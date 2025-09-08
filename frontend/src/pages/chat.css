@@ -1,0 +1,123 @@
+/* Chat page background and card, matching login/profile style */
+.chat-bg {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 50%, #34d399 100%);
+}
+
+.chat-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  padding: 2.5rem 2rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.chat-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.chat-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chat-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  font-size: 1rem;
+  background: #f8fafc;
+  margin-bottom: 0.2rem;
+}
+
+.chat-btn {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, #3b82f6 0%, #22c55e 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  margin-top: 0.2rem;
+  transition: background 0.2s;
+}
+.chat-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chat-error {
+  color: #ef4444;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.chat-messages {
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1rem 0.7rem;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #e0e7ff;
+  border-radius: 1rem;
+  padding: 0.7rem 1rem;
+  max-width: 80%;
+  box-sizing: border-box;
+  font-size: 1rem;
+  word-break: break-word;
+}
+.chat-message-self {
+  align-self: flex-end;
+  background: #bbf7d0;
+}
+.chat-message-other {
+  align-self: flex-start;
+  background: #e0e7ff;
+}
+.chat-message-meta {
+  font-size: 0.92rem;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+.chat-message-content {
+  font-size: 1.08rem;
+  color: #0f172a;
+  margin-bottom: 0.2rem;
+}
+.chat-message-time {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-align: right;
+}

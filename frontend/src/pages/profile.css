@@ -1,0 +1,97 @@
+/* styles for the profile setup page */
+
+.profile-bg {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 50%, #34d399 100%);
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  padding: 2.75rem 2.5rem 2.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.25rem;
+}
+
+.profile-info {
+  width: 100%;
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.7rem;
+  font-size: 1.12rem;
+}
+
+.profile-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.profile-desc {
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.profile-form {
+  width: 100%;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.profile-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.profile-input {
+  margin-top: 0.5rem;
+  width: 98%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+}
+.profile-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px #bbf7d0;
+}
+
+.profile-btn {
+  width: 100%;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.9rem 0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.profile-btn:hover {
+  background: #1e293b;
+}
+.profile-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

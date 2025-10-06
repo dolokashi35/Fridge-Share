@@ -6,14 +6,19 @@ const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-// ✅ 1️⃣ Define Mongoose schema + model
+// ✅ Define Mongoose schema + model
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  profile: {
+    name: String,
+    location: String,
+    bio: String
+  }
 });
 const User = mongoose.model("User", userSchema);
 
-// ✅ 2️⃣ Register route
+// ✅ Register route
 router.post("/register", async (req, res) => {
   try {
     console.log("REGISTER BODY:", req.body);
@@ -22,16 +27,13 @@ router.post("/register", async (req, res) => {
     if (!username || !password)
       return res.status(400).json({ error: "Username and password required" });
 
-    // Check for duplicates
     const existing = await User.findOne({ username });
     if (existing)
       return res.status(400).json({ error: "Username already exists" });
 
-    // Hash password
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({ username, password: hash });
 
-    // Create token
     const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
     res.json({ token, username: user.username });
   } catch (err) {
@@ -40,7 +42,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ✅ 3️⃣ Login route
+// ✅ Login route
 router.post("/login", async (req, res) => {
   try {
     console.log("LOGIN BODY:", req.body);
@@ -60,7 +62,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ✅ 4️⃣ Auth middleware (unchanged)
+// ✅ Auth middleware
 function auth(req, res, next) {
   const header = req.headers.authorization;
   if (!header) return res.status(401).json({ error: "No token" });

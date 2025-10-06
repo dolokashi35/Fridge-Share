@@ -22,9 +22,11 @@ const port = process.env.PORT || 3001;
 // 🛡️ FIXED CORS (Manual Headers)
 // ========================
 const allowedOrigins = [
-  "https://fridgeshare.vercel.app",
-  "http://localhost:5173",
+  "https://fridge-share-5ay3y5gf7-kashis-projects-3cf4b1d7.vercel.app",
+  "https://fridgeshare.vercel.app", // main domain
+  "http://localhost:5173",          // dev mode
 ];
+
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;

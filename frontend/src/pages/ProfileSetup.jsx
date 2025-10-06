@@ -1,7 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./profile.css";
+
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 export default function ProfileSetup({ onComplete }) {
   const [name, setName] = useState("");
@@ -9,15 +11,37 @@ export default function ProfileSetup({ onComplete }) {
   const [saving, setSaving] = useState(false);
   const nav = useNavigate();
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!name || !college) return;
     setSaving(true);
-    setTimeout(() => {
+
+    try {
+      const stored = JSON.parse(localStorage.getItem("fs_user"));
+      const username = stored?.username;
+
+      if (!username) {
+        alert("User not logged in");
+        setSaving(false);
+        return;
+      }
+
+      // Save profile to backend
+      await axios.post(`${BACKEND_URL}/users/profile`, {
+        username,
+        name,
+        college,
+      });
+
+      // Update local copy
       onComplete?.({ name, college });
+      nav("/marketplace");
+    } catch (err) {
+      console.error("❌ Profile save error:", err);
+      alert("Error saving profile");
+    } finally {
       setSaving(false);
-      nav("/marketplace");         // ← go to marketplace
-    }, 200);
+    }
   };
 
   return (

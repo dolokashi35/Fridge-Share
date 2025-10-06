@@ -1,5 +1,4 @@
 const express = require("express");
-const cors = require("cors");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
@@ -20,28 +19,28 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // ========================
-// 🛡️ CORS Setup
+// 🛡️ FIXED CORS (Manual Headers)
 // ========================
 const allowedOrigins = [
   "https://fridgeshare.vercel.app",
   "http://localhost:5173",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow non-browser clients
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("CORS not allowed for this origin: " + origin));
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
 
-// handle OPTIONS (preflight) requests explicitly
-app.options(/.*/, cors());
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204); // ✅ Handle preflight requests properly
+  }
+
+  next();
+});
 
 // ========================
 // 🧩 Middleware
@@ -61,7 +60,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
   visionClient = new vision.ImageAnnotatorClient({ credentials });
   console.log("✅ Google Vision client initialized with JSON credentials");
 } else {
-  visionClient = new vision.ImageAnnotatorClient(); // local fallback
+  visionClient = new vision.ImageAnnotatorClient(); // fallback for local dev
   console.warn("⚠️ Using default local credentials");
 }
 

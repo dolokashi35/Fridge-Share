@@ -41,7 +41,7 @@ app.use(
 );
 
 // handle OPTIONS (preflight) requests explicitly
-app.options("*", cors());
+app.options(/.*/, cors());
 
 // ========================
 // 🧩 Middleware

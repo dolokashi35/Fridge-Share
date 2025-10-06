@@ -6,36 +6,44 @@ const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-// ✅ Define Mongoose schema + model
+// ✅ Define schema + model
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  profile: {
-    name: String,
-    location: String,
-    bio: String
-  }
+  name: { type: String },
+  college: { type: String },
 });
+
 const User = mongoose.model("User", userSchema);
 
 // ✅ Register route
 router.post("/register", async (req, res) => {
   try {
     console.log("REGISTER BODY:", req.body);
-    const { username, password } = req.body;
+    const { username, password, name, college } = req.body;
 
-    if (!username || !password)
-      return res.status(400).json({ error: "Username and password required" });
+    if (!username || !password || !name || !college) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
 
     const existing = await User.findOne({ username });
     if (existing)
       return res.status(400).json({ error: "Username already exists" });
 
     const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, password: hash });
+    const user = await User.create({ username, password: hash, name, college });
 
-    const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
-    res.json({ token, username: user.username });
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      JWT_SECRET
+    );
+
+    res.json({
+      token,
+      username: user.username,
+      name: user.name,
+      college: user.college,
+    });
   } catch (err) {
     console.error("❌ Register error:", err);
     res.status(500).json({ error: "Server error" });
@@ -54,10 +62,50 @@ router.post("/login", async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
-    res.json({ token, username: user.username });
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      JWT_SECRET
+    );
+
+    res.json({
+      token,
+      username: user.username,
+      name: user.name,
+      college: user.college,
+    });
   } catch (err) {
     console.error("❌ Login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ Update profile (for ProfileSetup)
+router.post("/profile", async (req, res) => {
+  try {
+    const { username, name, college } = req.body;
+
+    if (!username || !name || !college) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { username },
+      { name, college },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        username: user.username,
+        name: user.name,
+        college: user.college,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Profile update error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

@@ -1,10 +1,7 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import BottomNav from "../components/BottomNav";
 import "./marketplace-modern.css";
-
 
 const SAMPLE = [
   { id: 1, name: "Bananas", category: "Produce", price: 1.29, img: "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60" },
@@ -18,10 +15,7 @@ const SAMPLE = [
 ];
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
-
-
 const categories = ["All", "Produce", "Meat", "Snacks"];
-
 
 export default function Marketplace() {
   const [items, setItems] = useState([]);
@@ -55,16 +49,11 @@ export default function Marketplace() {
 
     list.sort((a, b) => {
       switch (sort) {
-        case "name-asc":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        default:
-          return 0;
+        case "name-asc": return a.name.localeCompare(b.name);
+        case "name-desc": return b.name.localeCompare(a.name);
+        case "price-asc": return a.price - b.price;
+        case "price-desc": return b.price - a.price;
+        default: return 0;
       }
     });
     return list;
@@ -72,9 +61,22 @@ export default function Marketplace() {
 
   return (
     <div className="market-bg">
+      {/* top navbar */}
+      <div className="market-nav">
+        <div className="market-nav-left">
+          <span className="nav-active">Market</span>
+          <span>Alt</span>
+          <span>Orders</span>
+        </div>
+        <div className="market-nav-right">
+          <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="Profile" className="nav-icon" />
+        </div>
+      </div>
+
       <div className="market-container">
         <h1 className="market-title">Campus Grocery Marketplace</h1>
-        {/* Filters */}
+
+        {/* filters */}
         <div className="market-filters">
           <input
             type="search"
@@ -82,22 +84,13 @@ export default function Marketplace() {
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             className="market-input"
-            style={{ minWidth: 220, flex: 1 }}
           />
-          <select
-            value={cat}
-            onChange={(e) => setCat(e.target.value)}
-            className="market-select"
-          >
+          <select value={cat} onChange={(e) => setCat(e.target.value)} className="market-select">
             {categories.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="market-select"
-          >
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="market-select">
             <option value="name-asc">Name (A → Z)</option>
             <option value="name-desc">Name (Z → A)</option>
             <option value="price-asc">Price (Low → High)</option>
@@ -109,49 +102,46 @@ export default function Marketplace() {
               type="number"
               value={minP}
               onChange={(e) => setMinP(e.target.value)}
-              className="market-input"
-              style={{ width: 80 }}
+              className="market-input small"
             />
             <label>Max</label>
             <input
               type="number"
               value={maxP}
               onChange={(e) => setMaxP(e.target.value)}
-              className="market-input"
-              style={{ width: 80 }}
+              className="market-input small"
             />
           </div>
         </div>
-        {/* Grid */}
+
+        {/* grid */}
         <div className="market-grid">
           {filtered.length ? (
             filtered.map((it) => (
-              <div key={it.id} className="market-card" style={{ cursor: 'pointer' }} onClick={() => nav(`/items/${it.id}`)}>
+              <div key={it.id} className="market-card" onClick={() => nav(`/items/${it.id}`)}>
                 <img src={it.img} alt={it.name} className="market-img" />
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>
                   <p className="market-card-cat">{it.category}</p>
                   <p className="market-card-price">${it.price.toFixed(2)}</p>
-                  <p className="market-card-meta">Qty: {it.quantity ?? 'N/A'}</p>
-                  <p className="market-card-meta">Purchased: {it.purchaseDate ? new Date(it.purchaseDate).toLocaleDateString() : 'N/A'}</p>
-                  {it.expiration && <p className="market-card-meta">Expires: {new Date(it.expiration).toLocaleDateString()}</p>}
-                  <p className="market-card-meta">Posted by: <b>{it.username || 'Unknown'}</b></p>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <p className="market-card-meta">Qty: {it.quantity ?? "N/A"}</p>
+                  <p className="market-card-meta">Purchased: {it.purchaseDate ? new Date(it.purchaseDate).toLocaleDateString() : "N/A"}</p>
+                  <p className="market-card-meta">Posted by: <b>{it.username || "Unknown"}</b></p>
+                  <div className="market-card-actions">
                     <button
-                      className="market-card-btn"
-                      onClick={e => { e.stopPropagation(); alert(`Requested to buy: ${it.name}`); }}
+                      className="market-card-btn request"
+                      onClick={(e) => { e.stopPropagation(); alert(`Requested to buy: ${it.name}`); }}
                     >
                       Request
                     </button>
                     <button
-                      className="market-card-btn"
-                      style={{ background: '#e0e7ff', color: '#3730a3' }}
-                      onClick={e => {
+                      className="market-card-btn message"
+                      onClick={(e) => {
                         e.stopPropagation();
-                        nav('/chat', { state: { to: it.username } });
+                        nav("/chat", { state: { to: it.username } });
                       }}
                     >
-                      Chat
+                      Message
                     </button>
                   </div>
                 </div>
@@ -161,7 +151,6 @@ export default function Marketplace() {
             <p className="market-empty">No items found.</p>
           )}
         </div>
-  <BottomNav />
       </div>
     </div>
   );

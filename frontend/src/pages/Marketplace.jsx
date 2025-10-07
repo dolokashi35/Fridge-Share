@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-// FIX: Use HashRouter for reliability in embedded environments
-import { useLocation, useNavigate, HashRouter } from "react-router-dom"; 
+// FIX: Removed all imports related to React Router hooks (useLocation, useNavigate, HashRouter)
 import axios from "axios";
 // We no longer need to import the CSS file since we are using Tailwind classes.
 
@@ -21,15 +20,17 @@ const categories = ["All", "Produce", "Meat", "Snacks", "Baked Goods"];
 // RENAMED: This is the core application logic
 function MarketLayout() {
   const [items, setItems] = useState([]);
-  // These hooks require a router context
-  const location = useLocation();
-  const nav = useNavigate();
+  // MOCK: Replaced useLocation/useNavigate with simple variable/function definitions
+  // to remove the dependency on the external router context.
+  const nav = (path) => console.log(`Navigation attempted to: ${path}. Router context missing.`);
+
   const [term, setTerm] = useState("");
   const [cat, setCat] = useState("All");
   const [sort, setSort] = useState("name-asc");
   const [minP, setMinP] = useState(0);
   const [maxP, setMaxP] = useState(10);
 
+  // Removed 'location' from dependencies since it's no longer used.
   useEffect(() => {
     async function fetchItems() {
       try {
@@ -40,7 +41,7 @@ function MarketLayout() {
       }
     }
     fetchItems();
-  }, [location]);
+  }, []); // Empty dependency array.
 
   const filtered = useMemo(() => {
     let list = items.filter((it) => {
@@ -141,7 +142,7 @@ function MarketLayout() {
                 key={it.id} 
                 className={`bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition hover:shadow-xl cursor-pointer ${!it.inStock && 'opacity-60'}`} 
                 // Simplified navigation logic for running outside a full routing system
-                onClick={() => {console.log(`Navigating to item ${it.id}`); /* nav(`/items/${it.id}`) */}}
+                onClick={() => {console.log(`Navigating to item ${it.id}`); nav(`/items/${it.id}`) }}
               >
                 {/* Image Container */}
                 <div className="h-40 overflow-hidden">
@@ -206,12 +207,5 @@ function MarketLayout() {
   );
 }
 
-// FIX: Since the environment is inconsistently routing, we wrap the entire application 
-// in a HashRouter to guarantee the necessary context for the useLocation/useNavigate hooks.
-export default function App() {
-    return (
-        <HashRouter>
-            <MarketLayout />
-        </HashRouter>
-    );
-}
+// FIX: Export the functional component directly to run without relying on React Router context.
+export default MarketLayout;

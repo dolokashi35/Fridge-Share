@@ -8,7 +8,8 @@
   --gray: #6b7280;
 }
 
-body, html {
+/* Base */
+html, body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', sans-serif;
@@ -20,7 +21,7 @@ body, html {
   min-height: 100vh;
 }
 
-/* NAVBAR */
+/* Navbar */
 .market-nav {
   display: flex;
   justify-content: space-between;
@@ -49,11 +50,6 @@ body, html {
   font-weight: 700;
 }
 
-.market-nav-right {
-  display: flex;
-  align-items: center;
-}
-
 .nav-icon {
   width: 28px;
   height: 28px;
@@ -61,13 +57,14 @@ body, html {
   object-fit: cover;
 }
 
-/* HEADER & FILTERS */
+/* Container */
 .market-container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
 }
 
+/* Title */
 .market-title {
   text-align: center;
   font-size: 1.9rem;
@@ -75,6 +72,7 @@ body, html {
   margin-bottom: 1.2rem;
 }
 
+/* Filters */
 .market-filters {
   display: flex;
   flex-wrap: wrap;
@@ -101,23 +99,25 @@ body, html {
   text-align: center;
 }
 
-/* GRID + CARDS */
+/* ✅ GRID FIX */
 .market-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.25rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   justify-items: center;
   align-items: start;
+  width: 100%;
 }
 
+/* Cards */
 .market-card {
-  width: 100%;
-  max-width: 280px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   overflow: hidden;
   transition: transform .15s ease, box-shadow .15s ease;
+  width: 100%;
+  max-width: 270px;
 }
 
 .market-card:hover {
@@ -162,7 +162,7 @@ body, html {
   margin: 0.1rem 0;
 }
 
-/* BUTTONS */
+/* Buttons */
 .market-card-actions {
   display: flex;
   gap: 0.5rem;
@@ -198,6 +198,7 @@ body, html {
   background: #000;
 }
 
+/* Empty State */
 .market-empty {
   text-align: center;
   grid-column: 1 / -1;
@@ -205,9 +206,13 @@ body, html {
   padding: 2rem;
 }
 
-/* RESPONSIVE */
-@media (min-width: 1100px) {
+/* Responsive */
+@media (max-width: 768px) {
   .market-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .market-card {
+    max-width: 220px;
   }
 }

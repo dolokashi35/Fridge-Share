@@ -1,8 +1,32 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { TextField, Autocomplete, Popper } from "@mui/material";
+import { colleges } from "../data/colleges";
 import "./profile.css";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+// 👇 Custom Popper to keep dropdown below
+function CustomPopper(props) {
+  return (
+    <Popper
+      {...props}
+      placement="bottom-start"
+      modifiers={[
+        {
+          name: "flip",
+          enabled: false, // disables "flipping" up
+        },
+        {
+          name: "preventOverflow",
+          enabled: true,
+          options: { altAxis: false, tether: false },
+        },
+      ]}
+      style={{ zIndex: 1300 }}
+    />
+  );
+}
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -38,23 +62,21 @@ export default function ProfilePage() {
       </div>
     );
 
+  // ✅ Handle save
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
 
     try {
-      // ✅ Update in backend too (so data persists)
       await axios.post(`${BACKEND_URL}/users/profile`, {
         username: user.username,
         name,
         college,
       });
 
-      // ✅ Update locally
       const updated = { ...user, profile: { name, college } };
       setUser(updated);
       localStorage.setItem("fs_user", JSON.stringify(updated));
-
       setEditing(false);
     } catch (err) {
       console.error("❌ Profile update failed:", err);
@@ -74,6 +96,8 @@ export default function ProfilePage() {
             <div>
               <b>Username:</b> {user.username}
             </div>
+
+            {/* Name */}
             <div>
               <label>Name:</label>
               <input
@@ -83,15 +107,36 @@ export default function ProfilePage() {
                 required
               />
             </div>
-            <div>
+
+            {/* College Autocomplete */}
+            <div style={{ position: "relative", zIndex: 10 }}>
               <label>College:</label>
-              <input
-                className="profile-input"
+              <Autocomplete
+                options={colleges}
                 value={college}
-                onChange={(e) => setCollege(e.target.value)}
-                required
+                onChange={(e, newValue) => setCollege(newValue || "")}
+                onInputChange={(e, newValue) => setCollege(newValue || "")}
+                freeSolo
+                disablePortal
+                PopperComponent={CustomPopper}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Search for your college"
+                    variant="outlined"
+                    fullWidth
+                    required
+                  />
+                )}
+                sx={{
+                  mt: 1,
+                  mb: 2,
+                  backgroundColor: "white",
+                  borderRadius: 1,
+                }}
               />
             </div>
+
             <div style={{ display: "flex", gap: "8px" }}>
               <button
                 className="profile-btn"

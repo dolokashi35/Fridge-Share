@@ -3,7 +3,8 @@ import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import BottomNav from "../components/BottomNav";
-import "./marketplace.css";
+import "./marketplace-modern.css";
+
 
 const SAMPLE = [
   { id: 1, name: "Bananas", category: "Produce", price: 1.29, img: "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60" },

@@ -26,19 +26,32 @@ export default function ProfileSetup({ onComplete }) {
         return;
       }
 
+      console.log("➡️ Sending profile to backend:", { username, name, college });
+
       // Save profile to backend
-      await axios.post(`${BACKEND_URL}/users/profile`, {
+      const res = await axios.post(`${BACKEND_URL}/users/profile`, {
         username,
         name,
         college,
       });
 
-      // Update local copy
+      console.log("✅ Profile updated:", res.data);
+
+      // Update localStorage user data
+      const updatedUser = {
+        ...stored,
+        profile: { name, college },
+      };
+      localStorage.setItem("fs_user", JSON.stringify(updatedUser));
+
+      // Update parent state
       onComplete?.({ name, college });
+
+      // Redirect to marketplace
       nav("/marketplace");
     } catch (err) {
-      console.error("❌ Profile save error:", err);
-      alert("Error saving profile");
+      console.error("❌ Profile save error:", err.response?.data || err.message);
+      alert("Error saving profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -68,7 +81,9 @@ export default function ProfileSetup({ onComplete }) {
               onChange={(e) => setCollege(e.target.value)}
               required
             >
-              <option value="" disabled>Select your college</option>
+              <option value="" disabled>
+                Select your college
+              </option>
               <option value="UC Berkeley">UC Berkeley</option>
               <option value="Stanford University">Stanford University</option>
               <option value="UCLA">UCLA</option>

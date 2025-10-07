@@ -4,14 +4,14 @@ import axios from "axios";
 // We no longer need to import the CSS file since we are using Tailwind classes.
 
 const SAMPLE = [
-  // Using simplified placeholder images matching the design's aesthetic
-  { id: 1, name: "Apples", category: "Produce", price: 1.99, img: "https://placehold.co/600x400/FF0000/ffffff?text=Apples_Placeholder", meta: "Purchased: Unknown", inStock: true },
-  { id: 2, name: "Bananas", category: "Produce", price: 1.29, img: "https://placehold.co/600x400/FFD700/000000?text=Banana_Placeholder", meta: "Purchased: Unknown", inStock: true },
-  { id: 3, name: "Blueberries", category: "Produce", price: 4.50, img: "https://placehold.co/600x400/4F46E5/ffffff?text=Blueberries_Placeholder", meta: "Purchased: 2 days ago", inStock: true },
-  { id: 4, name: "Sourdough Bread", category: "Baked Goods", price: 5.00, img: "https://placehold.co/600x400/92400E/ffffff?text=Bread_Placeholder", meta: "Purchased: Unknown", inStock: false },
+  // FIX: Removing placeholder text from image URLs to prevent stretching issues.
+  { id: 1, name: "Apples", category: "Produce", price: 1.99, img: "https://placehold.co/600x400/FF0000/ffffff", meta: "Purchased: Unknown", inStock: true },
+  { id: 2, name: "Bananas", category: "Produce", price: 1.29, img: "https://placehold.co/600x400/FFD700/000000", meta: "Purchased: Unknown", inStock: true },
+  { id: 3, name: "Blueberries", category: "Produce", price: 4.50, img: "https://placehold.co/600x400/4F46E5/ffffff", meta: "Purchased: 2 days ago", inStock: true },
+  { id: 4, name: "Sourdough Bread", category: "Baked Goods", price: 5.00, img: "https://placehold.co/600x400/92400E/ffffff", meta: "Purchased: Unknown", inStock: false },
   // Adding more items for a fuller view
-  { id: 5, name: "Carrots", category: "Produce", price: 0.99, img: "https://placehold.co/600x400/FF8C00/ffffff?text=Carrots", meta: "Purchased: Unknown", inStock: true },
-  { id: 6, name: "Beef Steak", category: "Meat", price: 7.99, img: "https://placehold.co/600x400/800000/ffffff?text=Steak", meta: "Purchased: Unknown", inStock: true },
+  { id: 5, name: "Carrots", category: "Produce", price: 0.99, img: "https://placehold.co/600x400/FF8C00/ffffff", meta: "Purchased: Unknown", inStock: true },
+  { id: 6, name: "Beef Steak", category: "Meat", price: 7.99, img: "https://placehold.co/600x400/800000/ffffff", meta: "Purchased: Unknown", inStock: true },
 ];
 
 const BACKEND_URL = "http://localhost:3001";
@@ -152,7 +152,7 @@ function MarketLayout() {
                     <img 
                         src={it.img} 
                         alt={it.name} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover" // Ensures image fills container without stretching outside the card bounds
                         onError={(e) => { 
                             e.target.onerror = null; // prevents infinite loop 
                             e.target.src = 'https://placehold.co/600x400/CCCCCC/000000?text=Image+Error'; 

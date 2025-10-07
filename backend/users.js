@@ -40,9 +40,10 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ✅ Login
+// ✅ Login route
 router.post("/login", async (req, res) => {
   try {
+    console.log("LOGIN BODY:", req.body);
     const { username, password } = req.body;
 
     const user = await User.findOne({ username });
@@ -52,12 +53,19 @@ router.post("/login", async (req, res) => {
     if (!match) return res.status(400).json({ error: "Invalid credentials" });
 
     const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
-    res.json({ token, username: user.username, profile: user.profile });
+
+    // Include profile (if it exists)
+    res.json({
+      token,
+      username: user.username,
+      profile: user.profile || null,
+    });
   } catch (err) {
     console.error("❌ Login error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // ✅ Save or update profile
 router.post("/profile", async (req, res) => {

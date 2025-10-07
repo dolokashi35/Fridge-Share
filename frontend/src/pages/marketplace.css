@@ -189,3 +189,42 @@ body, html {
   color: var(--gray);
   padding: 2rem;
 }
+.market-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.market-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.market-nav-left span {
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.nav-active {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.market-nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.nav-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}

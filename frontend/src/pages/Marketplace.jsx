@@ -69,9 +69,14 @@ export default function Marketplace() {
           <span>Orders</span>
         </div>
         <div className="market-nav-right">
-          <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="Profile" className="nav-icon" />
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png"
+            alt="Profile"
+            className="nav-icon"
+          />
         </div>
       </div>
+
 
       <div className="market-container">
         <h1 className="market-title">Campus Grocery Marketplace</h1>

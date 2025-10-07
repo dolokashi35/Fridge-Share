@@ -99,17 +99,18 @@ html, body {
   text-align: center;
 }
 
-/* ✅ FIXED GRID (forces multiple per row) */
+/* ✅ Responsive Grid Layout */
 .market-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.25rem;
-  justify-content: center;
+  justify-items: center;
 }
 
-/* Each card gets a fixed width — 280px desktop */
+/* Card */
 .market-card {
-  width: 280px;
+  width: 100%;
+  max-width: 280px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -202,15 +203,9 @@ html, body {
   padding: 2rem;
 }
 
-/* ✅ Responsive Web Fixes */
-@media (max-width: 1100px) {
-  .market-card {
-    width: 45%;
-  }
-}
-
+/* ✅ Optional tighter responsive tuning */
 @media (max-width: 768px) {
   .market-card {
-    width: 90%;
+    max-width: 100%;
   }
 }

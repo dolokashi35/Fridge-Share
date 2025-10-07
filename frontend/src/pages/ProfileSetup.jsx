@@ -1,11 +1,38 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { TextField, Autocomplete } from "@mui/material";
-import { colleges } from "../data/colleges"; // ← Make sure you have this file
+import { TextField, Autocomplete, Popper } from "@mui/material";
+import { colleges } from "../data/colleges";
 import "./profile.css";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+// 👇 Custom Popper that disables "flipping" logic
+function CustomPopper(props) {
+  return (
+    <Popper
+      {...props}
+      placement="bottom-start"
+      modifiers={[
+        {
+          name: "flip",
+          enabled: false, // 🚫 disable flipping
+        },
+        {
+          name: "preventOverflow",
+          enabled: true,
+          options: {
+            altAxis: false,
+            tether: false,
+          },
+        },
+      ]}
+      style={{
+        zIndex: 1300, // above modal/dialog layers
+      }}
+    />
+  );
+}
 
 export default function ProfileSetup({ onComplete }) {
   const [name, setName] = useState("");
@@ -21,7 +48,6 @@ export default function ProfileSetup({ onComplete }) {
     try {
       const stored = JSON.parse(localStorage.getItem("fs_user"));
       const username = stored?.username;
-
       if (!username) {
         alert("User not logged in");
         setSaving(false);
@@ -30,7 +56,6 @@ export default function ProfileSetup({ onComplete }) {
 
       console.log("➡️ Sending profile to backend:", { username, name, college });
 
-      // Save profile to backend
       const res = await axios.post(`${BACKEND_URL}/users/profile`, {
         username,
         name,
@@ -39,14 +64,10 @@ export default function ProfileSetup({ onComplete }) {
 
       console.log("✅ Profile updated:", res.data);
 
-      // Update localStorage user data
       const updatedUser = { ...stored, profile: { name, college } };
       localStorage.setItem("fs_user", JSON.stringify(updatedUser));
 
-      // Update parent state
       onComplete?.({ name, college });
-
-      // Redirect to marketplace
       nav("/marketplace");
     } catch (err) {
       console.error("❌ Profile save error:", err.response?.data || err.message);
@@ -63,7 +84,7 @@ export default function ProfileSetup({ onComplete }) {
         <p className="profile-desc">Tell classmates who you are</p>
 
         <form onSubmit={submit} className="profile-form" autoComplete="off">
-          {/* Name */}
+          {/* Full name */}
           <div>
             <label className="profile-label">Full name</label>
             <input
@@ -75,7 +96,7 @@ export default function ProfileSetup({ onComplete }) {
             />
           </div>
 
-          {/* College Autocomplete */}
+          {/* College with forced dropdown below */}
           <div style={{ position: "relative", zIndex: 10 }}>
             <label className="profile-label">College</label>
             <Autocomplete
@@ -84,8 +105,8 @@ export default function ProfileSetup({ onComplete }) {
               onChange={(e, newValue) => setCollege(newValue || "")}
               onInputChange={(e, newValue) => setCollege(newValue || "")}
               freeSolo
-              filterSelectedOptions
-              disablePortal // 👈 ensures dropdown stays within the page
+              disablePortal
+              PopperComponent={CustomPopper} // 👈 the key line
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -104,7 +125,7 @@ export default function ProfileSetup({ onComplete }) {
             />
           </div>
 
-          {/* Submit button */}
+          {/* Save */}
           <button
             type="submit"
             disabled={!name || !college || saving}

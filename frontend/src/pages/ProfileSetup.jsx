@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { TextField, Autocomplete } from "@mui/material";
+import { colleges } from "../data/colleges"; // 👈 make sure this file exists
 import "./profile.css";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
@@ -38,10 +40,7 @@ export default function ProfileSetup({ onComplete }) {
       console.log("✅ Profile updated:", res.data);
 
       // Update localStorage user data
-      const updatedUser = {
-        ...stored,
-        profile: { name, college },
-      };
+      const updatedUser = { ...stored, profile: { name, college } };
       localStorage.setItem("fs_user", JSON.stringify(updatedUser));
 
       // Update parent state
@@ -73,29 +72,27 @@ export default function ProfileSetup({ onComplete }) {
               required
             />
           </div>
+
           <div>
             <label className="profile-label">College</label>
-            <select
-              className="profile-input"
+            <Autocomplete
+              options={colleges}
               value={college}
-              onChange={(e) => setCollege(e.target.value)}
-              required
-            >
-              <option value="" disabled>
-                Select your college
-              </option>
-              <option value="UC Berkeley">UC Berkeley</option>
-              <option value="Stanford University">Stanford University</option>
-              <option value="UCLA">UCLA</option>
-              <option value="USC">USC</option>
-              <option value="UC San Diego">UC San Diego</option>
-              <option value="UC Davis">UC Davis</option>
-              <option value="UC Irvine">UC Irvine</option>
-              <option value="UC Santa Barbara">UC Santa Barbara</option>
-              <option value="UC Santa Cruz">UC Santa Cruz</option>
-              <option value="Other">Other</option>
-            </select>
+              onChange={(e, newValue) => setCollege(newValue)}
+              freeSolo // 👈 allows typing if college not in list
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Search for your college"
+                  variant="outlined"
+                  required
+                  fullWidth
+                />
+              )}
+              sx={{ mt: 1, mb: 2 }}
+            />
           </div>
+
           <button
             type="submit"
             disabled={!name || !college || saving}

@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import { useLocation, useNavigate, BrowserRouter as Router } from "react-router-dom"; // Imported Router for context
+// FIX: Use HashRouter for reliability in embedded environments
+import { useLocation, useNavigate, HashRouter } from "react-router-dom"; 
 import axios from "axios";
 // We no longer need to import the CSS file since we are using Tailwind classes.
-// import "./marketplace-modern.css"; 
 
 const SAMPLE = [
   // Using simplified placeholder images matching the design's aesthetic
@@ -15,13 +15,13 @@ const SAMPLE = [
   { id: 6, name: "Beef Steak", category: "Meat", price: 7.99, img: "https://placehold.co/600x400/800000/ffffff?text=Steak", meta: "Purchased: Unknown", inStock: true },
 ];
 
-// FIX: Replaced import.meta.env with a simple fallback URL to resolve the compilation error.
 const BACKEND_URL = "http://localhost:3001";
 const categories = ["All", "Produce", "Meat", "Snacks", "Baked Goods"];
 
-// Renamed main component to MarketLayout to be nested within App
+// RENAMED: This is the core application logic
 function MarketLayout() {
   const [items, setItems] = useState([]);
+  // These hooks require a router context
   const location = useLocation();
   const nav = useNavigate();
   const [term, setTerm] = useState("");
@@ -33,12 +33,9 @@ function MarketLayout() {
   useEffect(() => {
     async function fetchItems() {
       try {
-        // Mocking item structure to match the sample data's requirement (inStock/meta)
-        // Using a try-catch for the mock API call
         const res = await axios.get(`${BACKEND_URL}/items`);
         setItems(res.data.length ? res.data : SAMPLE);
       } catch (e) {
-        // console.log("Using sample data, API call failed or is mocked.");
         setItems(SAMPLE);
       }
     }
@@ -209,12 +206,12 @@ function MarketLayout() {
   );
 }
 
-// FIX: Renamed the default export to App and wrapped the MarketLayout component 
-// in a Router component to resolve the "useLocation/useNavigate must be in a <Router>" error.
+// FIX: Since the environment is inconsistently routing, we wrap the entire application 
+// in a HashRouter to guarantee the necessary context for the useLocation/useNavigate hooks.
 export default function App() {
     return (
-        <Router>
+        <HashRouter>
             <MarketLayout />
-        </Router>
+        </HashRouter>
     );
 }

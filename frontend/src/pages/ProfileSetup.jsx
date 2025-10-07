@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { TextField, Autocomplete } from "@mui/material";
-import { colleges } from "../data/colleges"; // 👈 make sure this file exists
+import { colleges } from "../data/colleges"; // ← Make sure you have this file
 import "./profile.css";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
@@ -61,7 +61,9 @@ export default function ProfileSetup({ onComplete }) {
       <div className="profile-card">
         <h1 className="profile-title">Complete your profile</h1>
         <p className="profile-desc">Tell classmates who you are</p>
-        <form onSubmit={submit} className="profile-form">
+
+        <form onSubmit={submit} className="profile-form" autoComplete="off">
+          {/* Name */}
           <div>
             <label className="profile-label">Full name</label>
             <input
@@ -73,13 +75,17 @@ export default function ProfileSetup({ onComplete }) {
             />
           </div>
 
-          <div>
+          {/* College Autocomplete */}
+          <div style={{ position: "relative", zIndex: 10 }}>
             <label className="profile-label">College</label>
             <Autocomplete
               options={colleges}
               value={college}
-              onChange={(e, newValue) => setCollege(newValue)}
-              freeSolo // 👈 allows typing if college not in list
+              onChange={(e, newValue) => setCollege(newValue || "")}
+              onInputChange={(e, newValue) => setCollege(newValue || "")}
+              freeSolo
+              filterSelectedOptions
+              disablePortal // 👈 ensures dropdown stays within the page
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -89,10 +95,16 @@ export default function ProfileSetup({ onComplete }) {
                   fullWidth
                 />
               )}
-              sx={{ mt: 1, mb: 2 }}
+              sx={{
+                mt: 1,
+                mb: 2,
+                backgroundColor: "white",
+                borderRadius: 1,
+              }}
             />
           </div>
 
+          {/* Submit button */}
           <button
             type="submit"
             disabled={!name || !college || saving}

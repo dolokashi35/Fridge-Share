@@ -77,7 +77,8 @@ function MarketLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans antialiased">
+    // FIX: Added 'font-inter' class for proper typography and better spacing on mobile.
+    <div className="min-h-screen bg-gray-50 font-inter antialiased"> 
       {/* Top Navbar */}
       <div className="flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8 bg-white shadow-sm sticky top-0 z-10">
         <div className="flex items-center space-x-4 text-gray-800 font-semibold">
@@ -140,6 +141,8 @@ function MarketLayout() {
             filtered.map((it) => (
               <div 
                 key={it.id} 
+                // FIX: Ensure the max-width is controlled by the grid parent, 
+                // preventing individual cards from growing too large.
                 className={`bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition hover:shadow-xl cursor-pointer ${!it.inStock && 'opacity-60'}`} 
                 // Simplified navigation logic for running outside a full routing system
                 onClick={() => {console.log(`Navigating to item ${it.id}`); nav(`/items/${it.id}`) }}

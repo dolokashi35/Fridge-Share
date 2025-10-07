@@ -28,10 +28,19 @@ function AppContent() {
   return (
     <div style={{ paddingBottom: 56 }}>
       <Routes>
+        {/* ✅ Login */}
         <Route
           path="/login"
-          element={<Login onAuth={(token, username) => setUser({ token, username, profile: null })} />}
+          element={
+            <Login
+              onAuth={(token, username, profile) =>
+                setUser({ token, username, profile })
+              }
+            />
+          }
         />
+
+        {/* ✅ Profile Setup */}
         <Route
           path="/setup"
           element={
@@ -40,57 +49,121 @@ function AppContent() {
             ) : user.profile ? (
               <Navigate to="/marketplace" />
             ) : (
-              <ProfileSetup onComplete={(profile) => setUser((u) => ({ ...u, profile }))} />
+              <ProfileSetup
+                onComplete={(profile) =>
+                  setUser((u) => ({ ...u, profile }))
+                }
+              />
             )
           }
         />
+
+        {/* ✅ Marketplace */}
         <Route
           path="/marketplace"
           element={
-            !user ? <Navigate to="/login" /> : !user.profile ? <Navigate to="/setup" /> : <Marketplace />
+            !user ? (
+              <Navigate to="/login" />
+            ) : !user.profile ? (
+              <Navigate to="/setup" />
+            ) : (
+              <Marketplace />
+            )
           }
         />
+
+        {/* ✅ Item detail */}
         <Route
           path="/items/:id"
           element={
-            !user ? <Navigate to="/login" /> : !user.profile ? <Navigate to="/setup" /> : <ItemDetail />
+            !user ? (
+              <Navigate to="/login" />
+            ) : !user.profile ? (
+              <Navigate to="/setup" />
+            ) : (
+              <ItemDetail />
+            )
           }
         />
+
+        {/* ✅ Post item */}
         <Route
           path="/post"
           element={
-            !user ? <Navigate to="/login" /> : !user.profile ? <Navigate to="/setup" /> : <PostItem />
+            !user ? (
+              <Navigate to="/login" />
+            ) : !user.profile ? (
+              <Navigate to="/setup" />
+            ) : (
+              <PostItem />
+            )
           }
         />
+
+        {/* ✅ My listings */}
         <Route
           path="/mylistings"
           element={
-            !user ? <Navigate to="/login" /> : !user.profile ? <Navigate to="/setup" /> : <MyListings />
+            !user ? (
+              <Navigate to="/login" />
+            ) : !user.profile ? (
+              <Navigate to="/setup" />
+            ) : (
+              <MyListings />
+            )
           }
         />
+
+        {/* ✅ Profile page */}
         <Route
           path="/profile"
           element={
-            !user ? <Navigate to="/login" /> : !user.profile ? <Navigate to="/setup" /> : <ProfilePage />
+            !user ? (
+              <Navigate to="/login" />
+            ) : !user.profile ? (
+              <Navigate to="/setup" />
+            ) : (
+              <ProfilePage />
+            )
           }
         />
+
+        {/* ✅ Edit listing */}
         <Route
           path="/edit/:id"
           element={
-            !user ? <Navigate to="/login" /> : !user.profile ? <Navigate to="/setup" /> : <EditListing />
+            !user ? (
+              <Navigate to="/login" />
+            ) : !user.profile ? (
+              <Navigate to="/setup" />
+            ) : (
+              <EditListing />
+            )
           }
         />
+
+        {/* ✅ Chat */}
         <Route
           path="/chat"
           element={
-            !user ? <Navigate to="/login" /> : !user.profile ? <Navigate to="/setup" /> : <ChatPage currentUser={user.username} />
+            !user ? (
+              <Navigate to="/login" />
+            ) : !user.profile ? (
+              <Navigate to="/setup" />
+            ) : (
+              <ChatPage currentUser={user.username} />
+            )
           }
         />
+
+        {/* ✅ Default redirect */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
 
-      {/* Hide navbar on login/setup */}
-      {user && user.profile && !hideNavOn.includes(location.pathname) && <BottomNav />}
+      {/* ✅ Hide navbar on login/setup */}
+      {user && user.profile && !hideNavOn.includes(location.pathname) && (
+        <BottomNav />
+      )}
     </div>
   );
 }

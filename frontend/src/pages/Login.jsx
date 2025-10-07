@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './login.css';
 
-// Correct backend URL
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export default function Login({ onAuth }) {
@@ -18,13 +17,21 @@ export default function Login({ onAuth }) {
     setError('');
 
     try {
-      // ✅ Add /users/ before login/register
       const endpoint = `${BACKEND_URL}/users/${mode}`;
-
       const res = await axios.post(endpoint, { username, password });
 
-      onAuth(res.data.token, res.data.username);
-      navigate('/setup');
+      const { token, username: userName, profile } = res.data;
+
+      // Save token, username, and profile
+      onAuth(token, userName, profile);
+
+      // If profile exists, skip setup
+      if (profile && profile.name && profile.college) {
+        navigate('/marketplace');
+      } else {
+        navigate('/setup');
+      }
+
     } catch (err) {
       console.error('Login/Register error:', err);
       setError(err.response?.data?.error || 'Error');

@@ -19,26 +19,30 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // ========================
-// 🛡️ FIXED CORS (Manual Headers)
+// 🛡️ Dynamic & Safe CORS Setup
 // ========================
 const allowedOrigins = [
-  "https://fridge-share-5ay3y5gf7-kashis-projects-3cf4b1d7.vercel.app",
-  "https://fridgeshare.vercel.app", // main domain
-  "http://localhost:5173",          // dev mode
+  "https://fridgeshare.vercel.app",
+  "http://localhost:5173",
 ];
-
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
+
+  // Allow main + preview domains dynamically
+  if (
+    allowedOrigins.includes(origin) ||
+    /^https:\/\/fridge-share-[\w-]+\.vercel\.app$/.test(origin)
+  ) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
   }
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
+
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
-    return res.sendStatus(204); // ✅ Handle preflight requests properly
+    return res.sendStatus(204);
   }
 
   next();
@@ -55,19 +59,19 @@ const upload = multer({ dest: "uploads/" });
 // 👁️ Google Vision Setup
 // ========================
 const vision = require("@google-cloud/vision");
-
 let visionClient;
+
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
   const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
   visionClient = new vision.ImageAnnotatorClient({ credentials });
   console.log("✅ Google Vision client initialized with JSON credentials");
 } else {
-  visionClient = new vision.ImageAnnotatorClient(); // fallback for local dev
+  visionClient = new vision.ImageAnnotatorClient();
   console.warn("⚠️ Using default local credentials");
 }
 
 // ========================
-// 🌐 Fetch Polyfill for Gemini API
+// 🌐 Fetch Polyfill (for Gemini API or future use)
 // ========================
 const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 

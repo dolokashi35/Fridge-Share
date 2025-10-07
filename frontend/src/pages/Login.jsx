@@ -16,27 +16,30 @@ export default function Login({ onAuth }) {
     e.preventDefault();
     setError('');
 
+    const eduRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.edu$/i;
+    if (!eduRegex.test(username)) {
+      setError("Please use a valid .edu email address");
+      return;
+    }
+
     try {
       const endpoint = `${BACKEND_URL}/users/${mode}`;
       const res = await axios.post(endpoint, { username, password });
-
       const { token, username: userName, profile } = res.data;
 
-      // Save token, username, and profile
       onAuth(token, userName, profile);
 
-      // If profile exists, skip setup
       if (profile && profile.name && profile.college) {
         navigate('/marketplace');
       } else {
         navigate('/setup');
       }
-
     } catch (err) {
       console.error('Login/Register error:', err);
       setError(err.response?.data?.error || 'Error');
     }
   }
+
 
   return (
     <div className="login-bg">

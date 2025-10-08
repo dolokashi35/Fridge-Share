@@ -1,56 +1,211 @@
-body {
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(180deg, #fff, #f8fafc);
-  color: #1f2937;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --primary: #ef4444;
+  --primary-dark: #dc2626;
+  --text-dark: #111827;
+  --gray: #6b7280;
 }
 
-/* Cards */
-.market-card {
-  border: none;
-  border-radius: 1rem;
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: #fafafa;
+  color: var(--text-dark);
+  overflow-x: hidden;
+}
+
+/* NAVBAR */
+.market-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.market-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
-/* Buttons */
-.market-card-btn {
-  border-radius: 1.5rem;
-  padding: 0.7rem;
-  font-weight: 600;
-  letter-spacing: .2px;
-}
-.market-card-btn:first-child {
-  background: #10b981; /* green */
-}
-.market-card-btn:nth-child(2) {
-  background: #f97316; /* orange */
+.market-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-/* Filter bar */
+.nav-active {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.nav-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* LAYOUT CONTAINER */
+.market-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* TITLE */
+.market-title {
+  text-align: center;
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+
+/* FILTER BAR */
 .market-filters {
-  background: #fff;
-  padding: .75rem 1rem;
-  border-radius: .75rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   margin-bottom: 1.5rem;
 }
-.market-input, .market-select {
+
+.market-input,
+.market-select {
+  border-radius: 9999px;
   border: 1px solid #e5e7eb;
-  border-radius: 2rem;
-  padding: .6rem 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  background: #fff;
 }
 
-/* Category tags */
+.market-input.small {
+  width: 70px;
+  text-align: center;
+}
+
+/* ✅ MULTI-COLUMN GRID LAYOUT */
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  justify-items: center;
+  align-items: start;
+}
+
+/* CARD STYLING */
+.market-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.market-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* IMAGES */
+.market-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+/* CARD CONTENT */
+.market-card-content {
+  padding: 0.75rem;
+}
+
+.market-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.2rem;
+}
+
 .market-card-cat {
-  display: inline-block;
-  background: #f3f4f6;
-  color: #6b7280;
-  border-radius: 1rem;
-  padding: 2px 10px;
-  font-size: .85rem;
+  color: var(--primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.market-card-price {
+  color: var(--primary);
+  font-weight: 700;
+  margin-top: 0.25rem;
+  font-size: 1rem;
+}
+
+.market-card-meta {
+  color: var(--gray);
+  font-size: 0.85rem;
+  margin: 0.1rem 0;
+}
+
+/* CARD BUTTONS */
+.market-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.market-card-btn {
+  flex: 1;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.55rem 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.market-card-btn.request {
+  background: var(--primary);
+  color: white;
+}
+
+.market-card-btn.request:hover {
+  background: var(--primary-dark);
+}
+
+.market-card-btn.message {
+  background: #111;
+  color: white;
+}
+
+.market-card-btn.message:hover {
+  background: #000;
+}
+
+/* EMPTY STATE */
+.market-empty {
+  text-align: center;
+  grid-column: 1 / -1;
+  color: var(--gray);
+  padding: 2rem;
+}
+
+/* ✅ RESPONSIVE BREAKPOINTS */
+@media (max-width: 1100px) {
+  .market-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
 }

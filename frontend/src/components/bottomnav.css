@@ -1,0 +1,121 @@
+/* 🔝 Top Navigation Bar */
+.bottom-navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #ffffff;
+  height: 64px;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 1.5rem;
+
+  position: relative; /* ✅ allows logo to be absolutely positioned inside */
+}
+
+/* ✅ Logo (doesn’t shift layout) */
+.bottom-navbar-logo {
+  position: absolute;       /* removes from flex flow */
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 100px;             /* adjust size as needed */
+  width: auto;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+/* Centered section for navigation buttons */
+.bottom-navbar-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+/* 🔘 Each button/tab */
+.bottom-navbar-btn {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+/* 🟥 Active tab */
+.bottom-navbar-btn.active {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* 🩶 Hover */
+.bottom-navbar-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* 🧭 Icons */
+.bottom-navbar-icon {
+  font-size: 1rem;
+  position: relative;
+  top: 1.5px;
+}
+
+/* 🔺 Post button (center one) */
+.bottom-navbar-btn:nth-child(2) {
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.5rem 1.3rem;
+  font-size: 1rem;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.bottom-navbar-btn:nth-child(2):hover {
+  background: #dc2626;
+}
+
+/* 🧍 Profile button (modern circular icon) */
+.profile-btn {
+  background: #1f2937;
+  color: #fff;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.profile-btn:hover {
+  background: #111827;
+  transform: scale(1.05);
+}
+
+.profile-btn svg {
+  font-size: 0.8rem;
+}

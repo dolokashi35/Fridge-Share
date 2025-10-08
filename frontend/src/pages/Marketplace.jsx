@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./marketplace-modern.css";
+import "./marketplace-modern.css"; // Keep styling import
 
 const SAMPLE = [
   { id: 1, name: "Bananas", category: "Produce", price: 1.29, img: "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60" },
@@ -49,11 +49,16 @@ export default function Marketplace() {
 
     list.sort((a, b) => {
       switch (sort) {
-        case "name-asc": return a.name.localeCompare(b.name);
-        case "name-desc": return b.name.localeCompare(a.name);
-        case "price-asc": return a.price - b.price;
-        case "price-desc": return b.price - a.price;
-        default: return 0;
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "price-asc":
+          return a.price - b.price;
+        case "price-desc":
+          return b.price - a.price;
+        default:
+          return 0;
       }
     });
     return list;
@@ -61,22 +66,7 @@ export default function Marketplace() {
 
   return (
     <div className="market-bg">
-      {/* Navbar */}
-      <div className="market-nav">
-        <div className="market-nav-left">
-          <span className="nav-active">Market</span>
-          <span>Alt</span>
-          <span>Orders</span>
-        </div>
-        <div className="market-nav-right">
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png"
-            alt="Profile"
-            className="nav-icon"
-          />
-        </div>
-      </div>
-
+      {/* 🧭 Main Marketplace Content (Navbar handled globally in App.jsx) */}
       <div className="market-container">
         <h1 className="market-title">Campus Grocery Marketplace</h1>
 
@@ -89,12 +79,20 @@ export default function Marketplace() {
             onChange={(e) => setTerm(e.target.value)}
             className="market-input"
           />
-          <select value={cat} onChange={(e) => setCat(e.target.value)} className="market-select">
+          <select
+            value={cat}
+            onChange={(e) => setCat(e.target.value)}
+            className="market-select"
+          >
             {categories.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="market-select">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="market-select"
+          >
             <option value="name-asc">Name (A → Z)</option>
             <option value="name-desc">Name (Z → A)</option>
             <option value="price-asc">Price (Low → High)</option>
@@ -122,20 +120,31 @@ export default function Marketplace() {
         <div className="market-grid">
           {filtered.length ? (
             filtered.map((it) => (
-              <div key={it.id} className="market-card" onClick={() => nav(`/items/${it.id}`)}>
+              <div
+                key={it.id}
+                className="market-card"
+                onClick={() => nav(`/items/${it.id}`)}
+              >
                 <img src={it.img} alt={it.name} className="market-img" />
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>
                   <p className="market-card-cat">{it.category}</p>
-                  <p className="market-card-price">${it.price.toFixed(2)}</p>
-                  <p className="market-card-meta">Qty: {it.quantity ?? "N/A"}</p>
+                  <p className="market-card-price">
+                    ${it.price.toFixed(2)}
+                  </p>
+                  <p className="market-card-meta">
+                    Qty: {it.quantity ?? "N/A"}
+                  </p>
                   <p className="market-card-meta">
                     Posted by: <b>{it.username || "Unknown"}</b>
                   </p>
                   <div className="market-card-actions">
                     <button
                       className="market-card-btn request"
-                      onClick={(e) => { e.stopPropagation(); alert(`Requested to buy: ${it.name}`); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert(`Requested to buy: ${it.name}`);
+                      }}
                     >
                       Request
                     </button>

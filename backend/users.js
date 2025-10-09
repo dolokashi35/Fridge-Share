@@ -1,9 +1,9 @@
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const mongoose = require("mongoose");
-const router = express.Router();
+import express from "express";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
+const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
 // ✅ Define schema and model
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-/// ✅ Register route (only .edu emails)
+// ✅ Register route (only .edu emails)
 router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -74,11 +74,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 // ✅ Save or update profile
 router.post("/profile", async (req, res) => {
   try {
-    console.log("PROFILE BODY:", req.body);
     const { username, name, college } = req.body;
 
     if (!username || !name || !college)
@@ -100,7 +98,7 @@ router.post("/profile", async (req, res) => {
 });
 
 // ✅ Auth middleware
-function auth(req, res, next) {
+export function auth(req, res, next) {
   const header = req.headers.authorization;
   if (!header) return res.status(401).json({ error: "No token" });
   try {
@@ -112,4 +110,5 @@ function auth(req, res, next) {
   }
 }
 
-module.exports = { router, auth, User };
+// ✅ Export router + model
+export { router, User };

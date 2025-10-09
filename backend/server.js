@@ -10,6 +10,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import vision from "@google-cloud/vision";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { router as userRouter } from "./users.js"; // ✅ Import user routes
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,9 @@ mongoose
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
+// ========================
+// 🛡️ Middleware
+// ========================
 app.use(
   cors({
     origin: ["https://fridgeshare.vercel.app", "http://localhost:5173"],
@@ -35,8 +39,10 @@ app.use(express.urlencoded({ extended: true }));
 const upload = multer({ dest: "uploads/" });
 
 // ========================
-// 👁️ Google Vision Setup
+// 👥 Mount User Routes
 // ========================
+app.use("/users", userRouter); // ✅ Enables /users/register, /users/login, /users/profile
+
 // ========================
 // 👁️ Google Vision Setup
 // ========================
@@ -44,12 +50,12 @@ let visionClient;
 try {
   let credentials;
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    // ✅ Render-safe: parse JSON from environment variable
+    // ✅ Render-safe (base64-encoded JSON env var)
     credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
     visionClient = new vision.ImageAnnotatorClient({ credentials });
     console.log("✅ Google Vision initialized from environment JSON");
   } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    // ✅ Local dev: use key file path
+    // ✅ Local dev (path to service-account.json)
     visionClient = new vision.ImageAnnotatorClient({
       keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     });
@@ -62,7 +68,6 @@ try {
   process.exit(1);
 }
 
-
 // ========================
 // 🤖 Gemini Setup
 // ========================
@@ -74,14 +79,11 @@ console.log("✅ Gemini 2.0 Flash initialized via API key");
 // 🏠 Root Route
 // ========================
 app.get("/", (_, res) =>
-  res.json({ status: "✅ FridgeShare AI backend running (Vision + Gemini)" })
+  res.json({ status: "✅ FridgeShare backend running (Vision + Gemini + Auth)" })
 );
 
 // ========================
-// 📸 POST /api/analyze — Vision + Gemini with fallbacks
-// ========================
-// ========================
-// 📸 POST /api/analyze — Vision only (no auto Gemini description)
+// 📸 POST /api/analyze — Vision Only (no auto description)
 // ========================
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No image uploaded" });
@@ -92,22 +94,21 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
   try {
     console.log("🧠 Analyzing image:", imagePath);
 
-    // 1️⃣ Label Detection
+    // Label detection
     const [labelResult] = await visionClient.labelDetection(imagePath);
     let labels = labelResult.labelAnnotations || [];
 
-    // 2️⃣ Object Localization fallback
+    // Fallbacks: Object + Text detection
     if (!labels.length) {
-      console.warn("⚠️ No labels detected. Trying object localization...");
+      console.warn("⚠️ No labels found, trying object localization...");
       const [objRes] = await visionClient.objectLocalization(imagePath);
       const objects = objRes.localizedObjectAnnotations || [];
       if (objects.length)
         labels = [{ description: objects[0].name, score: objects[0].score }];
     }
 
-    // 3️⃣ Text Detection fallback
     if (!labels.length) {
-      console.warn("⚠️ No objects found. Trying text detection...");
+      console.warn("⚠️ Trying text detection...");
       const [textRes] = await visionClient.textDetection(imagePath);
       const text = textRes.fullTextAnnotation?.text;
       if (text) {
@@ -116,29 +117,26 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
       }
     }
 
-    // 4️⃣ Final fallback
+    // Final fallback
     if (!labels.length)
       labels = [{ description: "Unknown item", score: 0.0 }];
 
     const itemName = labels[0].description;
     const confidence = labels[0].score || 0.5;
-    console.log(
-      "📷 Detected:",
-      itemName,
-      `(${(confidence * 100).toFixed(1)}%)`
-    );
 
-    // ✅ Skip Gemini generation entirely — just return Vision data
+    console.log(`📷 Detected: ${itemName} (${(confidence * 100).toFixed(1)}%)`);
+
+    // Return Vision-only result
     res.json({
       itemName,
-      description: "", // will be empty until user clicks "Generate Description"
+      description: "",
       marketPrice: "0.00",
       discountedPrice: "0.00",
       confidence: (confidence * 100).toFixed(1),
       detectedLabels: labels.map((l) => l.description),
     });
   } catch (err) {
-    console.error("❌ Error analyzing image:", err);
+    console.error("❌ Vision error:", err);
     res.status(500).json({ error: "Vision analysis failed" });
   } finally {
     await fs.unlink(imagePath).catch(() => {});
@@ -155,10 +153,11 @@ app.post("/api/generate-description", async (req, res) => {
 
   try {
     const prompt = `
-Write a short, friendly (<200 chars) product description for "${itemName}" (quantity: ${quantity || 1})  
-in the context of a community food sharing app.  
+Write a short, friendly (<200 chars) product description for "${itemName}" (quantity: ${quantity || 1})
+in the context of a community food sharing app.
 Return JSON: { "description": "string" }
 `;
+
     const result = await geminiModel.generateContent(prompt);
     const text = result.response.text();
     const match = text.match(/\{[\s\S]*\}/);
@@ -180,12 +179,12 @@ app.post("/api/suggest-price", async (req, res) => {
 
   try {
     const prompt = `
-Estimate the average U.S. retail price for ${quantity} of "${itemName}".  
-Then apply a 50% markdown for community resale.  
-Return ONLY valid JSON:  
+Estimate the average U.S. retail price for ${quantity} of "${itemName}".
+Then apply a 50% markdown for community resale.
+Return ONLY valid JSON:
 {
- "marketPrice": "string (USD)",
- "discountedPrice": "string (USD)"
+  "marketPrice": "string (USD)",
+  "discountedPrice": "string (USD)"
 }
 `;
 
@@ -212,7 +211,7 @@ Return ONLY valid JSON:
 
     res.json(json);
   } catch (err) {
-    console.error("❌ Error generating price:", err);
+    console.error("❌ Price generation failed:", err);
     res.status(500).json({ error: "Price generation failed" });
   }
 });
@@ -221,5 +220,5 @@ Return ONLY valid JSON:
 // 🚀 Start Server
 // ========================
 app.listen(port, () =>
-  console.log(`🚀 FridgeShare AI running on port ${port} (Vision + Gemini API)`)
+  console.log(`🚀 FridgeShare backend running on port ${port} (Vision + Gemini + Auth)`)
 );

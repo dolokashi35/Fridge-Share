@@ -37,15 +37,31 @@ const upload = multer({ dest: "uploads/" });
 // ========================
 // 👁️ Google Vision Setup
 // ========================
+// ========================
+// 👁️ Google Vision Setup
+// ========================
 let visionClient;
 try {
-  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-  visionClient = new vision.ImageAnnotatorClient({ credentials });
-  console.log("✅ Google Vision initialized with env credentials");
+  let credentials;
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    // ✅ Render-safe: parse JSON from environment variable
+    credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+    visionClient = new vision.ImageAnnotatorClient({ credentials });
+    console.log("✅ Google Vision initialized from environment JSON");
+  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    // ✅ Local dev: use key file path
+    visionClient = new vision.ImageAnnotatorClient({
+      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    });
+    console.log("✅ Google Vision initialized from key file");
+  } else {
+    throw new Error("No Google credentials found.");
+  }
 } catch (err) {
   console.error("❌ Failed to initialize Vision client:", err.message);
   process.exit(1);
 }
+
 
 // ========================
 // 🤖 Gemini Setup

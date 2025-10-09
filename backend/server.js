@@ -172,44 +172,54 @@ Return JSON: { "description": "string" }
 // ========================
 // 💰 POST /api/suggest-price
 // ========================
+// ========================
+// 💰 POST /api/suggest-price (Smarter logic: scale by quantity)
+// ========================
 app.post("/api/suggest-price", async (req, res) => {
   const { itemName, quantity } = req.body;
   if (!itemName || !quantity)
     return res.status(400).json({ error: "Missing itemName or quantity" });
 
   try {
+    // 1️⃣ Ask Gemini for *base price per single unit*
     const prompt = `
-Estimate the average U.S. retail price for ${quantity} of "${itemName}".
-Then apply a 50% markdown for community resale.
-Return ONLY valid JSON:
-{
-  "marketPrice": "string (USD)",
-  "discountedPrice": "string (USD)"
-}
+You are an AI pricing assistant. Estimate the average *U.S. retail price* for ONE unit of "${itemName}".
+Return only JSON like this:
+{ "basePrice": "string (USD)" }
 `;
 
     const response = await geminiModel.generateContent(prompt);
     const text = response.response.text();
 
+    // 2️⃣ Parse safely
     let json;
     try {
       json = JSON.parse(text);
     } catch {
       const match = text.match(/\{[\s\S]*\}/);
-      json = match ? JSON.parse(match[0]) : {
-        marketPrice: "0.00",
-        discountedPrice: "0.00",
-      };
+      json = match ? JSON.parse(match[0]) : { basePrice: "1.00" };
     }
 
-    const market = parseFloat(json.marketPrice.replace(/[^0-9.]/g, "")) || 0;
-    const discounted =
-      parseFloat(json.discountedPrice.replace(/[^0-9.]/g, "")) || market / 2;
+    // 3️⃣ Extract numeric price
+    const base = parseFloat((json.basePrice || "1.00").replace(/[^0-9.]/g, "")) || 1.0;
 
-    json.marketPrice = market.toFixed(2);
-    json.discountedPrice = discounted.toFixed(2);
+    // 4️⃣ Compute total & markdown
+    const qty = parseFloat(quantity) || 1;
+    const marketPrice = base * qty;
+    const discountedPrice = marketPrice * 0.5;
 
-    res.json(json);
+    // 5️⃣ Respond
+    res.json({
+      marketPrice: marketPrice.toFixed(2),
+      discountedPrice: discountedPrice.toFixed(2),
+      basePrice: base.toFixed(2),
+      quantity: qty,
+    });
+
+    console.log(
+      `💰 Base: $${base.toFixed(2)} x ${qty} = $${marketPrice.toFixed(2)} → discounted $${discountedPrice.toFixed(2)}`
+    );
+
   } catch (err) {
     console.error("❌ Price generation failed:", err);
     res.status(500).json({ error: "Price generation failed" });

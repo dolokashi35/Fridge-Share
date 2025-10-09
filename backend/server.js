@@ -39,10 +39,9 @@ const upload = multer({ dest: "uploads/" });
 // ========================
 let visionClient;
 try {
-  visionClient = new vision.ImageAnnotatorClient({
-    keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-  });
-  console.log("✅ Google Vision initialized");
+  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+  visionClient = new vision.ImageAnnotatorClient({ credentials });
+  console.log("✅ Google Vision initialized with env credentials");
 } catch (err) {
   console.error("❌ Failed to initialize Vision client:", err.message);
   process.exit(1);

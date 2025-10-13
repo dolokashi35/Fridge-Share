@@ -907,6 +907,25 @@ app.get("/api/transactions/:userId", async (req, res) => {
 });
 
 // ========================
+// 💬 GET /api/chat/:transactionId/messages - Get Chat Messages
+// ========================
+app.get("/api/chat/:transactionId/messages", async (req, res) => {
+  const { transactionId } = req.params;
+  
+  try {
+    const chatRoom = await ChatRoom.findOne({ transactionId });
+    if (!chatRoom) {
+      return res.status(404).json({ error: "Chat room not found" });
+    }
+
+    res.json(chatRoom.messages || []);
+  } catch (err) {
+    console.error("❌ Get chat messages error:", err);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+
+// ========================
 // 🔌 Socket.IO Events
 // ========================
 io.on('connection', (socket) => {

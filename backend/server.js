@@ -30,7 +30,7 @@ mongoose
 // ========================
 app.use(
   cors({
-    origin: ["https://fridgeshare.vercel.app", "http://localhost:5173"],
+    origin: ["https://fridgeshare.vercel.app", "http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   })
 );

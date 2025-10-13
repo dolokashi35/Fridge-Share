@@ -124,9 +124,9 @@ export default function Marketplace() {
           {filtered.length ? (
             filtered.map((it) => (
               <div
-                key={it.id}
+                key={it._id}
                 className="market-card"
-                onClick={() => nav(`/items/${it.id}`)}
+                onClick={() => nav(`/items/${it._id}`)}
               >
                 <img 
                   src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60"} 

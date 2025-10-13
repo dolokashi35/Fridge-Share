@@ -35,7 +35,7 @@ export default function MyListings() {
         {loading ? <div>Loading…</div> : (
           <div className="market-grid">
             {items.length ? items.map(it => (
-              <div key={it.id} className="market-card">
+              <div key={it._id} className="market-card">
                 <img src={it.img} alt={it.name} className="market-img" />
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>
@@ -45,7 +45,7 @@ export default function MyListings() {
                   <p className="market-card-meta">Purchased: {it.purchaseDate ? new Date(it.purchaseDate).toLocaleDateString() : 'N/A'}</p>
                   {it.expiration && <p className="market-card-meta">Expires: {new Date(it.expiration).toLocaleDateString()}</p>}
                   <p className="market-card-desc">{it.description}</p>
-                  <button className="market-card-btn" onClick={() => nav(`/edit/${it.id}`)}>Edit</button>
+                  <button className="market-card-btn" onClick={() => nav(`/edit/${it._id}`)}>Edit</button>
                 </div>
               </div>
             )) : <p className="market-empty">No items posted yet.</p>}

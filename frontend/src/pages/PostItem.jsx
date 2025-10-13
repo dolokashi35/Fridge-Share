@@ -115,18 +115,57 @@ export default function PostItem() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!confirmedName || !purchaseDate || !quantity || transferMethods.length === 0) {
       alert("Please fill out all required fields.");
       return;
     }
+    
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/marketplace");
+    
+    try {
+      // Get current user info
+      const user = JSON.parse(localStorage.getItem('fs_user'));
+      if (!user || !user.username) {
+        alert("Please log in to post items.");
+        navigate("/login");
+        return;
+      }
+
+      // Prepare item data
+      const itemData = {
+        name: confirmedName,
+        category: manualCategory || "Fresh", // Default category if none selected
+        price: parseFloat(price) || 0,
+        description: description || "",
+        quantity: parseInt(quantity),
+        purchaseDate: purchaseDate,
+        expirationDate: expiration || null,
+        listingDuration: parseInt(listingDuration),
+        transferMethods: transferMethods,
+        imageUrl: imageSrc || "", // Use captured image if available
+        username: user.username
+      };
+
+      // Submit to backend
+      const response = await axios.post(`${BACKEND_URL}/items`, itemData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+
+      console.log("✅ Item posted successfully:", response.data);
       alert("Item Posted Successfully!");
-    }, 1200);
+      navigate("/marketplace");
+      
+    } catch (error) {
+      console.error("❌ Error posting item:", error);
+      alert("Failed to post item. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

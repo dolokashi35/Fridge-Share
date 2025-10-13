@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import vision from "@google-cloud/vision";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { router as userRouter } from "./users.js"; // ✅ Import user routes
+import Item from "./models/Item.js"; // ✅ Import Item model
 
 dotenv.config();
 const app = express();
@@ -223,6 +224,117 @@ Return only JSON like this:
   } catch (err) {
     console.error("❌ Price generation failed:", err);
     res.status(500).json({ error: "Price generation failed" });
+  }
+});
+
+// ========================
+// 📦 ITEM ROUTES
+// ========================
+
+// GET /items - Get all active items
+app.get("/items", async (req, res) => {
+  try {
+    const items = await Item.find({ 
+      status: "active",
+      expiresAt: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+    
+    res.json(items);
+  } catch (err) {
+    console.error("❌ Error fetching items:", err);
+    res.status(500).json({ error: "Failed to fetch items" });
+  }
+});
+
+// GET /items/:id - Get single item
+app.get("/items/:id", async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    res.json(item);
+  } catch (err) {
+    console.error("❌ Error fetching item:", err);
+    res.status(500).json({ error: "Failed to fetch item" });
+  }
+});
+
+// POST /items - Create new item
+app.post("/items", async (req, res) => {
+  try {
+    const {
+      name,
+      category,
+      price,
+      description,
+      quantity,
+      purchaseDate,
+      expirationDate,
+      listingDuration,
+      transferMethods,
+      imageUrl,
+      username
+    } = req.body;
+
+    // Calculate expiration date
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + parseInt(listingDuration));
+
+    const item = new Item({
+      name,
+      category,
+      price: parseFloat(price),
+      description,
+      quantity: parseInt(quantity),
+      purchaseDate: new Date(purchaseDate),
+      expirationDate: expirationDate ? new Date(expirationDate) : null,
+      listingDuration: parseInt(listingDuration),
+      transferMethods,
+      imageUrl,
+      username,
+      expiresAt
+    });
+
+    await item.save();
+    res.status(201).json(item);
+  } catch (err) {
+    console.error("❌ Error creating item:", err);
+    res.status(500).json({ error: "Failed to create item" });
+  }
+});
+
+// PUT /items/:id - Update item
+app.put("/items/:id", async (req, res) => {
+  try {
+    const item = await Item.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    
+    res.json(item);
+  } catch (err) {
+    console.error("❌ Error updating item:", err);
+    res.status(500).json({ error: "Failed to update item" });
+  }
+});
+
+// DELETE /items/:id - Delete item
+app.delete("/items/:id", async (req, res) => {
+  try {
+    const item = await Item.findByIdAndDelete(req.params.id);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    res.json({ message: "Item deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting item:", err);
+    res.status(500).json({ error: "Failed to delete item" });
   }
 });
 

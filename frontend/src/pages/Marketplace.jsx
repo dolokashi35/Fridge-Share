@@ -15,7 +15,10 @@ const SAMPLE = [
 ];
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
-const categories = ["All", "Produce", "Meat", "Snacks"];
+const categories = [
+  "All", "Produce", "Dairy", "Baked Goods", "Meat", "Seafood",
+  "Frozen", "Fresh", "Drinks", "Snacks", "Canned", "Spices", "Sauces"
+];
 
 export default function Marketplace() {
   const [items, setItems] = useState([]);
@@ -125,7 +128,11 @@ export default function Marketplace() {
                 className="market-card"
                 onClick={() => nav(`/items/${it.id}`)}
               >
-                <img src={it.img} alt={it.name} className="market-img" />
+                <img 
+                  src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60"} 
+                  alt={it.name} 
+                  className="market-img" 
+                />
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>
                   <p className="market-card-cat">{it.category}</p>

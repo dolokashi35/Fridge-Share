@@ -51,6 +51,7 @@ export default function PostItem() {
       const data = res.data;
       setPredictedName(data.itemName || "Unknown");
       setConfirmedName(data.itemName || "Unknown");
+      // Use AI-generated description from text analysis
       setDescription(data.description || "");
       setPrice(data.price || "");
       setConfidence(data.confidence || "");

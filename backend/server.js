@@ -135,27 +135,73 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
     // Use best detection
     const bestDetection = allDetections[0] || { name: "Unknown item", confidence: 0.0 };
     
-    // Determine category based on item name
-    let category = "Fresh";
-    const itemName = bestDetection.name.toLowerCase();
-    if (itemName.includes('apple') || itemName.includes('banana') || itemName.includes('fruit') || itemName.includes('vegetable')) {
-      category = "Produce";
-    } else if (itemName.includes('milk') || itemName.includes('cheese') || itemName.includes('yogurt')) {
-      category = "Dairy";
-    } else if (itemName.includes('meat') || itemName.includes('chicken') || itemName.includes('beef')) {
-      category = "Meat";
+    // Use Gemini to analyze detected text and improve item name/description
+    let enhancedResult = {
+      itemName: bestDetection.name,
+      category: "Fresh",
+      description: "",
+      marketPrice: "1.00",
+      discountedPrice: "0.50"
+    };
+
+    if (text && text.trim().length > 0) {
+      try {
+        const geminiPrompt = `
+Analyze this detected text from a food item image: "${text}"
+
+Also consider these detected labels: ${allDetections.slice(0, 3).map(d => d.name).join(', ')}
+
+Provide:
+1. Most likely item name (be specific)
+2. Category (Produce, Dairy, Meat, etc.)
+3. Brief description based on the text
+
+Return JSON:
+{
+  "itemName": "specific item name",
+  "category": "category name",
+  "description": "brief description based on text"
+}
+`;
+
+        const response = await geminiModel.generateContent(geminiPrompt);
+        const geminiText = response.response.text();
+        
+        const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const aiResult = JSON.parse(jsonMatch[0]);
+          enhancedResult.itemName = aiResult.itemName || bestDetection.name;
+          enhancedResult.category = aiResult.category || "Fresh";
+          enhancedResult.description = aiResult.description || "";
+        }
+      } catch (e) {
+        console.warn("⚠️ Text analysis failed, using Vision API only");
+      }
     }
 
-    console.log(`📷 Enhanced Detection: ${bestDetection.name} (${allDetections.length} detections)`);
+    // Fallback category detection
+    if (enhancedResult.category === "Fresh") {
+      const itemName = enhancedResult.itemName.toLowerCase();
+      if (itemName.includes('apple') || itemName.includes('banana') || itemName.includes('fruit') || itemName.includes('vegetable')) {
+        enhancedResult.category = "Produce";
+      } else if (itemName.includes('milk') || itemName.includes('cheese') || itemName.includes('yogurt')) {
+        enhancedResult.category = "Dairy";
+      } else if (itemName.includes('meat') || itemName.includes('chicken') || itemName.includes('beef')) {
+        enhancedResult.category = "Meat";
+      }
+    }
+
+    console.log(`📷 Enhanced Detection: ${enhancedResult.itemName} (${allDetections.length} detections)`);
 
     res.json({
-      itemName: bestDetection.name,
-      category: category,
-      description: text ? `Text detected: ${text.substring(0, 50)}...` : "",
-      marketPrice: "1.00",
-      discountedPrice: "0.50",
+      itemName: enhancedResult.itemName,
+      category: enhancedResult.category,
+      description: enhancedResult.description,
+      marketPrice: enhancedResult.marketPrice,
+      discountedPrice: enhancedResult.discountedPrice,
       confidence: (bestDetection.confidence * 100).toFixed(1),
       detectedLabels: allDetections.map(d => d.name),
+      detectedText: text,
       aiEnhanced: true,
       detectionCount: allDetections.length
     });

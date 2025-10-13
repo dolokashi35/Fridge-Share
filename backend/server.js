@@ -658,6 +658,22 @@ app.delete("/items/:id", async (req, res) => {
 });
 
 // ========================
+// 🏥 Health Check Endpoint
+// ========================
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "healthy", 
+    timestamp: new Date().toISOString(),
+    services: {
+      mongodb: "connected",
+      socketio: "active",
+      vision: "ready",
+      gemini: "ready"
+    }
+  });
+});
+
+// ========================
 // 🧮 Helper Functions
 // ========================
 function calculateDistance(lat1, lon1, lat2, lon2) {

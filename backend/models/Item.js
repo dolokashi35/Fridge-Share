@@ -55,8 +55,40 @@ const itemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["active", "sold", "expired"],
+    enum: ["active", "sold", "expired", "handed_off"],
     default: "active"
+  },
+  handoffStatus: {
+    type: String,
+    enum: ["pending", "completed", "cancelled"],
+    default: null
+  },
+  handoffTo: {
+    type: String, // username of recipient
+    default: null
+  },
+  handoffDate: {
+    type: Date,
+    default: null
+  },
+  handoffNotes: {
+    type: String,
+    default: ""
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: false
+    },
+    name: {
+      type: String,
+      default: ""
+    }
   },
   createdAt: {
     type: Date,
@@ -72,5 +104,6 @@ const itemSchema = new mongoose.Schema({
 itemSchema.index({ status: 1, expiresAt: 1 });
 itemSchema.index({ username: 1 });
 itemSchema.index({ category: 1 });
+itemSchema.index({ location: '2dsphere' }); // Geospatial index for location queries
 
 export default mongoose.model('Item', itemSchema);

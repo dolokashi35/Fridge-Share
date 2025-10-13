@@ -10,11 +10,24 @@ import cors from "cors";
 import dotenv from "dotenv";
 import vision from "@google-cloud/vision";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import crypto from "crypto";
+import qrcode from "qrcode";
 import { router as userRouter } from "./users.js"; // ✅ Import user routes
 import Item from "./models/Item.js"; // ✅ Import Item model
+import Transaction from "./models/Transaction.js";
+import ChatRoom from "./models/ChatRoom.js";
 
 dotenv.config();
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["https://fridgeshare.vercel.app", "http://localhost:5173", "http://localhost:5174"],
+    credentials: true,
+  }
+});
 const port = process.env.PORT || 8080;
 
 // ========================
@@ -247,6 +260,158 @@ Return JSON:
     res.status(500).json({ error: "AI analysis failed" });
   } finally {
     await fs.unlink(imagePath).catch(() => {});
+  }
+});
+
+// ========================
+// 🤝 POST /api/handoff
+// ========================
+app.post("/api/handoff", async (req, res) => {
+  const { itemId, handoffTo, handoffNotes } = req.body;
+  
+  if (!itemId || !handoffTo) {
+    return res.status(400).json({ error: "Missing itemId or handoffTo" });
+  }
+
+  try {
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    // Check if item is still available
+    if (item.status !== "active") {
+      return res.status(400).json({ error: "Item is no longer available" });
+    }
+
+    // Update item with handoff information
+    item.handoffStatus = "pending";
+    item.handoffTo = handoffTo;
+    item.handoffNotes = handoffNotes || "";
+    item.handoffDate = new Date();
+    item.status = "handed_off";
+
+    await item.save();
+
+    console.log(`🤝 Handoff initiated: ${item.name} → ${handoffTo}`);
+    res.json({ 
+      success: true, 
+      message: "Handoff initiated successfully",
+      handoffStatus: item.handoffStatus,
+      handoffTo: item.handoffTo,
+      handoffDate: item.handoffDate
+    });
+  } catch (err) {
+    console.error("❌ Handoff error:", err);
+    res.status(500).json({ error: "Handoff failed" });
+  }
+});
+
+// ========================
+// ✅ POST /api/complete-handoff
+// ========================
+app.post("/api/complete-handoff", async (req, res) => {
+  const { itemId } = req.body;
+  
+  if (!itemId) {
+    return res.status(400).json({ error: "Missing itemId" });
+  }
+
+  try {
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    if (item.handoffStatus !== "pending") {
+      return res.status(400).json({ error: "Item is not in pending handoff status" });
+    }
+
+    // Complete the handoff
+    item.handoffStatus = "completed";
+    item.status = "sold";
+
+    await item.save();
+
+    console.log(`✅ Handoff completed: ${item.name} → ${item.handoffTo}`);
+    res.json({ 
+      success: true, 
+      message: "Handoff completed successfully",
+      handoffStatus: item.handoffStatus
+    });
+  } catch (err) {
+    console.error("❌ Complete handoff error:", err);
+    res.status(500).json({ error: "Complete handoff failed" });
+  }
+});
+
+// ========================
+// ❌ POST /api/cancel-handoff
+// ========================
+app.post("/api/cancel-handoff", async (req, res) => {
+  const { itemId } = req.body;
+  
+  if (!itemId) {
+    return res.status(400).json({ error: "Missing itemId" });
+  }
+
+  try {
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    if (item.handoffStatus !== "pending") {
+      return res.status(400).json({ error: "Item is not in pending handoff status" });
+    }
+
+    // Cancel the handoff and reactivate item
+    item.handoffStatus = "cancelled";
+    item.handoffTo = null;
+    item.handoffNotes = "";
+    item.handoffDate = null;
+    item.status = "active";
+
+    await item.save();
+
+    console.log(`❌ Handoff cancelled: ${item.name}`);
+    res.json({ 
+      success: true, 
+      message: "Handoff cancelled successfully",
+      status: item.status
+    });
+  } catch (err) {
+    console.error("❌ Cancel handoff error:", err);
+    res.status(500).json({ error: "Cancel handoff failed" });
+  }
+});
+
+// ========================
+// 📋 GET /api/handoffs/:username
+// ========================
+app.get("/api/handoffs/:username", async (req, res) => {
+  const { username } = req.params;
+  
+  try {
+    // Get items handed off TO this user
+    const receivedHandoffs = await Item.find({
+      handoffTo: username,
+      handoffStatus: "pending"
+    }).sort({ handoffDate: -1 });
+
+    // Get items handed off BY this user
+    const sentHandoffs = await Item.find({
+      username: username,
+      handoffStatus: { $in: ["pending", "completed"] }
+    }).sort({ handoffDate: -1 });
+
+    res.json({
+      received: receivedHandoffs,
+      sent: sentHandoffs
+    });
+  } catch (err) {
+    console.error("❌ Get handoffs error:", err);
+    res.status(500).json({ error: "Failed to fetch handoffs" });
   }
 });
 
@@ -493,8 +658,354 @@ app.delete("/items/:id", async (req, res) => {
 });
 
 // ========================
+// 🧮 Helper Functions
+// ========================
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  return distance;
+}
+
+// ========================
+// 🗺️ GET /api/items/nearby - Map-First Discovery
+// ========================
+app.get("/api/items/nearby", async (req, res) => {
+  const { lat, lng, radius = 5000 } = req.query; // radius in meters
+  
+  if (!lat || !lng) {
+    return res.status(400).json({ error: "Missing latitude or longitude" });
+  }
+
+  try {
+    const items = await Item.find({
+      status: "active",
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)]
+          },
+          $maxDistance: parseInt(radius)
+        }
+      }
+    }).limit(50);
+
+    // Add distance calculation
+    const itemsWithDistance = items.map(item => {
+      const distance = calculateDistance(
+        parseFloat(lat), parseFloat(lng),
+        item.location.coordinates[1], item.location.coordinates[0]
+      );
+      return {
+        ...item.toObject(),
+        distance: Math.round(distance * 100) / 100 // Round to 2 decimal places
+      };
+    });
+
+    res.json(itemsWithDistance);
+  } catch (err) {
+    console.error("❌ Nearby items error:", err);
+    res.status(500).json({ error: "Failed to fetch nearby items" });
+  }
+});
+
+// ========================
+// 💬 POST /api/transactions/start - Start Transaction & Chat
+// ========================
+app.post("/api/transactions/start", async (req, res) => {
+  const { itemId, buyerId, buyerUsername } = req.body;
+  
+  if (!itemId || !buyerId || !buyerUsername) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    if (item.status !== "active") {
+      return res.status(400).json({ error: "Item is no longer available" });
+    }
+
+    // Generate verification code and QR code
+    const verificationCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const qrCodeData = await qrcode.toDataURL(verificationCode);
+
+    // Create transaction
+    const transaction = new Transaction({
+      itemId,
+      sellerId: item.username,
+      buyerId,
+      verificationCode,
+      qrCode: qrCodeData,
+      chatRoomId: crypto.randomUUID()
+    });
+
+    await transaction.save();
+
+    // Create chat room
+    const chatRoom = new ChatRoom({
+      transactionId: transaction._id,
+      participants: [
+        { userId: item.username, username: item.username },
+        { userId: buyerId, username: buyerUsername }
+      ]
+    });
+
+    await chatRoom.save();
+
+    console.log(`💬 Transaction started: ${item.name} - ${buyerUsername} → ${item.username}`);
+
+    res.json({
+      success: true,
+      transaction: transaction,
+      chatRoom: chatRoom
+    });
+  } catch (err) {
+    console.error("❌ Start transaction error:", err);
+    res.status(500).json({ error: "Failed to start transaction" });
+  }
+});
+
+// ========================
+// 📍 POST /api/transactions/:id/location - Set Meeting Location
+// ========================
+app.post("/api/transactions/:id/location", async (req, res) => {
+  const { id } = req.params;
+  const { coordinates, name } = req.body;
+  
+  if (!coordinates || !name) {
+    return res.status(400).json({ error: "Missing coordinates or location name" });
+  }
+
+  try {
+    const transaction = await Transaction.findById(id);
+    if (!transaction) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    transaction.location = {
+      type: "Point",
+      coordinates,
+      name
+    };
+
+    await transaction.save();
+
+    res.json({ success: true, location: transaction.location });
+  } catch (err) {
+    console.error("❌ Set location error:", err);
+    res.status(500).json({ error: "Failed to set location" });
+  }
+});
+
+// ========================
+// ⏰ POST /api/transactions/:id/time - Set Pickup Time
+// ========================
+app.post("/api/transactions/:id/time", async (req, res) => {
+  const { id } = req.params;
+  const { start, end } = req.body;
+  
+  if (!start || !end) {
+    return res.status(400).json({ error: "Missing start or end time" });
+  }
+
+  try {
+    const transaction = await Transaction.findById(id);
+    if (!transaction) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    transaction.pickupWindow = {
+      start: new Date(start),
+      end: new Date(end)
+    };
+    transaction.status = "confirmed";
+
+    await transaction.save();
+
+    res.json({ success: true, pickupWindow: transaction.pickupWindow });
+  } catch (err) {
+    console.error("❌ Set time error:", err);
+    res.status(500).json({ error: "Failed to set pickup time" });
+  }
+});
+
+// ========================
+// ✅ POST /api/transactions/:id/verify - Verify Handoff
+// ========================
+app.post("/api/transactions/:id/verify", async (req, res) => {
+  const { id } = req.params;
+  const { verificationCode, userLocation } = req.body;
+  
+  if (!verificationCode) {
+    return res.status(400).json({ error: "Missing verification code" });
+  }
+
+  try {
+    const transaction = await Transaction.findById(id);
+    if (!transaction) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    if (transaction.verificationCode !== verificationCode.toUpperCase()) {
+      return res.status(400).json({ error: "Invalid verification code" });
+    }
+
+    // Check if user is within 50m of meeting location
+    if (userLocation && transaction.location) {
+      const distance = calculateDistance(
+        userLocation.lat, userLocation.lng,
+        transaction.location.coordinates[1], transaction.location.coordinates[0]
+      );
+      
+      if (distance > 0.05) { // 50 meters
+        return res.status(400).json({ error: "You must be within 50m of the meeting location" });
+      }
+    }
+
+    transaction.status = "completed";
+    transaction.completedAt = new Date();
+
+    // Update item status
+    await Item.findByIdAndUpdate(transaction.itemId, { status: "sold" });
+
+    await transaction.save();
+
+    res.json({ success: true, transaction });
+  } catch (err) {
+    console.error("❌ Verify transaction error:", err);
+    res.status(500).json({ error: "Failed to verify transaction" });
+  }
+});
+
+// ========================
+// 📋 GET /api/transactions/:userId - Get User Transactions
+// ========================
+app.get("/api/transactions/:userId", async (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const transactions = await Transaction.find({
+      $or: [{ sellerId: userId }, { buyerId: userId }]
+    }).populate('itemId').sort({ createdAt: -1 });
+
+    res.json(transactions);
+  } catch (err) {
+    console.error("❌ Get transactions error:", err);
+    res.status(500).json({ error: "Failed to fetch transactions" });
+  }
+});
+
+// ========================
+// 🔌 Socket.IO Events
+// ========================
+io.on('connection', (socket) => {
+  console.log(`👤 User connected: ${socket.id}`);
+
+  // Join chat room
+  socket.on('join-chat', async (data) => {
+    const { transactionId, userId } = data;
+    const roomName = `transaction-${transactionId}`;
+    socket.join(roomName);
+    
+    // Update user online status
+    await ChatRoom.findOneAndUpdate(
+      { transactionId, 'participants.userId': userId },
+      { 
+        $set: { 
+          'participants.$.isOnline': true,
+          'participants.$.lastSeen': new Date()
+        }
+      }
+    );
+    
+    socket.emit('joined-chat', { roomName, transactionId });
+    console.log(`👥 User ${userId} joined chat for transaction ${transactionId}`);
+  });
+
+  // Send message
+  socket.on('send-message', async (data) => {
+    const { transactionId, senderId, senderUsername, content, type = 'text', locationData } = data;
+    
+    try {
+      const chatRoom = await ChatRoom.findOne({ transactionId });
+      if (!chatRoom) return;
+
+      const message = {
+        senderId,
+        senderUsername,
+        content,
+        type,
+        locationData,
+        timestamp: new Date()
+      };
+
+      chatRoom.messages.push(message);
+      chatRoom.lastMessageAt = new Date();
+      await chatRoom.save();
+
+      // Broadcast to room
+      io.to(`transaction-${transactionId}`).emit('new-message', message);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  });
+
+  // Update location
+  socket.on('update-location', async (data) => {
+    const { transactionId, userId, coordinates } = data;
+    
+    try {
+      const transaction = await Transaction.findById(transactionId);
+      if (!transaction) return;
+
+      // Update user location in transaction
+      if (transaction.sellerId === userId) {
+        transaction.sellerLocation = {
+          type: 'Point',
+          coordinates,
+          lastUpdated: new Date()
+        };
+      } else if (transaction.buyerId === userId) {
+        transaction.buyerLocation = {
+          type: 'Point',
+          coordinates,
+          lastUpdated: new Date()
+        };
+      }
+
+      await transaction.save();
+
+      // Broadcast location update
+      io.to(`transaction-${transactionId}`).emit('location-updated', {
+        userId,
+        coordinates,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      console.error('Error updating location:', error);
+    }
+  });
+
+  // Disconnect
+  socket.on('disconnect', async () => {
+    console.log(`👤 User disconnected: ${socket.id}`);
+  });
+});
+
+// ========================
 // 🚀 Start Server
 // ========================
-app.listen(port, () =>
-  console.log(`🚀 FridgeShare backend running on port ${port} (Vision + Gemini + Auth)`)
-);
+server.listen(port, () => {
+  console.log(`🚀 FridgeShare backend running on port ${port} (Vision + Gemini + Auth + Socket.IO)`);
+});

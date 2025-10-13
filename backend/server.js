@@ -593,7 +593,8 @@ app.post("/items", async (req, res) => {
       listingDuration,
       transferMethods,
       imageUrl,
-      username
+      username,
+      location
     } = req.body;
 
     // Calculate expiration date
@@ -612,10 +613,12 @@ app.post("/items", async (req, res) => {
       transferMethods,
       imageUrl,
       username,
+      location: location || null, // Include location data
       expiresAt
     });
 
     await item.save();
+    console.log(`✅ Item created: ${item.name} at ${location?.name || 'No location'}`);
     res.status(201).json(item);
   } catch (err) {
     console.error("❌ Error creating item:", err);

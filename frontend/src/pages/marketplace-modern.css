@@ -135,16 +135,20 @@ html, body {
 
 .market-card-btn {
   flex: 1;
+  box-sizing: border-box;
   border: none;
   border-radius: 9999px;
   padding: 0.45rem 0; /* smaller to fit both */
   font-weight: 600;
   font-size: 0.85rem; /* slightly smaller text */
+  line-height: 1; /* consistent height */
   cursor: pointer;
   transition: background .2s ease, color .2s ease;
   display: flex;
   align-items: center;   /* center text vertically */
   justify-content: center; /* center text horizontally */
+  white-space: nowrap; /* prevent wrapping differences */
+  min-height: 34px; /* force equal button heights */
 }
 
 .market-card-btn.request {

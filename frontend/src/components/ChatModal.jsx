@@ -24,10 +24,12 @@ export default function ChatModal({ transaction, isOpen, onClose }) {
   const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
-    // Get current user from localStorage
-    const userProfile = localStorage.getItem('userProfile');
-    if (userProfile) {
-      setCurrentUser(JSON.parse(userProfile));
+    // Get current user from localStorage (prefer fs_user, fallback to userProfile)
+    const fsUser = localStorage.getItem('fs_user');
+    const legacy = localStorage.getItem('userProfile');
+    const parsed = fsUser ? JSON.parse(fsUser) : (legacy ? JSON.parse(legacy) : null);
+    if (parsed) {
+      setCurrentUser(parsed);
     }
     
     // Get user's current location

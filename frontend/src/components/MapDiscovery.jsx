@@ -82,11 +82,19 @@ export default function MapDiscovery() {
 
   const handleStartTransaction = async (item) => {
     try {
-      const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      // Read user from consistent storage key; fallback to legacy key
+      const storedFsUser = localStorage.getItem('fs_user');
+      const storedLegacy = localStorage.getItem('userProfile');
+      const parsed = storedFsUser ? JSON.parse(storedFsUser) : (storedLegacy ? JSON.parse(storedLegacy) : {});
+      const buyerUsername = parsed?.username;
+      if (!buyerUsername) {
+        alert('Please log in first.');
+        return;
+      }
       const response = await axios.post(`${BACKEND_URL}/api/transactions/start`, {
         itemId: item._id,
-        buyerId: userProfile.username,
-        buyerUsername: userProfile.username
+        buyerId: buyerUsername,
+        buyerUsername: buyerUsername
       });
 
       if (response.data.success) {

@@ -129,7 +129,7 @@ html, body {
 /* Buttons */
 .market-card-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-top: 0.75rem;
 }
 
@@ -137,11 +137,14 @@ html, body {
   flex: 1;
   border: none;
   border-radius: 9999px;
-  padding: 0.55rem 0;
+  padding: 0.45rem 0; /* smaller to fit both */
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem; /* slightly smaller text */
   cursor: pointer;
-  transition: background .2s ease;
+  transition: background .2s ease, color .2s ease;
+  display: flex;
+  align-items: center;   /* center text vertically */
+  justify-content: center; /* center text horizontally */
 }
 
 .market-card-btn.request {
@@ -154,13 +157,12 @@ html, body {
 }
 
 .market-card-btn.message {
-  background: transparent;
-  color: var(--primary);
-  border: 2px solid var(--primary);
+  background: #111; /* black button */
+  color: #fff;      /* white text */
 }
 
 .market-card-btn.message:hover {
-  background: var(--primary);
+  background: #000; /* darker on hover */
   color: #fff;
 }
 

@@ -1,4 +1,12 @@
-/* styles for the profile setup page */
+/* Profile Page — aligned with app design system (Inter/Poppins + red theme) */
+
+:root {
+  --color-primary: #dc2626; /* red-600 */
+  --color-primary-dark: #b91c1c; /* red-700 */
+  --color-black: #111827; /* near-black */
+  --color-border: #e5e7eb;
+  --color-bg: #f9fafb;
+}
 
 .profile-bg {
   min-height: 100vh;
@@ -6,8 +14,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: sans-serif;
-  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 50%, #34d399 100%);
+  font-family: 'Inter', sans-serif;
+  background: var(--color-bg);
 }
 
 .profile-card {
@@ -15,7 +23,7 @@
   max-width: 440px;
   background: #fff;
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.10);
   padding: 2.75rem 2.5rem 2.5rem 2.5rem;
   display: flex;
   flex-direction: column;
@@ -34,9 +42,10 @@
 
 .profile-title {
   text-align: center;
-  font-size: 1.5rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--color-black);
 }
 
 .profile-desc {
@@ -72,24 +81,26 @@
   transition: border 0.2s;
 }
 .profile-input:focus {
-  border-color: #16a34a;
-  box-shadow: 0 0 0 2px #bbf7d0;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(220,38,38,0.2);
 }
 
 .profile-btn {
   width: 100%;
-  background: #0f172a;
+  background: var(--color-primary);
   color: #fff;
   font-weight: 600;
   padding: 0.9rem 0;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   font-size: 1rem;
   border: none;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 .profile-btn:hover {
-  background: #1e293b;
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(220, 38, 38, 0.2);
 }
 .profile-btn:disabled {
   opacity: 0.6;

@@ -1,0 +1,320 @@
+/* Handoff Info */
+.handoff-info {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+  border-left: 4px solid #2563eb;
+}
+
+.handoff-info-text {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Item Detail Actions */
+.item-detail-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.item-detail-actions .market-card-btn {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Handoff Modal Styles */
+.handoff-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.handoff-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.handoff-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 24px;
+}
+
+.handoff-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.handoff-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.handoff-modal-close:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.handoff-modal-content {
+  padding: 0 24px 24px;
+}
+
+.handoff-item-info {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.handoff-item-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.handoff-item-details h4 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.handoff-item-price {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.handoff-item-category {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.handoff-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.handoff-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.handoff-form-group label {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.handoff-input,
+.handoff-textarea {
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.handoff-input:focus,
+.handoff-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.handoff-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.handoff-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #fecaca;
+}
+
+.handoff-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.handoff-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-width: 120px;
+}
+
+.handoff-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.handoff-btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.handoff-btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.handoff-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.handoff-btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+/* Handoff Status Badges */
+.handoff-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.handoff-status-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.handoff-status-completed {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.handoff-status-cancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Handoff Actions */
+.handoff-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.handoff-action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.handoff-action-btn-complete {
+  background: #059669;
+  color: white;
+}
+
+.handoff-action-btn-complete:hover {
+  background: #047857;
+}
+
+.handoff-action-btn-cancel {
+  background: #dc2626;
+  color: white;
+}
+
+.handoff-action-btn-cancel:hover {
+  background: #b91c1c;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .handoff-modal {
+    margin: 20px;
+    max-width: none;
+  }
+  
+  .handoff-modal-header {
+    padding: 20px 20px 0;
+  }
+  
+  .handoff-modal-content {
+    padding: 0 20px 20px;
+  }
+  
+  .handoff-item-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .handoff-item-image {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+  }
+  
+  .handoff-modal-actions {
+    flex-direction: column;
+  }
+  
+  .handoff-btn {
+    width: 100%;
+  }
+}

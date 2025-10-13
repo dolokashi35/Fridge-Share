@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./marketplace-modern.css"; // Keep styling import
+import "../components/handoff.css";
 
 const SAMPLE = [
   { id: 1, name: "Bananas", category: "Produce", price: 1.29, img: "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60" },
@@ -41,6 +42,24 @@ export default function Marketplace() {
     }
     fetchItems();
   }, [location]);
+
+  const getHandoffStatusBadge = (item) => {
+    if (!item.handoffStatus) return null;
+    
+    const statusClasses = {
+      pending: 'handoff-status-pending',
+      completed: 'handoff-status-completed',
+      cancelled: 'handoff-status-cancelled'
+    };
+
+    return (
+      <div className={`handoff-status-badge ${statusClasses[item.handoffStatus]}`}>
+        {item.handoffStatus === 'pending' && '⏳ Pending'}
+        {item.handoffStatus === 'completed' && '✅ Completed'}
+        {item.handoffStatus === 'cancelled' && '❌ Cancelled'}
+      </div>
+    );
+  };
 
   const filtered = useMemo(() => {
     let list = items.filter((it) => {
@@ -145,6 +164,8 @@ export default function Marketplace() {
                   <p className="market-card-meta">
                     Posted by: <b>{it.username || "Unknown"}</b>
                   </p>
+                  {/* Handoff Status Badge */}
+                  {getHandoffStatusBadge(it)}
                   <div className="market-card-actions">
                     <button
                       className="market-card-btn request"

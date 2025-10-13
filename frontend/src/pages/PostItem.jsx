@@ -23,6 +23,7 @@ export default function PostItem() {
   const [manualCategory, setManualCategory] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [detectedText, setDetectedText] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [expiration, setExpiration] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -48,13 +49,15 @@ export default function PostItem() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = res.data;
-      setPredictedName(data.itemName || "Unknown");
-      setConfirmedName(data.itemName || "Unknown");
-      // Use AI-generated description from text analysis
-      setDescription(data.description || "");
-      setPrice(data.price || "");
-      setConfidence(data.confidence || "");
+            const data = res.data;
+            setPredictedName(data.itemName || "Unknown");
+            setConfirmedName(data.itemName || "Unknown");
+            // Store detected text separately for description generation
+            setDetectedText(data.detectedText || "");
+            // Use AI-generated description from text analysis
+            setDescription(data.description || "");
+            setPrice(data.price || "");
+            setConfidence(data.confidence || "");
     } catch (err) {
       console.error("❌ AI analyze error:", err);
       alert("AI analysis failed. Please retry.");
@@ -68,6 +71,7 @@ export default function PostItem() {
     setPredictedName("");
     setConfirmedName("");
     setDescription("");
+    setDetectedText("");
     setPrice("");
     setConfidence("");
   };
@@ -88,6 +92,8 @@ export default function PostItem() {
       const res = await axios.post(`${BACKEND_URL}/api/generate-description`, {
         itemName: confirmedName,
         quantity: quantity || "1",
+        category: manualCategory,
+        detectedText: detectedText || "" // Pass the detected text from image analysis
       });
       setDescription(res.data.description);
     } catch (err) {

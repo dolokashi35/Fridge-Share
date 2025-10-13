@@ -254,23 +254,57 @@ Return JSON:
 // 💬 POST /api/generate-description
 // ========================
 app.post("/api/generate-description", async (req, res) => {
-  const { itemName, quantity, category } = req.body;
+  const { itemName, quantity, category, detectedText } = req.body;
   if (!itemName)
     return res.status(400).json({ error: "Missing itemName" });
 
   try {
-    // Simple template-based descriptions instead of AI
-    const templates = [
-      "Good condition. Need gone by weekend.",
-      "Fresh. Bought too many.",
-      "Expires next week.",
-      "Good quality. Moving out.",
-      "Fresh. Don't need anymore.",
-      "Good condition. Going home for break."
-    ];
+    let description = "";
     
-    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
-    const json = { description: randomTemplate };
+    // If we have detected text, use AI to create a smart description
+    if (detectedText && detectedText.trim().length > 0) {
+      const prompt = `Create a marketplace description for "${itemName}" using this product information: "${detectedText}"
+
+Requirements:
+- Use specific details from the text (brand, nutrition facts, features)
+- Keep under 80 characters
+- Be factual and appealing
+- Mention key selling points
+
+Examples:
+- "Zero sugar, 15g protein. Need gone by weekend."
+- "Organic brand, good condition. Moving out."
+- "Fresh, expires next week. Don't need anymore."
+
+Return JSON: { "description": "string" }`;
+
+      try {
+        const response = await geminiModel.generateContent(prompt);
+        const geminiText = response.response.text();
+        const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const aiResult = JSON.parse(jsonMatch[0]);
+          description = aiResult.description || "";
+        }
+      } catch (e) {
+        console.warn("⚠️ AI description generation failed, using fallback");
+      }
+    }
+    
+    // Fallback to simple templates if no text or AI fails
+    if (!description) {
+      const templates = [
+        "Good condition. Need gone by weekend.",
+        "Fresh. Bought too many.",
+        "Expires next week.",
+        "Good quality. Moving out.",
+        "Fresh. Don't need anymore.",
+        "Good condition. Going home for break."
+      ];
+      description = templates[Math.floor(Math.random() * templates.length)];
+    }
+    
+    const json = { description };
     
     console.log(`📝 Enhanced description for ${itemName}: ${json.description.substring(0, 50)}...`);
     res.json(json);

@@ -73,8 +73,16 @@ try {
 // 🤖 Gemini Setup
 // ========================
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-console.log("✅ Gemini 2.0 Flash initialized via API key");
+const geminiModel = genAI.getGenerativeModel({ 
+  model: "gemini-1.5-flash",
+  generationConfig: {
+    temperature: 0.1,
+    topK: 40,
+    topP: 0.95,
+    maxOutputTokens: 1024,
+  }
+});
+console.log("✅ Gemini 1.5 Flash (Enhanced) initialized via API key");
 
 // ========================
 // 🏠 Root Route
@@ -84,7 +92,7 @@ app.get("/", (_, res) =>
 );
 
 // ========================
-// 📸 POST /api/analyze — Vision Only (no auto description)
+// 📸 POST /api/analyze — Enhanced AI Analysis
 // ========================
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No image uploaded" });
@@ -93,52 +101,104 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
   const quantity = req.body.quantity || "1";
 
   try {
-    console.log("🧠 Analyzing image:", imagePath);
+    console.log("🧠 Enhanced AI analysis:", imagePath);
 
-    // Label detection
+    // Read image for Gemini
+    const imageBuffer = await fs.readFile(imagePath);
+    const imageBase64 = imageBuffer.toString('base64');
+
+    // Enhanced Vision API analysis
     const [labelResult] = await visionClient.labelDetection(imagePath);
+    const [objectResult] = await visionClient.objectLocalization(imagePath);
+    const [textResult] = await visionClient.textDetection(imagePath);
+    
     let labels = labelResult.labelAnnotations || [];
+    let objects = objectResult.localizedObjectAnnotations || [];
+    let text = textResult.fullTextAnnotation?.text || "";
 
-    // Fallbacks: Object + Text detection
-    if (!labels.length) {
-      console.warn("⚠️ No labels found, trying object localization...");
-      const [objRes] = await visionClient.objectLocalization(imagePath);
-      const objects = objRes.localizedObjectAnnotations || [];
-      if (objects.length)
-        labels = [{ description: objects[0].name, score: objects[0].score }];
+    // Use Gemini 1.5 Pro for advanced image understanding
+    const geminiPrompt = `
+    Analyze this food/grocery item image and provide:
+    1. Exact item name (be specific: "Red Delicious Apple" not just "Apple")
+    2. Category (Produce, Dairy, Meat, etc.)
+    3. Brief description (brand, size, condition)
+    4. Estimated retail price per unit in USD
+    5. Confidence level (0-100%)
+
+    Vision API detected: ${labels.map(l => l.description).join(', ')}
+    Objects: ${objects.map(o => o.name).join(', ')}
+    Text: ${text}
+
+    Return JSON format:
+    {
+      "itemName": "specific item name",
+      "category": "category name", 
+      "description": "brief description",
+      "estimatedPrice": "X.XX",
+      "confidence": 85
+    }
+    `;
+
+    const geminiResponse = await geminiModel.generateContent([
+      geminiPrompt,
+      {
+        inlineData: {
+          data: imageBase64,
+          mimeType: "image/jpeg"
+        }
+      }
+    ]);
+
+    const geminiText = geminiResponse.response.text();
+    console.log("🤖 Gemini response:", geminiText);
+
+    // Parse Gemini response
+    let aiResult;
+    try {
+      const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
+      aiResult = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (e) {
+      console.warn("⚠️ Failed to parse Gemini JSON");
     }
 
-    if (!labels.length) {
-      console.warn("⚠️ Trying text detection...");
-      const [textRes] = await visionClient.textDetection(imagePath);
-      const text = textRes.fullTextAnnotation?.text;
-      if (text) {
+    // Fallback to Vision API if Gemini fails
+    if (!aiResult || !aiResult.itemName) {
+      console.log("🔄 Falling back to Vision API");
+      if (!labels.length && objects.length) {
+        labels = [{ description: objects[0].name, score: objects[0].score }];
+      }
+      if (!labels.length && text) {
         const firstWord = text.split(/\s+/)[0];
         labels = [{ description: firstWord, score: 0.5 }];
       }
+      if (!labels.length) {
+        labels = [{ description: "Unknown item", score: 0.0 }];
+      }
+      
+      aiResult = {
+        itemName: labels[0].description,
+        category: "Fresh",
+        description: "",
+        estimatedPrice: "1.00",
+        confidence: (labels[0].score || 0.5) * 100
+      };
     }
 
-    // Final fallback
-    if (!labels.length)
-      labels = [{ description: "Unknown item", score: 0.0 }];
+    console.log(`📷 AI Detected: ${aiResult.itemName} (${aiResult.confidence}%)`);
 
-    const itemName = labels[0].description;
-    const confidence = labels[0].score || 0.5;
-
-    console.log(`📷 Detected: ${itemName} (${(confidence * 100).toFixed(1)}%)`);
-
-    // Return Vision-only result
     res.json({
-      itemName,
-      description: "",
-      marketPrice: "0.00",
-      discountedPrice: "0.00",
-      confidence: (confidence * 100).toFixed(1),
+      itemName: aiResult.itemName,
+      category: aiResult.category,
+      description: aiResult.description,
+      marketPrice: aiResult.estimatedPrice,
+      discountedPrice: (parseFloat(aiResult.estimatedPrice) * 0.5).toFixed(2),
+      confidence: aiResult.confidence.toString(),
       detectedLabels: labels.map((l) => l.description),
+      aiEnhanced: true
     });
   } catch (err) {
-    console.error("❌ Vision error:", err);
-    res.status(500).json({ error: "Vision analysis failed" });
+    console.error("❌ Enhanced analysis error:", err);
+    res.status(500).json({ error: "AI analysis failed" });
   } finally {
     await fs.unlink(imagePath).catch(() => {});
   }
@@ -148,14 +208,24 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
 // 💬 POST /api/generate-description
 // ========================
 app.post("/api/generate-description", async (req, res) => {
-  const { itemName, quantity } = req.body;
+  const { itemName, quantity, category } = req.body;
   if (!itemName)
     return res.status(400).json({ error: "Missing itemName" });
 
   try {
     const prompt = `
-Write a short, friendly (<200 chars) product description for "${itemName}" (quantity: ${quantity || 1})
-in the context of a community food sharing app.
+Write an engaging marketplace description for "${itemName}" (${quantity || 1} ${quantity > 1 ? 'items' : 'item'}, ${category || 'food item'}).
+
+Make it:
+- Appealing to college students
+- Honest about condition/quality
+- Include relevant details (brand, size, freshness, etc.)
+- Keep it concise but informative (<200 chars)
+- Use a friendly, casual tone
+
+Example format:
+"Fresh [item] from [store/brand]! [condition details]. [quantity info]. [why selling]. Perfect for [use case]."
+
 Return JSON: { "description": "string" }
 `;
 
@@ -163,10 +233,12 @@ Return JSON: { "description": "string" }
     const text = result.response.text();
     const match = text.match(/\{[\s\S]*\}/);
     const json = match ? JSON.parse(match[0]) : { description: text.trim() };
+    
+    console.log(`📝 Enhanced description for ${itemName}: ${json.description.substring(0, 50)}...`);
     res.json(json);
   } catch (err) {
-    console.error("❌ Description generation failed:", err);
-    res.status(500).json({ error: "Generation failed" });
+    console.error("❌ Enhanced description generation failed:", err);
+    res.status(500).json({ error: "Description generation failed" });
   }
 });
 
@@ -174,55 +246,65 @@ Return JSON: { "description": "string" }
 // 💰 POST /api/suggest-price
 // ========================
 // ========================
-// 💰 POST /api/suggest-price (Smarter logic: scale by quantity)
+// 💰 POST /api/suggest-price — Enhanced AI Pricing
 // ========================
 app.post("/api/suggest-price", async (req, res) => {
-  const { itemName, quantity } = req.body;
+  const { itemName, quantity, category } = req.body;
   if (!itemName || !quantity)
     return res.status(400).json({ error: "Missing itemName or quantity" });
 
   try {
-    // 1️⃣ Ask Gemini for *base price per single unit*
-    const prompt = `
-You are an AI pricing assistant. Estimate the average *U.S. retail price* for ONE unit of "${itemName}".
-Return only JSON like this:
-{ "basePrice": "string (USD)" }
-`;
+    // Simplified but effective pricing prompt
+    const prompt = `Estimate the US retail price for "${itemName}" (${category || 'food item'}). 
+    
+Return JSON: {"retailPrice": "X.XX", "suggestedPrice": "X.XX", "reasoning": "brief explanation"}`;
 
     const response = await geminiModel.generateContent(prompt);
     const text = response.response.text();
+    console.log("💰 Gemini pricing response:", text);
 
-    // 2️⃣ Parse safely
-    let json;
+    // Parse response
+    let pricingData;
     try {
-      json = JSON.parse(text);
-    } catch {
-      const match = text.match(/\{[\s\S]*\}/);
-      json = match ? JSON.parse(match[0]) : { basePrice: "1.00" };
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      pricingData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (e) {
+      console.warn("⚠️ Failed to parse pricing JSON");
     }
 
-    // 3️⃣ Extract numeric price
-    const base = parseFloat((json.basePrice || "1.00").replace(/[^0-9.]/g, "")) || 1.0;
+    // Fallback pricing if AI fails
+    if (!pricingData || !pricingData.retailPrice) {
+      console.log("🔄 Using fallback pricing");
+      const fallbackPrice = Math.max(0.50, Math.min(15.00, itemName.length * 0.3));
+      pricingData = {
+        retailPrice: fallbackPrice.toFixed(2),
+        suggestedPrice: (fallbackPrice * 0.7).toFixed(2),
+        reasoning: "Estimated based on item characteristics"
+      };
+    }
 
-    // 4️⃣ Compute total & markdown
     const qty = parseFloat(quantity) || 1;
-    const marketPrice = base * qty;
-    const discountedPrice = marketPrice * 0.5;
+    const retailPerUnit = parseFloat(pricingData.retailPrice);
+    const suggestedPerUnit = parseFloat(pricingData.suggestedPrice);
+    
+    const totalRetail = retailPerUnit * qty;
+    const totalSuggested = suggestedPerUnit * qty;
 
-    // 5️⃣ Respond
     res.json({
-      marketPrice: marketPrice.toFixed(2),
-      discountedPrice: discountedPrice.toFixed(2),
-      basePrice: base.toFixed(2),
+      marketPrice: totalRetail.toFixed(2),
+      discountedPrice: totalSuggested.toFixed(2),
+      basePrice: retailPerUnit.toFixed(2),
       quantity: qty,
+      reasoning: pricingData.reasoning,
+      aiEnhanced: true
     });
 
     console.log(
-      `💰 Base: $${base.toFixed(2)} x ${qty} = $${marketPrice.toFixed(2)} → discounted $${discountedPrice.toFixed(2)}`
+      `💰 Enhanced Pricing: ${itemName} - Retail: $${totalRetail.toFixed(2)}, Suggested: $${totalSuggested.toFixed(2)}`
     );
 
   } catch (err) {
-    console.error("❌ Price generation failed:", err);
+    console.error("❌ Enhanced price generation failed:", err);
     res.status(500).json({ error: "Price generation failed" });
   }
 });

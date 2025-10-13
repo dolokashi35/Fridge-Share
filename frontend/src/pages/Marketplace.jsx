@@ -14,7 +14,7 @@ const SAMPLE = [
   { id: 8, name: "Chocolate Bar", category: "Snacks", price: 1.5, img: "https://images.unsplash.com/photo-1560963685-7d8a4e5728b8?auto=format&fit=crop&w=600&q=60" },
 ];
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const categories = [
   "All", "Produce", "Dairy", "Baked Goods", "Meat", "Seafood",
   "Frozen", "Fresh", "Drinks", "Snacks", "Canned", "Spices", "Sauces"

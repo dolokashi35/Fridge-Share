@@ -4,7 +4,7 @@ import axios from 'axios';
 import './login.css';
 import logo from '../assets/fridgeshare-logo.png';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export default function Login({ onAuth }) {
   const [username, setUsername] = useState('');

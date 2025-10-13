@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./postitem.css";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const CATEGORIES = [
   "Produce","Dairy","Baked Goods","Meat","Seafood","Frozen","Fresh","Drinks","Snacks","Canned","Spices","Sauces"
 ];

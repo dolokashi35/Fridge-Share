@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
+import MeetingLocationPicker from "../components/MeetingLocationPicker";
 import "./postitem.css";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -32,6 +33,26 @@ export default function PostItem() {
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  
+  // Location states
+  const [pickupLocation, setPickupLocation] = useState(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+
+  // Get user's current location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([latitude, longitude]);
+        },
+        (err) => {
+          console.error("Error getting user location:", err);
+        }
+      );
+    }
+  }, []);
 
   const captureImage = async () => {
     if (!camRef.current) return;
@@ -84,6 +105,11 @@ export default function PostItem() {
     );
   };
 
+  // Handle pickup location selection
+  const handleLocationConfirm = (location) => {
+    setPickupLocation(location);
+  };
+
   // ✨ Generate AI Description
   const generateDescription = async () => {
     if (!confirmedName) return alert("Please enter an item name first!");
@@ -124,8 +150,8 @@ export default function PostItem() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!confirmedName || !purchaseDate || !quantity || transferMethods.length === 0) {
-      alert("Please fill out all required fields.");
+    if (!confirmedName || !purchaseDate || !quantity || transferMethods.length === 0 || !pickupLocation) {
+      alert("Please fill out all required fields including pickup location.");
       return;
     }
     
@@ -152,7 +178,12 @@ export default function PostItem() {
         listingDuration: parseInt(listingDuration),
         transferMethods: transferMethods,
         imageUrl: imageSrc || "", // Use captured image if available
-        username: user.username
+        username: user.username,
+        location: {
+          type: 'Point',
+          coordinates: [pickupLocation.coordinates[1], pickupLocation.coordinates[0]], // [lng, lat]
+          name: pickupLocation.name
+        }
       };
 
       // Submit to backend
@@ -339,6 +370,47 @@ export default function PostItem() {
                 </div>
               </div>
             </section>
+
+            {/* 4️⃣ Pickup Location */}
+            <section className="post-card">
+              <h2>4. Pickup Location <span style={{ color: "#ef4444" }}>*</span></h2>
+              <div className="post-row">
+                <div style={{ flex: "1 1 100%" }}>
+                  <label className="post-label">Where can buyers pick up this item?</label>
+                  <div className="location-selection">
+                    {pickupLocation ? (
+                      <div className="selected-location-display">
+                        <div className="location-info">
+                          <span className="location-icon">📍</span>
+                          <div className="location-details">
+                            <div className="location-name">{pickupLocation.name}</div>
+                            <div className="location-type">{pickupLocation.type}</div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowLocationPicker(true)}
+                          className="change-location-btn"
+                        >
+                          Change Location
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowLocationPicker(true)}
+                        className="select-location-btn"
+                      >
+                        📍 Select Pickup Location
+                      </button>
+                    )}
+                  </div>
+                  <p className="location-help-text">
+                    Choose a safe, accessible location where buyers can pick up your item.
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
 
           {/* RIGHT COLUMN */}
@@ -435,6 +507,15 @@ export default function PostItem() {
           </p>
         </div>
       )}
+
+      {/* Meeting Location Picker Modal */}
+      <MeetingLocationPicker
+        isOpen={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onLocationConfirm={handleLocationConfirm}
+        userLocation={userLocation}
+        currentLocation={pickupLocation}
+      />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import axios from 'axios';
+import MeetingLocationPicker from './MeetingLocationPicker';
+import TimeScheduler from './TimeScheduler';
 import './ChatModal.css';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -13,12 +15,32 @@ export default function ChatModal({ transaction, isOpen, onClose }) {
   const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // Meeting location and time scheduling states
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showTimeScheduler, setShowTimeScheduler] = useState(false);
+  const [meetingLocation, setMeetingLocation] = useState(null);
+  const [pickupTimeSlot, setPickupTimeSlot] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     // Get current user from localStorage
     const userProfile = localStorage.getItem('userProfile');
     if (userProfile) {
       setCurrentUser(JSON.parse(userProfile));
+    }
+    
+    // Get user's current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([latitude, longitude]);
+        },
+        (err) => {
+          console.error("Error getting user location:", err);
+        }
+      );
     }
   }, []);
 
@@ -135,6 +157,62 @@ export default function ChatModal({ transaction, isOpen, onClose }) {
     );
   };
 
+  // Handle meeting location selection
+  const handleLocationConfirm = async (location) => {
+    setMeetingLocation(location);
+    
+    try {
+      // Update transaction with meeting location
+      await axios.post(`${BACKEND_URL}/api/transactions/${transaction._id}/location`, {
+        location: {
+          type: 'Point',
+          coordinates: [location.coordinates[1], location.coordinates[0]], // [lng, lat]
+          name: location.name
+        }
+      });
+
+      // Send message about location selection
+      socket.emit('send-message', {
+        transactionId: transaction._id,
+        senderId: currentUser.username,
+        senderUsername: currentUser.username,
+        content: `📍 Meeting location set: ${location.name}`,
+        type: 'text'
+      });
+    } catch (err) {
+      console.error('Error setting meeting location:', err);
+      setError('Failed to set meeting location');
+    }
+  };
+
+  // Handle pickup time selection
+  const handleTimeConfirm = async (timeSlot) => {
+    setPickupTimeSlot(timeSlot);
+    
+    try {
+      // Update transaction with pickup time
+      await axios.post(`${BACKEND_URL}/api/transactions/${transaction._id}/time`, {
+        pickupWindow: {
+          start: timeSlot.startTime,
+          end: timeSlot.endTime
+        }
+      });
+
+      // Send message about time selection
+      const timeString = `${timeSlot.startTime.toLocaleDateString()} ${timeSlot.startTime.toLocaleTimeString()} - ${timeSlot.endTime.toLocaleTimeString()}`;
+      socket.emit('send-message', {
+        transactionId: transaction._id,
+        senderId: currentUser.username,
+        senderUsername: currentUser.username,
+        content: `⏰ Pickup time set: ${timeString}`,
+        type: 'text'
+      });
+    } catch (err) {
+      console.error('Error setting pickup time:', err);
+      setError('Failed to set pickup time');
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -190,11 +268,29 @@ export default function ChatModal({ transaction, isOpen, onClose }) {
           </div>
         )}
 
+        {/* Transaction Actions */}
+        <div className="transaction-actions">
+          <button 
+            className="action-btn location-action"
+            onClick={() => setShowLocationPicker(true)}
+            title="Set Meeting Location"
+          >
+            📍 Set Location
+          </button>
+          <button 
+            className="action-btn time-action"
+            onClick={() => setShowTimeScheduler(true)}
+            title="Schedule Pickup Time"
+          >
+            ⏰ Pick Time
+          </button>
+        </div>
+
         <div className="chat-input">
           <button 
             className="location-btn"
             onClick={shareLocation}
-            title="Share Location"
+            title="Share Current Location"
           >
             📍
           </button>
@@ -216,6 +312,23 @@ export default function ChatModal({ transaction, isOpen, onClose }) {
           </button>
         </div>
       </div>
+
+      {/* Meeting Location Picker Modal */}
+      <MeetingLocationPicker
+        isOpen={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onLocationConfirm={handleLocationConfirm}
+        userLocation={userLocation}
+        currentLocation={meetingLocation}
+      />
+
+      {/* Time Scheduler Modal */}
+      <TimeScheduler
+        isOpen={showTimeScheduler}
+        onClose={() => setShowTimeScheduler(false)}
+        onTimeConfirm={handleTimeConfirm}
+        currentTimeSlot={pickupTimeSlot}
+      />
     </div>
   );
 }

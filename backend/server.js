@@ -176,26 +176,18 @@ app.post("/api/generate-description", async (req, res) => {
     return res.status(400).json({ error: "Missing itemName" });
 
   try {
-    const prompt = `
-Write an engaging marketplace description for "${itemName}" (${quantity || 1} ${quantity > 1 ? 'items' : 'item'}, ${category || 'food item'}).
-
-Make it:
-- Appealing to college students
-- Honest about condition/quality
-- Include relevant details (brand, size, freshness, etc.)
-- Keep it concise but informative (<200 chars)
-- Use a friendly, casual tone
-
-Example format:
-"Fresh [item] from [store/brand]! [condition details]. [quantity info]. [why selling]. Perfect for [use case]."
-
-Return JSON: { "description": "string" }
-`;
-
-    const result = await geminiModel.generateContent(prompt);
-    const text = result.response.text();
-    const match = text.match(/\{[\s\S]*\}/);
-    const json = match ? JSON.parse(match[0]) : { description: text.trim() };
+    // Simple template-based descriptions instead of AI
+    const templates = [
+      "Good condition. Need gone by weekend.",
+      "Fresh. Bought too many.",
+      "Expires next week.",
+      "Good quality. Moving out.",
+      "Fresh. Don't need anymore.",
+      "Good condition. Going home for break."
+    ];
+    
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    const json = { description: randomTemplate };
     
     console.log(`📝 Enhanced description for ${itemName}: ${json.description.substring(0, 50)}...`);
     res.json(json);

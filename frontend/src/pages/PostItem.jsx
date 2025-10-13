@@ -185,9 +185,71 @@ export default function PostItem() {
         <div className="post-layout">
           {/* LEFT COLUMN */}
           <div className="post-left">
-            {/* 1️⃣ Basic Info */}
+            {/* 1️⃣ Photo Capture - FIRST STEP */}
             <section className="post-card">
-              <h2>1. Basic Information</h2>
+              <h2>1. 📸 Take Photo</h2>
+              <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
+                Take a clear photo of your item. AI will help fill in the details!
+              </p>
+              
+              {imageSrc ? (
+                <div style={{ textAlign: "center" }}>
+                  <img
+                    src={imageSrc}
+                    alt="Captured"
+                    className="post-webcam"
+                    style={{ maxWidth: "100%", borderRadius: "1rem", marginBottom: "1rem" }}
+                  />
+                  {predictedName && (
+                    <div style={{ 
+                      background: "#f0f9ff", 
+                      padding: "0.75rem", 
+                      borderRadius: "0.5rem", 
+                      marginBottom: "1rem",
+                      border: "1px solid #0ea5e9"
+                    }}>
+                      <p style={{ margin: 0, fontSize: "0.9rem" }}>
+                        <strong>AI Detected:</strong> {predictedName} {confidence && `(${confidence}% confidence)`}
+                      </p>
+                    </div>
+                  )}
+                  <button
+                    onClick={retakeImage}
+                    className="post-btn"
+                    style={{
+                      background: "#d1d5db",
+                      color: "#374151",
+                      width: "100%",
+                    }}
+                  >
+                    📷 Retake Photo
+                  </button>
+                </div>
+              ) : (
+                <div style={{ textAlign: "center" }}>
+                  <Webcam
+                    ref={camRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={{ facingMode: "environment" }}
+                    className="post-webcam"
+                    style={{ marginBottom: "1rem" }}
+                  />
+                  <button
+                    onClick={captureImage}
+                    className="scan-btn"
+                    style={{ width: "100%" }}
+                    disabled={analyzing}
+                  >
+                    {analyzing ? "🤖 Analyzing..." : "📸 Scan Item with AI"}
+                  </button>
+                </div>
+              )}
+            </section>
+
+            {/* 2️⃣ Confirm AI Suggestions */}
+            <section className="post-card">
+              <h2>2. ✅ Confirm Details</h2>
               <div className="post-row">
                 <div style={{ flex: "1 1 100%" }}>
                   <label className="post-label">
@@ -254,33 +316,12 @@ export default function PostItem() {
               </div>
             </section>
 
-            {/* 2️⃣ Description */}
+            {/* 3️⃣ Pricing */}
             <section className="post-card">
-              <h2>2. Description</h2>
-              <textarea
-                className="post-textarea"
-                rows="4"
-                placeholder="Add details or reason for posting..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              ></textarea>
-
-              <button
-                onClick={generateDescription}
-                className="scan-btn mt-3"
-                style={{ width: "100%" }}
-                disabled={aiLoading}
-              >
-                {aiLoading ? "Loading..." : "✨ Generate AI Description"}
-              </button>
-            </section>
-
-            {/* 3️⃣ Pricing & Logistics */}
-            <section className="post-card">
-              <h2>3. Pricing & Logistics</h2>
+              <h2>3. 💰 Set Price</h2>
               <div className="post-row">
-                <div>
-                  <label className="post-label">Suggested Price ($)</label>
+                <div style={{ flex: "1" }}>
+                  <label className="post-label">Your Price ($)</label>
                   <input
                     type="number"
                     min="0"
@@ -290,16 +331,45 @@ export default function PostItem() {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                   />
+                </div>
+                <div style={{ flex: "0 0 auto", marginLeft: "1rem" }}>
                   <button
                     onClick={generateSuggestedPrice}
-                    className="scan-btn mt-2"
-                    style={{ width: "100%" }}
+                    className="scan-btn"
+                    style={{ width: "100%", minWidth: "120px" }}
                     disabled={aiLoading}
                   >
-                    {aiLoading ? "Loading..." : "💰 Generate Suggested Price"}
+                    {aiLoading ? "..." : "💰 AI Price"}
                   </button>
                 </div>
+              </div>
+            </section>
 
+            {/* 4️⃣ Description */}
+            <section className="post-card">
+              <h2>4. 📝 Description</h2>
+              <textarea
+                className="post-textarea"
+                rows="3"
+                placeholder="Brief description or reason for selling..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              ></textarea>
+
+              <button
+                onClick={generateDescription}
+                className="scan-btn mt-2"
+                style={{ width: "100%" }}
+                disabled={aiLoading}
+              >
+                {aiLoading ? "..." : "✨ AI Description"}
+              </button>
+            </section>
+
+            {/* 5️⃣ Logistics */}
+            <section className="post-card">
+              <h2>5. 🚚 Logistics</h2>
+              <div className="post-row">
                 <div>
                   <label className="post-label">Listing Duration *</label>
                   <select
@@ -334,58 +404,7 @@ export default function PostItem() {
             </section>
           </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="post-right">
-            <section className="media-section">
-              <h2>Item Media</h2>
-
-              {imageSrc ? (
-                <div style={{ textAlign: "center" }}>
-                  <img
-                    src={imageSrc}
-                    alt="Captured"
-                    className="post-webcam"
-                    style={{ maxWidth: "100%", borderRadius: "1rem" }}
-                  />
-                  {predictedName && (
-                    <p>
-                      Prediction: <b>{predictedName}</b>{" "}
-                      {confidence && `(${confidence}%)`}
-                    </p>
-                  )}
-                  <button
-                    onClick={retakeImage}
-                    className="post-btn"
-                    style={{
-                      background: "#d1d5db",
-                      color: "#374151",
-                      width: "100%",
-                    }}
-                  >
-                    Retake Photo
-                  </button>
-                </div>
-              ) : (
-                <div style={{ textAlign: "center" }}>
-                  <Webcam
-                    ref={camRef}
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    videoConstraints={{ facingMode: "environment" }}
-                    className="post-webcam"
-                  />
-                  <button
-                    onClick={captureImage}
-                    className="scan-btn"
-                    style={{ marginTop: "1rem" }}
-                    disabled={analyzing}
-                  >
-                    {analyzing ? "Analyzing..." : "Scan Item with AI"}
-                  </button>
-                </div>
-              )}
-            </section>
-          </div>
+          {/* RIGHT COLUMN - REMOVED, everything flows left to right now */}
         </div>
       </div>
 

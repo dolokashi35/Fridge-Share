@@ -131,6 +131,7 @@ html, body {
   display: flex;
   gap: 0.4rem;
   margin-top: 0.75rem;
+  align-items: stretch; /* ensure equal heights */
 }
 
 .market-card-btn {
@@ -138,7 +139,7 @@ html, body {
   box-sizing: border-box;
   border: none;
   border-radius: 9999px;
-  padding: 0.45rem 0; /* smaller to fit both */
+  padding: 0 0.75rem; /* horizontal padding only */
   font-weight: 600;
   font-size: 0.85rem; /* slightly smaller text */
   line-height: 1; /* consistent height */
@@ -148,7 +149,7 @@ html, body {
   align-items: center;   /* center text vertically */
   justify-content: center; /* center text horizontally */
   white-space: nowrap; /* prevent wrapping differences */
-  min-height: 34px; /* force equal button heights */
+  height: 36px; /* force equal button heights */
 }
 
 .market-card-btn.request {

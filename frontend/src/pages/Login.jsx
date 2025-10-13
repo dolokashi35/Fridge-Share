@@ -45,7 +45,7 @@ export default function Login({ onAuth }) {
     <div className="login-bg">
       <div className="login-card">
         <div className="login-icon">
-          <span role="img" aria-label="fridge" style={{ fontSize: 32 }}>🧊</span>
+          <span role="img" aria-label="fridge" style={{ fontSize: 28 }}>🧊</span>
         </div>
 
         <div className="login-title">
@@ -56,12 +56,12 @@ export default function Login({ onAuth }) {
           {mode === 'login' ? 'Sign in to your account' : 'Create a new account'}
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit} style={{ width: '100%' }}>
+        <form className="login-form" onSubmit={handleSubmit}>
           <input
             className="login-input"
             value={username}
             onChange={e => setUsername(e.target.value)}
-            placeholder="Username"
+            placeholder="Email address (.edu)"
             autoFocus
             autoComplete="username"
             required
@@ -77,31 +77,31 @@ export default function Login({ onAuth }) {
           />
           {error && <div className="login-error">{error}</div>}
           <button className="login-btn" type="submit">
-            {mode === 'login' ? 'Login' : 'Sign Up'}
+            {mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
         <div className="login-switch">
           {mode === 'login' ? (
             <span>
-              New?{' '}
+              Don't have an account?{' '}
               <button
                 className="login-link"
                 type="button"
                 onClick={() => setMode('register')}
               >
-                Sign Up
+                Create Account
               </button>
             </span>
           ) : (
             <span>
-              Have an account?{' '}
+              Already have an account?{' '}
               <button
                 className="login-link"
                 type="button"
                 onClick={() => setMode('login')}
               >
-                Login
+                Sign In
               </button>
             </span>
           )}

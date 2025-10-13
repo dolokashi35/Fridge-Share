@@ -36,7 +36,7 @@ export default function MyListings() {
           <div className="market-grid">
             {items.length ? items.map(it => (
               <div key={it._id} className="market-card">
-                <img src={it.img} alt={it.name} className="market-img" />
+                <img src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60"} alt={it.name} className="market-img" />
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>
                   <p className="market-card-cat">{it.category}</p>

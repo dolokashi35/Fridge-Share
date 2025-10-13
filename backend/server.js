@@ -73,16 +73,8 @@ try {
 // 🤖 Gemini Setup
 // ========================
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const geminiModel = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash",
-  generationConfig: {
-    temperature: 0.1,
-    topK: 40,
-    topP: 0.95,
-    maxOutputTokens: 1024,
-  }
-});
-console.log("✅ Gemini 1.5 Flash (Enhanced) initialized via API key");
+const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+console.log("✅ Gemini 2.0 Flash initialized via API key");
 
 // ========================
 // 🏠 Root Route
@@ -92,7 +84,7 @@ app.get("/", (_, res) =>
 );
 
 // ========================
-// 📸 POST /api/analyze — Enhanced AI Analysis
+// 📸 POST /api/analyze — Enhanced Vision API (Reliable)
 // ========================
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No image uploaded" });
@@ -101,13 +93,9 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
   const quantity = req.body.quantity || "1";
 
   try {
-    console.log("🧠 Enhanced AI analysis:", imagePath);
+    console.log("🧠 Enhanced Vision analysis:", imagePath);
 
-    // Read image for Gemini
-    const imageBuffer = await fs.readFile(imagePath);
-    const imageBase64 = imageBuffer.toString('base64');
-
-    // Enhanced Vision API analysis
+    // Enhanced Vision API analysis with multiple detection methods
     const [labelResult] = await visionClient.labelDetection(imagePath);
     const [objectResult] = await visionClient.objectLocalization(imagePath);
     const [textResult] = await visionClient.textDetection(imagePath);
@@ -116,85 +104,60 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
     let objects = objectResult.localizedObjectAnnotations || [];
     let text = textResult.fullTextAnnotation?.text || "";
 
-    // Use Gemini 1.5 Pro for advanced image understanding
-    const geminiPrompt = `
-    Analyze this food/grocery item image and provide:
-    1. Exact item name (be specific: "Red Delicious Apple" not just "Apple")
-    2. Category (Produce, Dairy, Meat, etc.)
-    3. Brief description (brand, size, condition)
-    4. Estimated retail price per unit in USD
-    5. Confidence level (0-100%)
-
-    Vision API detected: ${labels.map(l => l.description).join(', ')}
-    Objects: ${objects.map(o => o.name).join(', ')}
-    Text: ${text}
-
-    Return JSON format:
-    {
-      "itemName": "specific item name",
-      "category": "category name", 
-      "description": "brief description",
-      "estimatedPrice": "X.XX",
-      "confidence": 85
-    }
-    `;
-
-    const geminiResponse = await geminiModel.generateContent([
-      geminiPrompt,
-      {
-        inlineData: {
-          data: imageBase64,
-          mimeType: "image/jpeg"
-        }
+    // Combine all detection results for better accuracy
+    let allDetections = [];
+    
+    // Add high-confidence labels
+    labels.forEach(label => {
+      if (label.score > 0.6) {
+        allDetections.push({
+          name: label.description,
+          confidence: label.score,
+          type: 'label'
+        });
       }
-    ]);
+    });
 
-    const geminiText = geminiResponse.response.text();
-    console.log("🤖 Gemini response:", geminiText);
+    // Add objects
+    objects.forEach(obj => {
+      if (obj.score > 0.5) {
+        allDetections.push({
+          name: obj.name,
+          confidence: obj.score,
+          type: 'object'
+        });
+      }
+    });
 
-    // Parse Gemini response
-    let aiResult;
-    try {
-      const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
-      aiResult = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    } catch (e) {
-      console.warn("⚠️ Failed to parse Gemini JSON");
+    // Sort by confidence
+    allDetections.sort((a, b) => b.confidence - a.confidence);
+
+    // Use best detection
+    const bestDetection = allDetections[0] || { name: "Unknown item", confidence: 0.0 };
+    
+    // Determine category based on item name
+    let category = "Fresh";
+    const itemName = bestDetection.name.toLowerCase();
+    if (itemName.includes('apple') || itemName.includes('banana') || itemName.includes('fruit') || itemName.includes('vegetable')) {
+      category = "Produce";
+    } else if (itemName.includes('milk') || itemName.includes('cheese') || itemName.includes('yogurt')) {
+      category = "Dairy";
+    } else if (itemName.includes('meat') || itemName.includes('chicken') || itemName.includes('beef')) {
+      category = "Meat";
     }
 
-    // Fallback to Vision API if Gemini fails
-    if (!aiResult || !aiResult.itemName) {
-      console.log("🔄 Falling back to Vision API");
-      if (!labels.length && objects.length) {
-        labels = [{ description: objects[0].name, score: objects[0].score }];
-      }
-      if (!labels.length && text) {
-        const firstWord = text.split(/\s+/)[0];
-        labels = [{ description: firstWord, score: 0.5 }];
-      }
-      if (!labels.length) {
-        labels = [{ description: "Unknown item", score: 0.0 }];
-      }
-      
-      aiResult = {
-        itemName: labels[0].description,
-        category: "Fresh",
-        description: "",
-        estimatedPrice: "1.00",
-        confidence: (labels[0].score || 0.5) * 100
-      };
-    }
-
-    console.log(`📷 AI Detected: ${aiResult.itemName} (${aiResult.confidence}%)`);
+    console.log(`📷 Enhanced Detection: ${bestDetection.name} (${allDetections.length} detections)`);
 
     res.json({
-      itemName: aiResult.itemName,
-      category: aiResult.category,
-      description: aiResult.description,
-      marketPrice: aiResult.estimatedPrice,
-      discountedPrice: (parseFloat(aiResult.estimatedPrice) * 0.5).toFixed(2),
-      confidence: aiResult.confidence.toString(),
-      detectedLabels: labels.map((l) => l.description),
-      aiEnhanced: true
+      itemName: bestDetection.name,
+      category: category,
+      description: text ? `Text detected: ${text.substring(0, 50)}...` : "",
+      marketPrice: "1.00",
+      discountedPrice: "0.50",
+      confidence: (bestDetection.confidence * 100).toFixed(1),
+      detectedLabels: allDetections.map(d => d.name),
+      aiEnhanced: true,
+      detectionCount: allDetections.length
     });
   } catch (err) {
     console.error("❌ Enhanced analysis error:", err);

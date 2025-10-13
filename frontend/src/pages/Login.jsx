@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './login.css';
+import logo from '../assets/fridgeshare-logo.png';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -45,7 +46,11 @@ export default function Login({ onAuth }) {
     <div className="login-bg">
       <div className="login-card">
         <div className="login-icon">
-          <span role="img" aria-label="fridge" style={{ fontSize: 28 }}>🧊</span>
+          <img 
+            src={logo} 
+            alt="FridgeShare Logo" 
+            className="login-logo-img"
+          />
         </div>
 
         <div className="login-title">

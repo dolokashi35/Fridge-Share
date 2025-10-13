@@ -151,8 +151,8 @@ html, body {
 }
 
 .login-icon {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 4rem;
+  height: 4rem;
   border-radius: 9999px;
   background: #fef2f2;
   display: flex;
@@ -161,6 +161,13 @@ html, body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   margin-bottom: 1.25rem;
   border: 1px solid #fecaca;
+  padding: 0.5rem;
+}
+
+.login-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .login-title {

@@ -28,7 +28,7 @@ export default function Marketplace() {
   const [cat, setCat] = useState("All");
   const [sort, setSort] = useState("name-asc");
   const [minP, setMinP] = useState(0);
-  const [maxP, setMaxP] = useState(10);
+  const [maxP, setMaxP] = useState(100);
 
   useEffect(() => {
     async function fetchItems() {

@@ -119,7 +119,7 @@ export default function Marketplace() {
       }
     });
     return list;
-  }, [items, term, cat, sort, minP, maxP]);
+  }, [items, term, cat, sort, maxDistanceMi, maxP]);
 
   return (
     <div className="market-bg">

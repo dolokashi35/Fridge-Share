@@ -30,18 +30,46 @@ export default function Marketplace() {
   const [sort, setSort] = useState("name-asc");
   const [minP, setMinP] = useState(0);
   const [maxP, setMaxP] = useState(100);
+  const [userLoc, setUserLoc] = useState(null);
 
   useEffect(() => {
     async function fetchItems() {
-      try {
-        const stored = localStorage.getItem("fs_user");
-        const token = stored ? JSON.parse(stored)?.token : null;
-        const res = await axios.get(`${BACKEND_URL}/items`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
-        setItems(res.data.length ? res.data : SAMPLE);
-      } catch {
-        setItems(SAMPLE);
+      const stored = localStorage.getItem("fs_user");
+      const token = stored ? JSON.parse(stored)?.token : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const fetchNearby = async (lat, lng) => {
+        try {
+          const res = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
+            params: { lat, lng, radius: 5000 },
+            headers
+          });
+          setItems(res.data.length ? res.data : SAMPLE);
+        } catch {
+          // Fallback to scoped items without distance
+          try {
+            const res = await axios.get(`${BACKEND_URL}/items`, { headers });
+            setItems(res.data.length ? res.data : SAMPLE);
+          } catch {
+            setItems(SAMPLE);
+          }
+        }
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            setUserLoc([latitude, longitude]);
+            fetchNearby(latitude, longitude);
+          },
+          () => {
+            // Default center if denied
+            fetchNearby(40.7128, -74.0060);
+          }
+        );
+      } else {
+        fetchNearby(40.7128, -74.0060);
       }
     }
     fetchItems();
@@ -168,6 +196,11 @@ export default function Marketplace() {
                   <p className="market-card-meta">
                     Posted by: <b>{it.username || "Unknown"}</b>
                   </p>
+                  {typeof it.distance === "number" && (
+                    <p className="market-card-meta">
+                      {(it.distance * 0.621371).toFixed(1)} mi away
+                    </p>
+                  )}
                   {/* Handoff Status Badge */}
                   {getHandoffStatusBadge(it)}
                   <div className="market-card-actions">

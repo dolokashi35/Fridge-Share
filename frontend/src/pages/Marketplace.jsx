@@ -34,7 +34,11 @@ export default function Marketplace() {
   useEffect(() => {
     async function fetchItems() {
       try {
-        const res = await axios.get(`${BACKEND_URL}/items`);
+        const stored = localStorage.getItem("fs_user");
+        const token = stored ? JSON.parse(stored)?.token : null;
+        const res = await axios.get(`${BACKEND_URL}/items`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         setItems(res.data.length ? res.data : SAMPLE);
       } catch {
         setItems(SAMPLE);

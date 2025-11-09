@@ -14,7 +14,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import crypto from "crypto";
 import qrcode from "qrcode";
-import { router as userRouter } from "./users.js"; // ✅ ESM named export
+import { router as userRouter, User, auth } from "./users.js"; // ✅ ESM named export
 import Item from "./models/Item.js"; // ✅ Import Item model
 import Transaction from "./models/Transaction.js";
 import ChatRoom from "./models/ChatRoom.js";
@@ -590,12 +590,25 @@ Return JSON: {"retailPrice": "X.XX", "suggestedPrice": "X.XX", "reasoning": "bri
 // 📦 ITEM ROUTES
 // ========================
 
-// GET /items - Get all active items
-app.get("/items", async (req, res) => {
+// GET /items - Get all active items (same college as requester, exclude self)
+app.get("/items", auth, async (req, res) => {
   try {
+    const me = await User.findOne({ username: req.user.username }).lean();
+    const myCollege = me?.profile?.college;
+    if (!myCollege) {
+      return res.status(400).json({ error: "User college not set" });
+    }
+    // Find all users in the same college except self
+    const sameCollegeUsers = await User.find(
+      { "profile.college": myCollege, username: { $ne: req.user.username } },
+      { username: 1 }
+    ).lean();
+    const allowedUsernames = new Set(sameCollegeUsers.map(u => u.username));
+
     const items = await Item.find({ 
       status: "active",
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: new Date() },
+      username: { $in: Array.from(allowedUsernames) }
     }).sort({ createdAt: -1 });
     
     res.json(items);
@@ -735,7 +748,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // ========================
 // 🗺️ GET /api/items/nearby - Map-First Discovery
 // ========================
-app.get("/api/items/nearby", async (req, res) => {
+app.get("/api/items/nearby", auth, async (req, res) => {
   const { lat, lng, radius = 5000 } = req.query; // radius in meters
   
   if (!lat || !lng) {
@@ -743,8 +756,21 @@ app.get("/api/items/nearby", async (req, res) => {
   }
 
   try {
+    // Filter by same college as requester and exclude self
+    const me = await User.findOne({ username: req.user.username }).lean();
+    const myCollege = me?.profile?.college;
+    if (!myCollege) {
+      return res.status(400).json({ error: "User college not set" });
+    }
+    const sameCollegeUsers = await User.find(
+      { "profile.college": myCollege, username: { $ne: req.user.username } },
+      { username: 1 }
+    ).lean();
+    const allowedUsernames = new Set(sameCollegeUsers.map(u => u.username));
+
     const items = await Item.find({
       status: "active",
+      username: { $in: Array.from(allowedUsernames) },
       location: {
         $near: {
           $geometry: {

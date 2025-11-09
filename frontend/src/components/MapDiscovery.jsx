@@ -63,8 +63,11 @@ export default function MapDiscovery() {
   const fetchNearbyItems = async (lat, lng) => {
     try {
       setLoading(true);
+      const stored = localStorage.getItem('fs_user');
+      const token = stored ? JSON.parse(stored)?.token : null;
       const response = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
-        params: { lat, lng, radius: 5000 } // 5km radius
+        params: { lat, lng, radius: 5000 }, // 5km radius
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       setItems(response.data);
       setError(null);

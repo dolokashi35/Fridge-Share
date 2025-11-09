@@ -29,6 +29,7 @@ const server = createServer(app);
 // ========================
 const defaultAllowedOrigins = [
   "https://fridgeshare.vercel.app",
+  "https://fridge-share.vercel.app",
   "http://localhost:5173",
   "http://localhost:5174",
 ];
@@ -37,11 +38,17 @@ const envAllowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((o) => o.trim())
   .filter(Boolean);
 const explicitAllowed = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
-const vercelPreview = /^https:\/\/fridge-share-[\w-]+\.vercel\.app$/;
+const vercelMain = /^https:\/\/(fridge-share|fridgeshare)\.vercel\.app$/;
+const vercelPreview = /^https:\/\/(fridge-share|fridgeshare)-[\w-]+\.vercel\.app$/;
 const renderSubdomain = /^https:\/\/.*\.onrender\.com$/;
 const isAllowedOrigin = (origin) => {
   if (!origin) return true; // allow same-origin / non-browser
-  return explicitAllowed.includes(origin) || vercelPreview.test(origin) || renderSubdomain.test(origin);
+  return (
+    explicitAllowed.includes(origin) ||
+    vercelMain.test(origin) ||
+    vercelPreview.test(origin) ||
+    renderSubdomain.test(origin)
+  );
 };
 
 const io = new Server(server, {

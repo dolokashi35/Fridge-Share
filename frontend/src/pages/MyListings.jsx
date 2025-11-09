@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./marketplace-modern.css";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 

@@ -18,15 +18,41 @@ import { router as userRouter } from "./users.js"; // ✅ Import user routes
 import Item from "./models/Item.js"; // ✅ Import Item model
 import Transaction from "./models/Transaction.js";
 import ChatRoom from "./models/ChatRoom.js";
+import uploadCjs from "./upload.js";
+const { uploadBase64ToS3, removeImageFromS3 } = uploadCjs;
 
 dotenv.config();
 const app = express();
 const server = createServer(app);
+
+// ========================
+// 🛡️ Dynamic & Safe CORS Setup (Vercel + Render + env)
+// ========================
+const defaultAllowedOrigins = [
+  "https://fridgeshare.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
+const envAllowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+const explicitAllowed = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
+const vercelPreview = /^https:\/\/fridge-share-[\w-]+\.vercel\.app$/;
+const renderSubdomain = /^https:\/\/.*\.onrender\.com$/;
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // allow same-origin / non-browser
+  return explicitAllowed.includes(origin) || vercelPreview.test(origin) || renderSubdomain.test(origin);
+};
+
 const io = new Server(server, {
   cors: {
-    origin: ["https://fridgeshare.vercel.app", "http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
-  }
+  },
 });
 const port = process.env.PORT || 8080;
 
@@ -43,7 +69,10 @@ mongoose
 // ========================
 app.use(
   cors({
-    origin: ["https://fridgeshare.vercel.app", "http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -88,6 +117,42 @@ try {
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 console.log("✅ Gemini 2.0 Flash initialized via API key");
+
+// ========================
+// 🖼️ Image Upload Endpoint (S3)
+// ========================
+app.post("/upload", async (req, res) => {
+  try {
+    const { base64Data, fileName } = req.body;
+    if (!base64Data) {
+      return res.status(400).json({ error: "No image data provided" });
+    }
+    
+    const url = await uploadBase64ToS3(base64Data, fileName);
+    res.json({ url });
+  } catch (error) {
+    console.error("❌ Upload error:", error);
+    res.status(500).json({ error: "Failed to upload image" });
+  }
+});
+
+// ========================
+// 🗑️ Delete Image Endpoint (S3)
+// ========================
+app.delete("/upload", async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    if (!imageUrl) {
+      return res.status(400).json({ error: "No image URL provided" });
+    }
+    
+    await removeImageFromS3(imageUrl);
+    res.json({ message: "Image deleted successfully" });
+  } catch (error) {
+    console.error("❌ Delete error:", error);
+    res.status(500).json({ error: "Failed to delete image" });
+  }
+});
 
 // ========================
 // 🏠 Root Route

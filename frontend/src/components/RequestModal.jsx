@@ -6,30 +6,49 @@ const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 export default function RequestModal({ item, isOpen, onClose, onRequested }) {
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
+  const [selected, setSelected] = useState("10"); // '10' | '15' | 'keep' | 'custom'
+  const [custom, setCustom] = useState("");
   const options = useMemo(() => {
     const base = Number(item?.price || 0);
     const ten = Math.max(0, (base * 0.9).toFixed(2));
     const fifteen = Math.max(0, (base * 0.85).toFixed(2));
     return [
-      { label: `Offer $${fifteen} (15% off)`, value: Number(fifteen) },
-      { label: `Offer $${ten} (10% off)`, value: Number(ten) },
-      { label: `Keep $${base.toFixed(2)}`, value: base },
+      { key: "15", label: `15% off → $${Number(fifteen).toFixed(2)}`, value: Number(fifteen) },
+      { key: "10", label: `10% off → $${Number(ten).toFixed(2)}`, value: Number(ten) },
+      { key: "keep", label: `Keep $${base.toFixed(2)}`, value: base },
+      { key: "custom", label: "Custom", value: null },
     ];
   }, [item]);
 
   if (!isOpen || !item) return null;
 
-  const submitOffer = async (offerPrice) => {
+  const computeSelectedPrice = () => {
+    const base = Number(item?.price || 0);
+    if (selected === "custom") {
+      const num = Number(custom);
+      return Number.isFinite(num) && num >= 0 ? num : null;
+    }
+    const found = options.find((o) => o.key === selected);
+    return found ? found.value : base;
+  };
+
+  const submitOffer = async () => {
     try {
       setSending(true);
+      const offerPrice = computeSelectedPrice();
+      if (offerPrice == null) {
+        alert("Enter a valid custom price");
+        setSending(false);
+        return;
+      }
       const stored = localStorage.getItem("fs_user");
       const token = stored ? JSON.parse(stored)?.token : null;
-      await axios.post(
+      const res = await axios.post(
         `${BACKEND_URL}/api/offers`,
         { itemId: item._id, offerPrice, message: note },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
-      onRequested?.({ offerPrice, note });
+      onRequested?.(res.data?.offer || { offerPrice, note });
       onClose();
     } catch (e) {
       alert("Failed to send request.");
@@ -54,18 +73,33 @@ export default function RequestModal({ item, isOpen, onClose, onRequested }) {
         <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
           {options.map((opt) => (
             <button
-              key={opt.label}
+              key={opt.key}
               disabled={sending}
-              onClick={() => submitOffer(opt.value)}
+              onClick={() => setSelected(opt.key)}
               style={{
                 borderRadius: 9999, padding: "8px 12px", border: "1px solid #e2e8f0",
-                background: "#fff", cursor: "pointer"
+                background: selected === opt.key ? "#111" : "#fff",
+                color: selected === opt.key ? "#fff" : "#111",
+                cursor: "pointer"
               }}
             >
               {opt.label}
             </button>
           ))}
         </div>
+        {selected === "custom" && (
+          <div style={{ marginBottom: 10 }}>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Enter custom price"
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              style={{ width: "100%", border: "1px solid #e2e8f0", borderRadius: 8, padding: 10 }}
+            />
+          </div>
+        )}
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -74,7 +108,7 @@ export default function RequestModal({ item, isOpen, onClose, onRequested }) {
           style={{ width: "100%", border: "1px solid #e2e8f0", borderRadius: 8, padding: 10 }}
         />
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <button className="market-card-btn request" onClick={() => submitOffer(options[0].value)} disabled={sending} style={{ flex: 1 }}>
+          <button className="market-card-btn request" onClick={submitOffer} disabled={sending} style={{ flex: 1 }}>
             {sending ? "Sending..." : "Send Request"}
           </button>
           <button className="market-card-btn message" onClick={onClose} disabled={sending} style={{ flex: 1 }}>

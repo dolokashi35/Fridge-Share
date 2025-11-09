@@ -717,6 +717,26 @@ app.post("/api/offers/:id/complete", auth, async (req, res) => {
   }
 });
 
+// Buyer cancels a pending/countered offer
+app.post("/api/offers/:id/cancel", auth, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id);
+    if (!offer) return res.status(404).json({ error: "Offer not found" });
+    if (offer.buyerUsername !== req.user.username) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    if (!["pending", "countered"].includes(offer.status)) {
+      return res.status(400).json({ error: "Only pending/countered offers can be cancelled" });
+    }
+    offer.status = "cancelled";
+    await offer.save();
+    res.json({ success: true, offer });
+  } catch (err) {
+    console.error("❌ Cancel offer error:", err);
+    res.status(500).json({ error: "Failed to cancel offer" });
+  }
+});
+
 // GET /items - Get all active items (same college as requester, exclude self)
 app.get("/items", auth, async (req, res) => {
   try {

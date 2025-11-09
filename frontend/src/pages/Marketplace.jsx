@@ -24,7 +24,7 @@ const categories = [
 export default function Marketplace() {
   const [items, setItems] = useState([]);
   const [modalItem, setModalItem] = useState(null);
-  const [requestedIds, setRequestedIds] = useState(() => new Set());
+  const [requests, setRequests] = useState(() => ({})); // itemId -> { offerId, status }
   const location = useLocation();
   const nav = useNavigate();
   const [term, setTerm] = useState("");
@@ -228,10 +228,32 @@ export default function Marketplace() {
                       className="market-card-btn message"
                       onClick={(e) => {
                         e.stopPropagation();
-                    setModalItem(it);
+                    const r = requests[it._id];
+                    if (r && (r.status === "pending" || r.status === "countered")) {
+                      // cancel request
+                      const stored = localStorage.getItem("fs_user");
+                      const token = stored ? JSON.parse(stored)?.token : null;
+                      axios.post(
+                        `${BACKEND_URL}/api/offers/${r.offerId}/cancel`,
+                        {},
+                        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+                      ).then(() => {
+                        setRequests((prev) => {
+                          const next = { ...prev };
+                          next[it._id] = { ...next[it._id], status: "cancelled" };
+                          return next;
+                        });
+                      }).catch(() => {
+                        alert("Failed to cancel request");
+                      });
+                    } else {
+                      setModalItem(it);
+                    }
                       }}
                     >
-                  Request Item
+                  {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered")
+                    ? "Cancel Request"
+                    : "Request Item"}
                     </button>
                   </div>
                 </div>
@@ -246,9 +268,17 @@ export default function Marketplace() {
         item={modalItem}
         isOpen={!!modalItem}
         onClose={() => setModalItem(null)}
-        onRequested={() => {
-          if (modalItem?._id) {
-            setRequestedIds((prev) => new Set(prev).add(modalItem._id));
+        onRequested={(offer) => {
+          if (modalItem?._id && offer?._id) {
+            setRequests((prev) => ({
+              ...prev,
+              [modalItem._id]: { offerId: offer._id, status: offer.status || "pending" }
+            }));
+          } else if (modalItem?._id) {
+            setRequests((prev) => ({
+              ...prev,
+              [modalItem._id]: { offerId: null, status: "pending" }
+            }));
           }
           // Optionally navigate to chat placeholder
           // nav("/chat");

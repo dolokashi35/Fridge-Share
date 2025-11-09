@@ -14,8 +14,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import crypto from "crypto";
 import qrcode from "qrcode";
-import usersModule from "./users.js"; // CJS interop
-const { router: userRouter } = usersModule; // ✅ Extract router from CJS default
+import { router as userRouter } from "./users.js"; // ✅ ESM named export
 import Item from "./models/Item.js"; // ✅ Import Item model
 import Transaction from "./models/Transaction.js";
 import ChatRoom from "./models/ChatRoom.js";

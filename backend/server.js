@@ -488,11 +488,8 @@ app.post("/api/generate-description", async (req, res) => {
     return res.status(400).json({ error: "Missing itemName" });
 
   try {
-    let description = "";
-    
-    // If we have detected text, use AI to create a smart description
-    if (detectedText && detectedText.trim().length > 0) {
-      const prompt = `Create a marketplace description for "${itemName}" using this product information: "${detectedText}"
+    const dynamicPrompt = detectedText && detectedText.trim().length > 0
+      ? `Create a marketplace description for "${itemName}" using this product information: "${detectedText}"
 
 Requirements:
 - Use specific details from the text (brand, nutrition facts, features)
@@ -500,46 +497,27 @@ Requirements:
 - Be factual and appealing
 - Mention key selling points
 
-Examples:
-- "Zero sugar, 15g protein. Need gone by weekend."
-- "Organic brand, good condition. Moving out."
-- "Fresh, expires next week. Don't need anymore."
-
+Return JSON: { "description": "string" }`
+      : `Create a concise, factual marketplace description (<=80 chars) for "${itemName}".
 Return JSON: { "description": "string" }`;
 
-      try {
-        const response = await geminiModel.generateContent(prompt);
-        const geminiText = response.response.text();
-        const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const aiResult = JSON.parse(jsonMatch[0]);
-          description = aiResult.description || "";
-        }
-      } catch (e) {
-        console.warn("⚠️ AI description generation failed, using fallback");
-      }
+    const response = await geminiModel.generateContent(dynamicPrompt);
+    const geminiText = response.response.text();
+    const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(502).json({ error: "AI did not return a valid description" });
     }
-    
-    // Fallback to simple templates if no text or AI fails
-    if (!description) {
-      const templates = [
-        "Good condition. Need gone by weekend.",
-        "Fresh. Bought too many.",
-        "Expires next week.",
-        "Good quality. Moving out.",
-        "Fresh. Don't need anymore.",
-        "Good condition. Going home for break."
-      ];
-      description = templates[Math.floor(Math.random() * templates.length)];
+
+    const aiResult = JSON.parse(jsonMatch[0]);
+    if (!aiResult?.description) {
+      return res.status(502).json({ error: "AI did not return a description" });
     }
-    
-    const json = { description };
-    
-    console.log(`📝 Enhanced description for ${itemName}: ${json.description.substring(0, 50)}...`);
-    res.json(json);
+
+    console.log(`📝 Enhanced description for ${itemName}: ${aiResult.description.substring(0, 50)}...`);
+    res.json({ description: aiResult.description });
   } catch (err) {
-    console.error("❌ Enhanced description generation failed:", err);
-    res.status(500).json({ error: "Description generation failed" });
+    console.error("❌ Description generation failed:", err);
+    res.status(502).json({ error: "AI description generation failed" });
   }
 });
 
@@ -565,23 +543,13 @@ Return JSON: {"retailPrice": "X.XX", "suggestedPrice": "X.XX", "reasoning": "bri
     console.log("💰 Gemini pricing response:", text);
 
     // Parse response
-    let pricingData;
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      pricingData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    } catch (e) {
-      console.warn("⚠️ Failed to parse pricing JSON");
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(502).json({ error: "AI did not return pricing JSON" });
     }
-
-    // Fallback pricing if AI fails
-    if (!pricingData || !pricingData.retailPrice) {
-      console.log("🔄 Using fallback pricing");
-      const fallbackPrice = Math.max(0.50, Math.min(15.00, itemName.length * 0.3));
-      pricingData = {
-        retailPrice: fallbackPrice.toFixed(2),
-        suggestedPrice: (fallbackPrice * 0.7).toFixed(2),
-        reasoning: "Estimated based on item characteristics"
-      };
+    const pricingData = JSON.parse(jsonMatch[0]);
+    if (!pricingData?.retailPrice || !pricingData?.suggestedPrice) {
+      return res.status(502).json({ error: "AI pricing JSON incomplete" });
     }
 
     const qty = parseFloat(quantity) || 1;
@@ -605,8 +573,8 @@ Return JSON: {"retailPrice": "X.XX", "suggestedPrice": "X.XX", "reasoning": "bri
     );
 
   } catch (err) {
-    console.error("❌ Enhanced price generation failed:", err);
-    res.status(500).json({ error: "Price generation failed" });
+    console.error("❌ Price generation failed:", err);
+    res.status(502).json({ error: "AI price generation failed" });
   }
 });
 

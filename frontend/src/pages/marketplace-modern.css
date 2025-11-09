@@ -84,9 +84,22 @@ html, body {
   transition: transform .15s ease, box-shadow .15s ease;
 }
 
+.mylist-card {
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
 .market-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.hover-animate {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.hover-animate:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
 }
 
 .market-img {
@@ -124,6 +137,21 @@ html, body {
   color: var(--gray);
   font-size: 0.85rem;
   margin: 0.1rem 0;
+}
+
+.category-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(17, 24, 39, 0.9);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 9999px;
+}
+
+.mylist-grid {
+  gap: 24px;
 }
 
 /* Buttons */

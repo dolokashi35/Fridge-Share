@@ -19,6 +19,7 @@ import Item from "./models/Item.js"; // ✅ Import Item model
 import Transaction from "./models/Transaction.js";
 import ChatRoom from "./models/ChatRoom.js";
 import { uploadBase64ToS3, removeImageFromS3 } from "./upload.js";
+import Offer from "./models/Offer.js";
 
 dotenv.config();
 const app = express();
@@ -590,6 +591,131 @@ Return JSON: {"retailPrice": "X.XX", "suggestedPrice": "X.XX", "reasoning": "bri
 // ========================
 // 📦 ITEM ROUTES
 // ========================
+
+// ========================
+// 💬 Offer Routes (Buyer/Seller flow)
+// ========================
+
+// Query offers for current user (buyer or seller)
+app.get("/api/offers", auth, async (req, res) => {
+  try {
+    const { role, itemId, status } = req.query; // role: 'buyer' | 'seller'
+    const match = {};
+    if (role === "buyer") match.buyerUsername = req.user.username;
+    else if (role === "seller") match.sellerUsername = req.user.username;
+    else match.$or = [{ buyerUsername: req.user.username }, { sellerUsername: req.user.username }];
+    if (itemId) match.itemId = itemId;
+    if (status) match.status = status;
+    const offers = await Offer.find(match).sort({ createdAt: -1 }).lean();
+    res.json(offers);
+  } catch (err) {
+    console.error("❌ List offers error:", err);
+    res.status(500).json({ error: "Failed to list offers" });
+  }
+});
+
+// Buyer creates an offer
+app.post("/api/offers", auth, async (req, res) => {
+  try {
+    const { itemId, offerPrice, message } = req.body;
+    if (!itemId || offerPrice == null) {
+      return res.status(400).json({ error: "Missing itemId or offerPrice" });
+    }
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    if (item.username === req.user.username) {
+      return res.status(400).json({ error: "You cannot request your own item" });
+    }
+    const offer = await Offer.create({
+      itemId,
+      buyerUsername: req.user.username,
+      sellerUsername: item.username,
+      offerPrice: Number(offerPrice),
+      message: message || "",
+    });
+    res.status(201).json({ success: true, offer });
+  } catch (err) {
+    console.error("❌ Create offer error:", err);
+    res.status(500).json({ error: "Failed to create offer" });
+  }
+});
+
+// Seller responds to an offer: accept/decline/counter
+app.post("/api/offers/:id/respond", auth, async (req, res) => {
+  try {
+    const { action, counterPrice } = req.body; // action: 'accept' | 'decline' | 'counter'
+    const offer = await Offer.findById(req.params.id);
+    if (!offer) return res.status(404).json({ error: "Offer not found" });
+    if (offer.sellerUsername !== req.user.username) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    if (action === "accept") {
+      offer.status = "accepted";
+      await offer.save();
+      return res.json({ success: true, offer });
+    }
+    if (action === "decline") {
+      offer.status = "declined";
+      await offer.save();
+      return res.json({ success: true, offer });
+    }
+    if (action === "counter") {
+      if (counterPrice == null) return res.status(400).json({ error: "Missing counterPrice" });
+      offer.status = "countered";
+      offer.counterPrice = Number(counterPrice);
+      await offer.save();
+      return res.json({ success: true, offer });
+    }
+    return res.status(400).json({ error: "Invalid action" });
+  } catch (err) {
+    console.error("❌ Respond offer error:", err);
+    res.status(500).json({ error: "Failed to respond to offer" });
+  }
+});
+
+// Buyer schedules pickup (after accepted)
+app.post("/api/offers/:id/schedule", auth, async (req, res) => {
+  try {
+    const { timeOption, preferredLocation } = req.body;
+    const offer = await Offer.findById(req.params.id);
+    if (!offer) return res.status(404).json({ error: "Offer not found" });
+    if (offer.buyerUsername !== req.user.username) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    if (offer.status !== "accepted" && offer.status !== "countered") {
+      return res.status(400).json({ error: "Offer not in accepted/countered state" });
+    }
+    offer.schedule = {
+      timeOption: timeOption || null,
+      preferredLocation: preferredLocation || "",
+    };
+    offer.status = "ready_for_pickup";
+    await offer.save();
+    res.json({ success: true, offer });
+  } catch (err) {
+    console.error("❌ Schedule offer error:", err);
+    res.status(500).json({ error: "Failed to schedule pickup" });
+  }
+});
+
+// Either party confirms completion
+app.post("/api/offers/:id/complete", auth, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id);
+    if (!offer) return res.status(404).json({ error: "Offer not found" });
+    if (![offer.buyerUsername, offer.sellerUsername].includes(req.user.username)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    offer.status = "completed";
+    await offer.save();
+    // Optionally mark item as sold
+    await Item.findByIdAndUpdate(offer.itemId, { status: "sold" });
+    res.json({ success: true, offer });
+  } catch (err) {
+    console.error("❌ Complete offer error:", err);
+    res.status(500).json({ error: "Failed to complete offer" });
+  }
+});
 
 // GET /items - Get all active items (same college as requester, exclude self)
 app.get("/items", auth, async (req, res) => {

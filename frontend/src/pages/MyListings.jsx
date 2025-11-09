@@ -62,6 +62,50 @@ export default function MyListings() {
     return text.length > len ? `${text.slice(0, len)}…` : text;
   };
 
+  // Seller offers
+  const [offersByItem, setOffersByItem] = useState({});
+  const [respondingId, setRespondingId] = useState(null);
+  const loadOffers = useCallback(async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('fs_user'));
+      const token = user?.token;
+      const res = await axios.get(`${BACKEND_URL}/api/offers`, {
+        params: { role: "seller" },
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const map = {};
+      (res.data || []).forEach((o) => {
+        if (!map[o.itemId]) map[o.itemId] = [];
+        map[o.itemId].push(o);
+      });
+      setOffersByItem(map);
+    } catch {
+      setOffersByItem({});
+    }
+  }, []);
+
+  useEffect(() => {
+    loadOffers();
+  }, [loadOffers]);
+
+  const respond = async (offerId, action, counterPrice) => {
+    try {
+      setRespondingId(offerId);
+      const user = JSON.parse(localStorage.getItem('fs_user'));
+      const token = user?.token;
+      await axios.post(`${BACKEND_URL}/api/offers/${offerId}/respond`, {
+        action, counterPrice
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      await loadOffers();
+    } catch {
+      alert("Failed to respond to offer");
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
   async function handleDelete(itemId) {
     const user = JSON.parse(localStorage.getItem('fs_user'));
     const token = user?.token;
@@ -158,6 +202,62 @@ export default function MyListings() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </>
+            )}
+
+            {/* Pending offers per Active item (basic UI) */}
+            {grouped.active.length > 0 && (
+              <>
+                <h2 style={{ margin: "18px 4px 12px", fontSize: "1.1rem" }}>Incoming Offers</h2>
+                <div className="market-grid mylist-grid">
+                  {grouped.active.map((it) => {
+                    const offers = (offersByItem[it._id] || []).filter(o => o.status === "pending" || o.status === "countered");
+                    if (!offers.length) return null;
+                    return (
+                      <div key={`${it._id}-offers`} className="market-card mylist-card" style={{ paddingBottom: 8 }}>
+                        <div className="market-card-content">
+                          <h3 className="market-card-title">{it.name} • ${it.price.toFixed(2)}</h3>
+                          {offers.map((o) => (
+                            <div key={o._id} style={{ borderTop: "1px solid #f1f5f9", paddingTop: 8, marginTop: 8 }}>
+                              <p className="market-card-meta">
+                                Offer from <b>{o.buyerUsername}</b>: ${o.offerPrice.toFixed(2)} {o.status === "countered" && `(counter: $${(o.counterPrice || 0).toFixed(2)})`}
+                              </p>
+                              {o.message && <p className="market-card-meta">“{o.message}”</p>}
+                              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                                <button
+                                  className="market-card-btn request"
+                                  disabled={respondingId === o._id}
+                                  onClick={() => respond(o._id, "accept")}
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  className="market-card-btn message"
+                                  disabled={respondingId === o._id}
+                                  onClick={() => respond(o._id, "decline")}
+                                >
+                                  Decline
+                                </button>
+                                <button
+                                  className="market-card-btn"
+                                  style={{ background: "#0ea5e9", color: "#fff" }}
+                                  disabled={respondingId === o._id}
+                                  onClick={() => {
+                                    const cp = prompt("Counter price?");
+                                    if (!cp) return;
+                                    respond(o._id, "counter", Number(cp));
+                                  }}
+                                >
+                                  Counter
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </>
             )}

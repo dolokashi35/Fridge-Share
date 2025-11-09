@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./marketplace-modern.css"; // Keep styling import
+import RequestModal from "../components/RequestModal";
 
 const SAMPLE = [
   { id: 1, name: "Bananas", category: "Produce", price: 1.29, img: "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60" },
@@ -22,6 +23,8 @@ const categories = [
 
 export default function Marketplace() {
   const [items, setItems] = useState([]);
+  const [modalItem, setModalItem] = useState(null);
+  const [requestedIds, setRequestedIds] = useState(() => new Set());
   const location = useLocation();
   const nav = useNavigate();
   const [term, setTerm] = useState("");
@@ -193,6 +196,11 @@ export default function Marketplace() {
                   <p className="market-card-price">
                     ${it.price.toFixed(2)}
                   </p>
+                  {requestedIds.has(it._id) && (
+                    <p className="market-card-meta" style={{ color: "#16a34a", fontWeight: 600 }}>
+                      Requested · Waiting for seller
+                    </p>
+                  )}
                   <p className="market-card-meta">
                     Qty: {it.quantity ?? "N/A"}
                   </p>
@@ -211,19 +219,19 @@ export default function Marketplace() {
                       className="market-card-btn request"
                       onClick={(e) => {
                         e.stopPropagation();
-                        alert(`Requested to buy: ${it.name}`);
+                    nav(`/items/${it._id}`); // simple buy flow placeholder
                       }}
                     >
-                      Request
+                  Buy at ${it.price.toFixed(2)}
                     </button>
                     <button
                       className="market-card-btn message"
                       onClick={(e) => {
                         e.stopPropagation();
-                        nav("/chat", { state: { to: it.username } });
+                    setModalItem(it);
                       }}
                     >
-                      Message
+                  Request Item
                     </button>
                   </div>
                 </div>
@@ -234,6 +242,18 @@ export default function Marketplace() {
           )}
         </div>
       </div>
+      <RequestModal
+        item={modalItem}
+        isOpen={!!modalItem}
+        onClose={() => setModalItem(null)}
+        onRequested={() => {
+          if (modalItem?._id) {
+            setRequestedIds((prev) => new Set(prev).add(modalItem._id));
+          }
+          // Optionally navigate to chat placeholder
+          // nav("/chat");
+        }}
+      />
     </div>
   );
 }

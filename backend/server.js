@@ -566,10 +566,11 @@ Return JSON: {"retailPrice": "X.XX", "suggestedPrice": "X.XX", "reasoning": "bri
     
     const totalRetail = retailPerUnit * qty;
     const totalSuggested = suggestedPerUnit * qty;
+    const totalDiscounted = totalSuggested * 0.5; // requested: suggested * quantity * 0.5
 
     res.json({
       marketPrice: totalRetail.toFixed(2),
-      discountedPrice: totalSuggested.toFixed(2),
+      discountedPrice: totalDiscounted.toFixed(2),
       basePrice: retailPerUnit.toFixed(2),
       quantity: qty,
       reasoning: pricingData.reasoning,
@@ -577,7 +578,7 @@ Return JSON: {"retailPrice": "X.XX", "suggestedPrice": "X.XX", "reasoning": "bri
     });
 
     console.log(
-      `💰 Enhanced Pricing: ${itemName} - Retail: $${totalRetail.toFixed(2)}, Suggested: $${totalSuggested.toFixed(2)}`
+      `💰 Enhanced Pricing: ${itemName} - Retail: $${totalRetail.toFixed(2)}, Suggested: $${totalSuggested.toFixed(2)}, Discounted: $${totalDiscounted.toFixed(2)}`
     );
 
   } catch (err) {

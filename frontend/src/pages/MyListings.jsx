@@ -16,11 +16,10 @@ export default function MyListings() {
       const user = JSON.parse(localStorage.getItem('fs_user'));
       const token = user?.token;
       try {
-        const res = await axios.get(`${BACKEND_URL}/items`, {
+        const res = await axios.get(`${BACKEND_URL}/items/mine`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
-        const myId = user?.username;
-        setItems(res.data.filter(it => it.username === myId));
+        setItems(res.data || []);
       } catch {
         setItems([]);
       }

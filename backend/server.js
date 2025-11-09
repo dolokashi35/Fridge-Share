@@ -19,8 +19,7 @@ const { router: userRouter } = usersModule; // ✅ Extract router from CJS defau
 import Item from "./models/Item.js"; // ✅ Import Item model
 import Transaction from "./models/Transaction.js";
 import ChatRoom from "./models/ChatRoom.js";
-import uploadCjs from "./upload.js";
-const { uploadBase64ToS3, removeImageFromS3 } = uploadCjs;
+import { uploadBase64ToS3, removeImageFromS3 } from "./upload.js";
 
 dotenv.config();
 const app = express();
@@ -93,10 +92,10 @@ app.use("/users", userRouter); // ✅ Enables /users/register, /users/login, /us
 let visionClient;
 try {
   let credentials;
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
     // ✅ Render-safe (base64-encoded JSON env var)
     credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-    visionClient = new vision.ImageAnnotatorClient({ credentials });
+  visionClient = new vision.ImageAnnotatorClient({ credentials });
     console.log("✅ Google Vision initialized from environment JSON");
   } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     // ✅ Local dev (path to service-account.json)
@@ -104,7 +103,7 @@ try {
       keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     });
     console.log("✅ Google Vision initialized from key file");
-  } else {
+} else {
     throw new Error("No Google credentials found.");
   }
 } catch (err) {

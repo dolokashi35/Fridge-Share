@@ -97,6 +97,19 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
+.profile-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+.profile-actions .profile-btn {
+  width: auto;             /* override full width for row layout */
+  padding: 0.8rem 1.1rem;  /* add horizontal padding for readable text */
+  white-space: nowrap;     /* prevent text from wrapping */
+  flex: 1;                 /* share space evenly */
+  min-width: 140px;        /* avoid “smooshed” look on small screens */
+}
 .profile-btn:hover {
   background: var(--color-primary-dark);
   transform: translateY(-1px);

@@ -7,6 +7,7 @@ const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 export default function MyListings() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const nav = useNavigate();
 
   useEffect(() => {
@@ -28,6 +29,29 @@ export default function MyListings() {
     fetchMyItems();
   }, []);
 
+  async function handleDelete(itemId) {
+    const user = JSON.parse(localStorage.getItem('fs_user'));
+    const token = user?.token;
+    if (!token) {
+      alert("Please log in to delete a listing.");
+      return;
+    }
+    const confirm = window.confirm("Delete this listing? This cannot be undone.");
+    if (!confirm) return;
+    try {
+      setDeletingId(itemId);
+      await axios.delete(`${BACKEND_URL}/items/${itemId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setItems(prev => prev.filter(it => it._id !== itemId));
+    } catch (e) {
+      console.error("Failed to delete item", e);
+      alert("Failed to delete item.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="market-bg">
       <div className="market-container">
@@ -45,7 +69,17 @@ export default function MyListings() {
                   <p className="market-card-meta">Purchased: {it.purchaseDate ? new Date(it.purchaseDate).toLocaleDateString() : 'N/A'}</p>
                   {it.expiration && <p className="market-card-meta">Expires: {new Date(it.expiration).toLocaleDateString()}</p>}
                   <p className="market-card-desc">{it.description}</p>
-                  <button className="market-card-btn" onClick={() => nav(`/edit/${it._id}`)}>Edit</button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="market-card-btn" onClick={() => nav(`/edit/${it._id}`)}>Edit</button>
+                    <button
+                      className="market-card-btn"
+                      style={{ background: "#ef4444" }}
+                      disabled={deletingId === it._id}
+                      onClick={() => handleDelete(it._id)}
+                    >
+                      {deletingId === it._id ? "Deleting…" : "Delete"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )) : <p className="market-empty">No items posted yet.</p>}

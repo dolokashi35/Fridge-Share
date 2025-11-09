@@ -166,12 +166,28 @@ export default function ProfilePage() {
             <div>
               <b>College:</b> {user.profile.college || "Not set"}
             </div>
-            <button
-              className="profile-btn"
-              onClick={() => setEditing(true)}
-            >
-              Edit Profile
-            </button>
+            <div className="profile-actions">
+              <button
+                className="profile-btn"
+                onClick={() => setEditing(true)}
+              >
+                Edit Profile
+              </button>
+              <button
+                className="profile-btn"
+                style={{ background: "#ef4444" }}
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("fs_user");
+                    localStorage.removeItem("userProfile"); // legacy key cleanup
+                  } finally {
+                    window.location.replace("/login");
+                  }
+                }}
+              >
+                Log out
+              </button>
+            </div>
           </div>
         )}
       </div>

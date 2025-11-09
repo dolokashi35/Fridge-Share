@@ -196,7 +196,7 @@ export default function PostItem() {
 
       console.log("✅ Item posted successfully:", response.data);
       alert("Item Posted Successfully!");
-      navigate("/marketplace");
+      navigate("/mylistings");
       
     } catch (error) {
       console.error("❌ Error posting item:", error);

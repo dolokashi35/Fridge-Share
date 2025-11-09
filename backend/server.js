@@ -633,8 +633,8 @@ app.get("/items/:id", async (req, res) => {
   }
 });
 
-// POST /items - Create new item
-app.post("/items", async (req, res) => {
+// POST /items - Create new item (auth; username from token)
+app.post("/items", auth, async (req, res) => {
   try {
     const {
       name,
@@ -647,7 +647,6 @@ app.post("/items", async (req, res) => {
       listingDuration,
       transferMethods,
       imageUrl,
-      username,
       location
     } = req.body;
 
@@ -666,7 +665,7 @@ app.post("/items", async (req, res) => {
       listingDuration: parseInt(listingDuration),
       transferMethods,
       imageUrl,
-      username,
+      username: req.user.username,
       location: location || null, // Include location data
       expiresAt
     });

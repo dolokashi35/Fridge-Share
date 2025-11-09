@@ -1,6 +1,4 @@
 import { useMemo, useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./marketplace-modern.css"; // Keep styling import
@@ -88,33 +86,6 @@ export default function Marketplace() {
     return list;
   }, [items, term, cat, sort, minP, maxP]);
 
-  // Map helpers derived from the same filtered list used for marketplace cards
-  const mapPoints = useMemo(() => {
-    return filtered
-      .map((it) => {
-        // Support either GeoJSON-style { coordinates: [lng, lat] } or { lat, lng }
-        const coords = it?.location?.coordinates;
-        if (Array.isArray(coords) && coords.length >= 2) {
-          return { item: it, lat: coords[1], lng: coords[0] };
-        }
-        const lat = it?.location?.lat;
-        const lng = it?.location?.lng;
-        if (typeof lat === "number" && typeof lng === "number") {
-          return { item: it, lat, lng };
-        }
-        return null;
-      })
-      .filter(Boolean);
-  }, [filtered]);
-
-  const mapCenter = useMemo(() => {
-    if (mapPoints.length) {
-      return [mapPoints[0].lat, mapPoints[0].lng];
-    }
-    // Default center (NYC) if no items have location
-    return [40.7128, -74.0060];
-  }, [mapPoints]);
-
   return (
     <div className="market-bg">
       {/* 🧭 Main Marketplace Content (Navbar handled globally in App.jsx) */}
@@ -164,38 +135,6 @@ export default function Marketplace() {
               onChange={(e) => setMaxP(e.target.value)}
               className="market-input small"
             />
-          </div>
-        </div>
-
-        {/* Map shows ONLY the items currently visible in the marketplace list */}
-        <div style={{ marginTop: 16, marginBottom: 24 }}>
-          <div style={{ height: 280, width: "100%", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-            <MapContainer center={mapCenter} zoom={13} style={{ height: "100%", width: "100%" }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {mapPoints.map(({ item, lat, lng }) => (
-                <Marker key={item._id} position={[lat, lng]}>
-                  <Popup>
-                    <div style={{ minWidth: 160 }}>
-                      <div style={{ fontWeight: 600, marginBottom: 4 }}>{item.name}</div>
-                      <div style={{ marginBottom: 4 }}>${item.price.toFixed(2)}</div>
-                      {item.imageUrl || item.img ? (
-                        <img
-                          src={item.imageUrl || item.img}
-                          alt={item.name}
-                          style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: 8 }}
-                        />
-                      ) : null}
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}>
-            Map shows only listings currently visible in the marketplace.
           </div>
         </div>
 

@@ -77,6 +77,9 @@ export default function MeetingLocationPicker({
   const [selectedLocation, setSelectedLocation] = useState(currentLocation);
   const [mapCenter, setMapCenter] = useState(userLocation || [40.1015, -88.2265]);
   const mapRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (userLocation) {
@@ -107,6 +110,48 @@ export default function MeetingLocationPicker({
           alert('Failed to get your location. Please enable location services.');
         }
       );
+    }
+  };
+
+  // Debounced address search using OpenStreetMap Nominatim
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
+    const handle = setTimeout(async () => {
+      try {
+        setSearching(true);
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`;
+        const res = await fetch(url, {
+          headers: {
+            // Nominatim prefers an identifiable header; browser will include UA
+          }
+        });
+        const data = await res.json();
+        const results = (data || []).map((r) => ({
+          id: r.place_id,
+          name: r.display_name,
+          coordinates: [parseFloat(r.lat), parseFloat(r.lon)],
+          type: 'custom'
+        }));
+        setSearchResults(results);
+      } catch (e) {
+        console.error("Geocoding failed:", e);
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+
+  const applySearchSelection = (loc) => {
+    setSelectedLocation(loc);
+    setMapCenter(loc.coordinates);
+    if (mapRef.current) {
+      mapRef.current.setView(loc.coordinates, 16);
     }
   };
 
@@ -209,6 +254,50 @@ export default function MeetingLocationPicker({
               </Marker>
             )}
           </MapContainer>
+        </div>
+
+        {/* Search box below current location area */}
+        <div style={{ marginTop: 12 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Search for a place</label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Start typing an address or place name..."
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              border: '1px solid #e2e8f0',
+              borderRadius: 8
+            }}
+          />
+          {searchQuery && (
+            <div style={{ marginTop: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, maxHeight: 180, overflowY: 'auto' }}>
+              {searching ? (
+                <div style={{ padding: 10, color: '#64748b' }}>Searching…</div>
+              ) : searchResults.length ? (
+                searchResults.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => applySearchSelection(r)}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '10px 12px',
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {r.name}
+                  </button>
+                ))
+              ) : (
+                <div style={{ padding: 10, color: '#64748b' }}>No results</div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="picker-actions">

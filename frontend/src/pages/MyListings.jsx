@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -10,23 +10,38 @@ export default function MyListings() {
   const [deletingId, setDeletingId] = useState(null);
   const nav = useNavigate();
 
-  useEffect(() => {
-    async function fetchMyItems() {
-      setLoading(true);
-      const user = JSON.parse(localStorage.getItem('fs_user'));
-      const token = user?.token;
-      try {
-        const res = await axios.get(`${BACKEND_URL}/items/mine`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
-        setItems(res.data || []);
-      } catch {
-        setItems([]);
-      }
-      setLoading(false);
+  const fetchMyItems = useCallback(async () => {
+    setLoading(true);
+    const user = JSON.parse(localStorage.getItem('fs_user'));
+    const token = user?.token;
+    try {
+      const res = await axios.get(`${BACKEND_URL}/items/mine`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      setItems(res.data || []);
+    } catch {
+      setItems([]);
     }
-    fetchMyItems();
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetchMyItems();
+  }, [fetchMyItems]);
+
+  // Refresh when the tab gains focus or becomes visible again
+  useEffect(() => {
+    const onFocus = () => fetchMyItems();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') fetchMyItems();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [fetchMyItems]);
 
   async function handleDelete(itemId) {
     const user = JSON.parse(localStorage.getItem('fs_user'));

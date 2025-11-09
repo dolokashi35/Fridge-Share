@@ -110,11 +110,11 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
     });
     console.log("✅ Google Vision initialized from key file");
 } else {
-    throw new Error("No Google credentials found.");
+    throw new Error("No Google credentials found. Vision features will be disabled.");
   }
 } catch (err) {
-  console.error("❌ Failed to initialize Vision client:", err.message);
-  process.exit(1);
+  console.warn("⚠️ Vision disabled:", err.message);
+  visionClient = null;
 }
 
 // ========================
@@ -171,6 +171,7 @@ app.get("/", (_, res) =>
 // 📸 POST /api/analyze — Enhanced Vision API (Reliable)
 // ========================
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
+  if (!visionClient) return res.status(503).json({ error: "Vision service unavailable" });
   if (!req.file) return res.status(400).json({ error: "No image uploaded" });
 
   const imagePath = path.resolve(req.file.path);

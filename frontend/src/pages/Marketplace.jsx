@@ -28,7 +28,7 @@ export default function Marketplace() {
   const [term, setTerm] = useState("");
   const [cat, setCat] = useState("All");
   const [sort, setSort] = useState("name-asc");
-  const [minP, setMinP] = useState(0);
+  const [maxDistanceMi, setMaxDistanceMi] = useState(5); // replaced min price with distance (miles)
   const [maxP, setMaxP] = useState(100);
   const [userLoc, setUserLoc] = useState(null);
 
@@ -97,8 +97,12 @@ export default function Marketplace() {
     let list = items.filter((it) => {
       const okCat = cat === "All" || it.category === cat;
       const okTerm = it.name.toLowerCase().includes(term.toLowerCase());
-      const okPrice = it.price >= Number(minP) && it.price <= Number(maxP);
-      return okCat && okTerm && okPrice;
+      const okPrice = it.price <= Number(maxP);
+      const okDistance =
+        typeof it.distance !== "number"
+          ? true // if no distance available (fallback list), don't filter it out
+          : (it.distance * 0.621371) <= Number(maxDistanceMi || 0);
+      return okCat && okTerm && okPrice && okDistance;
     });
 
     list.sort((a, b) => {
@@ -153,11 +157,11 @@ export default function Marketplace() {
             <option value="price-desc">Price (High → Low)</option>
           </select>
           <div className="market-range">
-            <label>Min</label>
+            <label>Distance (mi)</label>
             <input
               type="number"
-              value={minP}
-              onChange={(e) => setMinP(e.target.value)}
+              value={maxDistanceMi}
+              onChange={(e) => setMaxDistanceMi(e.target.value)}
               className="market-input small"
             />
             <label>Max</label>

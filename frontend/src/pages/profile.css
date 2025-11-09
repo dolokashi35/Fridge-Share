@@ -109,6 +109,7 @@
   white-space: nowrap;     /* prevent text from wrapping */
   flex: 1;                 /* share space evenly */
   min-width: 140px;        /* avoid “smooshed” look on small screens */
+  border-radius: 0;        /* square corners */
 }
 .profile-btn:hover {
   background: var(--color-primary-dark);

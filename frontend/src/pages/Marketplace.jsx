@@ -196,7 +196,7 @@ export default function Marketplace() {
                   <p className="market-card-price">
                     ${it.price.toFixed(2)}
                   </p>
-                  {requestedIds.has(it._id) && (
+                  {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (
                     <p className="market-card-meta" style={{ color: "#16a34a", fontWeight: 600 }}>
                       Requested · Waiting for seller
                     </p>

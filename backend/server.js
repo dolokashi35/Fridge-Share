@@ -619,6 +619,18 @@ app.get("/items", auth, async (req, res) => {
   }
 });
 
+// GET /items/mine - Get items posted by the authenticated user
+app.get("/items/mine", auth, async (req, res) => {
+  try {
+    const items = await Item.find({
+      username: req.user.username,
+    }).sort({ createdAt: -1 });
+    res.json(items);
+  } catch (err) {
+    console.error("❌ Error fetching my items:", err);
+    res.status(500).json({ error: "Failed to fetch my items" });
+  }
+});
 // GET /items/:id - Get single item
 app.get("/items/:id", async (req, res) => {
   try {
@@ -713,18 +725,6 @@ app.delete("/items/:id", async (req, res) => {
   }
 });
 
-// GET /items/mine - Get items posted by the authenticated user
-app.get("/items/mine", auth, async (req, res) => {
-  try {
-    const items = await Item.find({
-      username: req.user.username,
-    }).sort({ createdAt: -1 });
-    res.json(items);
-  } catch (err) {
-    console.error("❌ Error fetching my items:", err);
-    res.status(500).json({ error: "Failed to fetch my items" });
-  }
-});
 // ========================
 // 🏥 Health Check Endpoint
 // ========================

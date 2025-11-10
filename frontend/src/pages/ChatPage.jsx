@@ -22,6 +22,8 @@ const ChatPage = ({ currentUser }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmation, setConfirmation] = useState(null);
+  const [confirming, setConfirming] = useState(false);
   const inputRef = useRef(null);
   const peerInitials = useMemo(() => {
     const name = to || 'User';
@@ -135,6 +137,28 @@ const ChatPage = ({ currentUser }) => {
     loadItem();
   }, [selectedItem]);
 
+  // Fetch purchase confirmation status
+  useEffect(() => {
+    const fetchConfirmation = async () => {
+      if (!to || !selectedItem?.id) {
+        setConfirmation(null);
+        return;
+      }
+      try {
+        const stored = localStorage.getItem('fs_user');
+        const token = stored ? JSON.parse(stored)?.token : null;
+        const res = await axios.get(`${BACKEND_URL}/api/purchase-confirmation`, {
+          params: { itemId: selectedItem.id, peer: to },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        setConfirmation(res.data.confirmation);
+      } catch {
+        setConfirmation(null);
+      }
+    };
+    fetchConfirmation();
+  }, [to, selectedItem]);
+
   // Send a message
   const handleSend = async (e) => {
     e.preventDefault();
@@ -167,6 +191,42 @@ const ChatPage = ({ currentUser }) => {
       setLoading(false);
     }
   };
+
+  // Handle purchase confirmation
+  const handleConfirmPurchase = async () => {
+    if (!to || !selectedItem?.id || confirming) return;
+    try {
+      setConfirming(true);
+      const stored = localStorage.getItem('fs_user');
+      const token = stored ? JSON.parse(stored)?.token : null;
+      const res = await axios.post(
+        `${BACKEND_URL}/api/purchase-confirmation/confirm`,
+        { itemId: selectedItem.id, peer: to },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      
+      if (res.data.completed) {
+        // Both confirmed - navigate away
+        alert("Purchase completed! Chat and listing have been deleted.");
+        nav("/marketplace");
+      } else {
+        // Update confirmation status
+        setConfirmation(res.data.confirmation);
+      }
+    } catch (err) {
+      console.error("Confirm purchase error:", err);
+      alert("Failed to confirm purchase. Please try again.");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  // Determine if current user has confirmed
+  const stored = localStorage.getItem('fs_user');
+  const currentUsername = stored ? JSON.parse(stored)?.username : null;
+  const isSeller = fullItem?.username === currentUsername;
+  const userConfirmed = confirmation ? (isSeller ? confirmation.sellerConfirmed : confirmation.buyerConfirmed) : false;
+  const otherConfirmed = confirmation ? (isSeller ? confirmation.buyerConfirmed : confirmation.sellerConfirmed) : false;
 
   return (
     <div className="chat-bg">
@@ -301,6 +361,42 @@ const ChatPage = ({ currentUser }) => {
                 )}
               </div>
             </div>
+            {to && selectedItem?.id && (
+              <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                {confirmation && otherConfirmed && !userConfirmed && (
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
+                    Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
+                  </p>
+                )}
+                {confirmation && userConfirmed && !otherConfirmed && (
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
+                    Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
+                  </p>
+                )}
+                {confirmation && userConfirmed && otherConfirmed && (
+                  <p style={{ fontSize: '0.875rem', color: '#16a34a', marginBottom: '12px', textAlign: 'center', fontWeight: 600 }}>
+                    Both parties confirmed
+                  </p>
+                )}
+                <button
+                  onClick={handleConfirmPurchase}
+                  disabled={confirming || (confirmation && userConfirmed)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: confirmation && userConfirmed ? '#94a3b8' : '#0E7490',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    cursor: (confirming || (confirmation && userConfirmed)) ? 'not-allowed' : 'pointer',
+                    opacity: (confirming || (confirmation && userConfirmed)) ? 0.6 : 1,
+                  }}
+                >
+                  {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
+                </button>
+              </div>
+            )}
           </div>
         </aside>
       </div>

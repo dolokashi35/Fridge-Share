@@ -21,6 +21,7 @@ import ChatRoom from "./models/ChatRoom.js";
 import { uploadBase64ToS3, removeImageFromS3 } from "./upload.js";
 import Offer from "./models/Offer.js";
 import Message from "./models/Message.js";
+import PurchaseConfirmation from "./models/PurchaseConfirmation.js";
 
 dotenv.config();
 const app = express();
@@ -808,6 +809,129 @@ app.post("/api/messages", auth, async (req, res) => {
   } catch (err) {
     console.error("❌ Send message error:", err);
     res.status(500).json({ error: "Failed to send message" });
+  }
+});
+
+// ========================
+// ✅ Purchase Confirmation Endpoints
+// ========================
+
+// Get purchase confirmation status for a chat thread
+app.get("/api/purchase-confirmation", auth, async (req, res) => {
+  try {
+    const { itemId, peer } = req.query;
+    if (!itemId || !peer) {
+      return res.status(400).json({ error: "itemId and peer required" });
+    }
+    const me = req.user.username;
+    const otherUser = peer;
+    
+    // Determine buyer and seller
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    
+    const isSeller = item.username === me;
+    const buyerUsername = isSeller ? otherUser : me;
+    const sellerUsername = isSeller ? me : otherUser;
+    
+    let confirmation = await PurchaseConfirmation.findOne({
+      itemId,
+      buyerUsername,
+      sellerUsername,
+    });
+    
+    if (!confirmation) {
+      confirmation = new PurchaseConfirmation({
+        itemId,
+        buyerUsername,
+        sellerUsername,
+      });
+      await confirmation.save();
+    }
+    
+    res.json({ confirmation });
+  } catch (err) {
+    console.error("❌ Get purchase confirmation error:", err);
+    res.status(500).json({ error: "Failed to get confirmation status" });
+  }
+});
+
+// Confirm purchase (buyer or seller)
+app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
+  try {
+    const { itemId, peer } = req.body;
+    if (!itemId || !peer) {
+      return res.status(400).json({ error: "itemId and peer required" });
+    }
+    const me = req.user.username;
+    const otherUser = peer;
+    
+    // Determine buyer and seller
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    
+    const isSeller = item.username === me;
+    const buyerUsername = isSeller ? otherUser : me;
+    const sellerUsername = isSeller ? me : otherUser;
+    
+    let confirmation = await PurchaseConfirmation.findOne({
+      itemId,
+      buyerUsername,
+      sellerUsername,
+    });
+    
+    if (!confirmation) {
+      confirmation = new PurchaseConfirmation({
+        itemId,
+        buyerUsername,
+        sellerUsername,
+      });
+    }
+    
+    // Update confirmation status
+    if (isSeller) {
+      confirmation.sellerConfirmed = true;
+    } else {
+      confirmation.buyerConfirmed = true;
+    }
+    
+    // Check if both confirmed
+    if (confirmation.buyerConfirmed && confirmation.sellerConfirmed) {
+      confirmation.completed = true;
+      await confirmation.save();
+      
+      // Delete all messages for this item thread
+      await Message.deleteMany({
+        $or: [
+          { from: buyerUsername, to: sellerUsername, itemId },
+          { from: sellerUsername, to: buyerUsername, itemId },
+        ],
+      });
+      
+      // Delete the item listing
+      await Item.findByIdAndDelete(itemId);
+      
+      // Delete the confirmation record
+      await PurchaseConfirmation.findByIdAndDelete(confirmation._id);
+      
+      return res.json({ 
+        success: true, 
+        confirmation,
+        completed: true,
+        message: "Purchase completed. Chat and listing deleted." 
+      });
+    }
+    
+    await confirmation.save();
+    res.json({ 
+      success: true, 
+      confirmation,
+      completed: false,
+      waitingFor: isSeller ? "buyer" : "seller"
+    });
+  } catch (err) {
+    console.error("❌ Confirm purchase error:", err);
+    res.status(500).json({ error: "Failed to confirm purchase" });
   }
 });
 

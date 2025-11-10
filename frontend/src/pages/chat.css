@@ -357,3 +357,18 @@
 .listing-panel .market-img {
   flex-shrink: 0;
 }
+
+/* Override description truncation in listing panel - show full description */
+.listing-panel .market-card-description {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  max-height: none !important;
+  line-height: 1.5 !important;
+}
+
+/* Remove cursor pointer and click functionality - only show shadow on hover */
+.listing-panel .market-card {
+  cursor: default !important;
+}

@@ -493,9 +493,7 @@ const ChatPage = ({ currentUser }) => {
             {fullItem && (
               <>
                 <div 
-                  className="market-card mylist-card" 
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setShowItemModal(true)}
+                  className="market-card mylist-card"
                 >
                   <div style={{ position: 'relative' }}>
                     <img
@@ -506,19 +504,13 @@ const ChatPage = ({ currentUser }) => {
                 </div>
                   <div className="market-card-content">
                     <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      {fullItem?.category && (
-                        <p className="market-card-meta" style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: '#64748b' }}>
-                          {fullItem.category}
-                        </p>
-                      )}
-                      {typeof fullItem?.distance === 'number' && (
-                        <p className="market-card-meta" style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: '#64748b' }}>
-                          {(fullItem.distance * 0.621371).toFixed(1)} mi away
-                        </p>
-                      )}
-                    </div>
                     <div className="market-card-info-line">
+                      {fullItem?.category && (
+                        <>
+                          <span className="market-card-meta">{fullItem.category}</span>
+                          <span className="market-card-separator">•</span>
+                        </>
+                      )}
                       {typeof fullItem?.price === 'number' && (
                         <>
                           <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
@@ -526,9 +518,17 @@ const ChatPage = ({ currentUser }) => {
                         </>
                       )}
                       <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
+                      {typeof fullItem?.distance === 'number' && (
+                        <>
+                          <span className="market-card-separator">•</span>
+                          <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
+                        </>
+                      )}
                     </div>
                     {fullItem?.description && (
-                      <p className="market-card-description">{fullItem.description}</p>
+                      <p className="market-card-description" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        {fullItem.description}
+                      </p>
                     )}
                     {fullItem?.username && (
                       <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>

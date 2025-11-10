@@ -389,6 +389,8 @@
 .listing-panel .market-card-info-line {
   flex-wrap: nowrap !important;
   white-space: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .listing-panel .market-card-info-line > * {

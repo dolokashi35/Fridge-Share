@@ -107,6 +107,7 @@ html, body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 24px; /* more deliberate gap */
+  align-items: stretch; /* ensure all cards stretch to same height */
 }
 
 /* Item card */
@@ -117,6 +118,9 @@ html, body {
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* ensure all cards have same height in grid */
 }
 
 .mylist-card {
@@ -142,11 +146,15 @@ html, body {
   height: 192px; /* h-48 = consistent image heights */
   object-fit: cover;
   border-radius: 1rem 1rem 0 0; /* rounded-t-2xl */
+  flex-shrink: 0; /* prevent image from shrinking */
 }
 
 .market-card-content {
   padding: 1rem; /* p-4 */
   line-height: 1.625; /* leading-relaxed */
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* allow content to grow */
 }
 
 .market-card-title {
@@ -160,6 +168,7 @@ html, body {
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.4;
+  min-height: 2.8em; /* always reserve 2 lines of space */
   max-height: 2.8em; /* 2 lines * 1.4 line-height */
 }
 
@@ -352,9 +361,10 @@ html, body {
 /* Buttons */
 .market-card-actions {
   display: flex;
-  gap: 0.4rem;
-  margin-top: 0.75rem;
+  gap: 0.5rem;
+  margin-top: auto; /* push buttons to bottom */
   align-items: stretch; /* ensure equal heights */
+  padding-top: 0.75rem; /* spacing above buttons */
 }
 
 .market-card-btn {
@@ -373,7 +383,7 @@ html, body {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  min-height: 40px; /* taller buttons */
+  height: 40px; /* fixed height for consistent button size */
 }
 
 .market-card-btn:hover {

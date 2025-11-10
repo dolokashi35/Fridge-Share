@@ -350,6 +350,9 @@
   width: 100%;
   height: auto !important;
   flex: none !important;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 .listing-panel .market-card:hover {
   transform: translateY(-4px) !important;
@@ -359,10 +362,6 @@
   min-height: auto !important;
   height: auto !important;
   flex: none !important;
-}
-.listing-panel .market-card {
-  display: flex;
-  flex-direction: column;
 }
 .listing-panel .market-img {
   flex-shrink: 0;

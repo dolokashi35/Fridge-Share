@@ -469,6 +469,18 @@ const ChatPage = ({ currentUser }) => {
                 </div>
                   <div className="market-card-content">
                     <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      {fullItem?.category && (
+                        <p className="market-card-meta" style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: '#64748b' }}>
+                          {fullItem.category}
+                        </p>
+                      )}
+                      {typeof fullItem?.distance === 'number' && (
+                        <p className="market-card-meta" style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: '#64748b' }}>
+                          {(fullItem.distance * 0.621371).toFixed(1)} mi away
+                        </p>
+                      )}
+                    </div>
                     <div className="market-card-info-line">
                       {typeof fullItem?.price === 'number' && (
                         <>
@@ -477,12 +489,6 @@ const ChatPage = ({ currentUser }) => {
                         </>
                       )}
                       <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
-                      {typeof fullItem?.distance === 'number' && (
-                        <>
-                          <span className="market-card-separator">•</span>
-                          <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
-                        </>
-                      )}
                     </div>
                     {fullItem?.description && (
                       <p className="market-card-description">{fullItem.description}</p>
@@ -500,7 +506,7 @@ const ChatPage = ({ currentUser }) => {
                   </div>
                 </div>
                 {to && selectedItem?.id && (
-                  <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                  <div style={{ marginTop: 'auto', paddingTop: '16px', width: '100%' }}>
                     {confirmation && otherConfirmed && !userConfirmed && (
                       <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
                         Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
@@ -530,6 +536,7 @@ const ChatPage = ({ currentUser }) => {
                         fontSize: '0.95rem',
                         cursor: (confirming || (confirmation && userConfirmed)) ? 'not-allowed' : 'pointer',
                         opacity: (confirming || (confirmation && userConfirmed)) ? 0.6 : 1,
+                        boxSizing: 'border-box',
                       }}
                     >
                       {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}

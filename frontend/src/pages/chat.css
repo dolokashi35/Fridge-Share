@@ -270,6 +270,7 @@
   position: sticky;
   bottom: 0;
   z-index: 3;
+  flex-wrap: wrap;
 }
 .chat-input {
   flex: 1;

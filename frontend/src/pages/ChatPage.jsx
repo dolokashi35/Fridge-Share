@@ -432,6 +432,28 @@ const ChatPage = ({ currentUser }) => {
                 style={{ maxWidth: 180 }}
           />
             )}
+            {to && selectedItem?.id && fullItem && (
+              <button
+                type="button"
+                onClick={handleConfirmPurchase}
+                disabled={confirming || (confirmation && userConfirmed)}
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: confirmation && userConfirmed ? '#94a3b8' : '#0E7490',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  cursor: (confirming || (confirmation && userConfirmed)) ? 'not-allowed' : 'pointer',
+                  opacity: (confirming || (confirmation && userConfirmed)) ? 0.6 : 1,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
+              </button>
+            )}
           <input
             type="text"
             className="chat-input"
@@ -554,38 +576,8 @@ const ChatPage = ({ currentUser }) => {
                   <p className="item-modal-meta">
                     <strong>Posted:</strong> {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
-                )}
-                {to && selectedItem?.id && (
-                  <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-                    {confirmation && otherConfirmed && !userConfirmed && (
-                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '16px', textAlign: 'center' }}>
-                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
-                      </p>
-                    )}
-                    {confirmation && userConfirmed && !otherConfirmed && (
-                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '16px', textAlign: 'center' }}>
-                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
-                      </p>
-                    )}
-                    {confirmation && userConfirmed && otherConfirmed && (
-                      <p style={{ fontSize: '0.875rem', color: '#16a34a', marginBottom: '16px', textAlign: 'center', fontWeight: 600 }}>
-                        Both parties confirmed
-                      </p>
-                    )}
-                    <button
-                      onClick={handleConfirmPurchase}
-                      disabled={confirming || (confirmation && userConfirmed)}
-                      className="item-modal-btn-buy"
-                      style={{
-                        width: '100%',
-                        padding: '14px',
-                      }}
-                    >
-                      {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
-                    </button>
-                  </div>
-                )}
-              </div>
+          )}
+        </div>
             </div>
           </div>
         )}

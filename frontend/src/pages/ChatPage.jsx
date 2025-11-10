@@ -180,6 +180,16 @@ const ChatPage = ({ currentUser }) => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setMessages(res.data.messages || []);
+      // Refresh confirmation status
+      if (selectedItem?.id && to) {
+        try {
+          const confRes = await axios.get(`${BACKEND_URL}/api/purchase-confirmation`, {
+            params: { itemId: selectedItem.id, peer: to },
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          setConfirmation(confRes.data.confirmation);
+        } catch {}
+      }
       // Refresh sidebar conversations
       const allRes = await axios.get(`${BACKEND_URL}/api/messages`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -361,7 +371,7 @@ const ChatPage = ({ currentUser }) => {
                 )}
               </div>
             </div>
-            {to && selectedItem?.id && (
+            {to && selectedItem?.id && fullItem && (
               <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
                 {confirmation && otherConfirmed && !userConfirmed && (
                   <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>

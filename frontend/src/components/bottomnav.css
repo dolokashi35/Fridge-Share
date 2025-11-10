@@ -36,7 +36,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem; /* reduced from 1.25rem */
+  gap: 1.5rem; /* gap-6 */
   flex: 1;
 }
 
@@ -48,31 +48,25 @@
   cursor: pointer;
   color: #374151;
   font-size: 1rem;
-  font-weight: 500; /* medium weight */
+  font-weight: 500; /* font-medium */
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem; /* py-3 */
   border-radius: 9999px;
-  transition: color 0.15s ease, opacity 0.15s ease;
+  transition: all 0.15s ease;
   position: relative;
 }
 
-/* 🟥 Active tab */
+/* 🟥 Active tab - light teal background, teal text */
 .bottom-navbar-btn.active {
-  color: #0E7490; /* teal accent */
-  font-weight: 500;
+  color: #0E7490; /* teal text */
+  font-weight: 500; /* font-medium, not bold */
+  background: rgba(14, 116, 144, 0.1); /* light teal background */
 }
 
 .bottom-navbar-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 1rem;
-  right: 1rem;
-  height: 2px;
-  background: #0E7490;
-  border-radius: 2px 2px 0 0;
+  display: none; /* remove underline */
 }
 
 /* 🩶 Hover - subtle color fade */
@@ -81,11 +75,16 @@
   opacity: 0.75;
 }
 
-/* 🧭 Icons */
+/* 🧭 Icons - slightly smaller, lower opacity */
 .bottom-navbar-icon {
-  font-size: 1rem;
+  font-size: 0.875rem; /* slightly smaller */
+  opacity: 0.8; /* lower opacity */
   position: relative;
   top: 1.5px;
+}
+
+.bottom-navbar-btn.active .bottom-navbar-icon {
+  opacity: 1; /* full opacity when active */
 }
 
 /* 🔺 Post button (center one) */
@@ -109,12 +108,13 @@
   background: #0d6880; /* darken by ~5-7% instead of 10-15% */
 }
 
-/* Separator between buttons and profile */
+/* Separator between buttons and profile - adds structure */
 .navbar-separator {
   width: 1px;
-  height: 24px;
+  height: 32px;
   background: #e5e7eb;
-  margin: 0 0.5rem;
+  margin: 0 1rem;
+  flex-shrink: 0;
 }
 
 /* 🧍 Profile button (modern circular icon) */

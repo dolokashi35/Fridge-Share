@@ -24,6 +24,8 @@ const categories = [
 export default function Marketplace() {
   const [items, setItems] = useState([]);
   const [modalItem, setModalItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null); // full item details for modal
+  const [loadingItem, setLoadingItem] = useState(false);
   const [requests, setRequests] = useState(() => ({})); // itemId -> { offerId, status }
   const location = useLocation();
   const nav = useNavigate();
@@ -143,6 +145,31 @@ export default function Marketplace() {
     return list;
   }, [items, term, cat, sort, maxDistanceMi, maxP]);
 
+  // Handle item click - fetch full details and show modal
+  const handleItemClick = async (itemId) => {
+    try {
+      setLoadingItem(true);
+      const stored = localStorage.getItem("fs_user");
+      const token = stored ? JSON.parse(stored)?.token : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const res = await axios.get(`${BACKEND_URL}/items/${itemId}`, { headers });
+      setSelectedItem(res.data);
+    } catch (err) {
+      console.error("Failed to load item details:", err);
+      alert("Failed to load item details");
+    } finally {
+      setLoadingItem(false);
+    }
+  };
+
+  // Close modal when clicking outside
+  const handleModalClose = (e) => {
+    if (e.target === e.currentTarget) {
+      setSelectedItem(null);
+    }
+  };
+
   return (
     <div className="market-bg">
       {/* 🧭 Main Marketplace Content (Navbar handled globally in App.jsx) */}
@@ -195,7 +222,7 @@ export default function Marketplace() {
               <div
                 key={it._id}
                 className="market-card"
-                onClick={() => nav(`/items/${it._id}`)}
+                onClick={() => handleItemClick(it._id)}
               >
                 <img 
                   src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60"} 
@@ -232,7 +259,7 @@ export default function Marketplace() {
                   )}
                   {/* Handoff Status Badge */}
                   {getHandoffStatusBadge(it)}
-                  <div className="market-card-actions">
+                  <div className="market-card-actions" onClick={(e) => e.stopPropagation()}>
                 <button
                       className="market-card-btn request"
                       onClick={(e) => {
@@ -315,6 +342,89 @@ export default function Marketplace() {
           // Do not auto-open chat here; chat prefill only for Buy flow
         }}
       />
+
+      {/* Item Detail Modal */}
+      {selectedItem && (
+        <div 
+          className="item-modal-overlay" 
+          onClick={handleModalClose}
+        >
+          <div className="item-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="item-modal-close"
+              onClick={() => setSelectedItem(null)}
+            >
+              ×
+            </button>
+            {loadingItem ? (
+              <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+            ) : (
+              <>
+                <img 
+                  src={selectedItem.imageUrl || selectedItem.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60"} 
+                  alt={selectedItem.name} 
+                  className="item-modal-image"
+                />
+                <div className="item-modal-body">
+                  <h2 className="item-modal-title">{selectedItem.name}</h2>
+                  <p className="item-modal-category">{selectedItem.category}</p>
+                  <p className="item-modal-price">${selectedItem.price.toFixed(2)}</p>
+                  {selectedItem.description && (
+                    <p className="item-modal-description">{selectedItem.description}</p>
+                  )}
+                  <div className="item-modal-meta">
+                    <p><strong>Quantity:</strong> {selectedItem.quantity ?? 'N/A'}</p>
+                    {selectedItem.purchaseDate && (
+                      <p><strong>Purchased:</strong> {new Date(selectedItem.purchaseDate).toLocaleDateString()}</p>
+                    )}
+                    {selectedItem.expirationDate && (
+                      <p><strong>Expires:</strong> {new Date(selectedItem.expirationDate).toLocaleDateString()}</p>
+                    )}
+                    <p><strong>Posted by:</strong> {selectedItem.username || "Unknown"}</p>
+                    {selectedItem.createdAt && (
+                      <p><strong>Posted:</strong> {new Date(selectedItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    )}
+                    {typeof selectedItem.distance === "number" && (
+                      <p><strong>Distance:</strong> {(selectedItem.distance * 0.621371).toFixed(1)} mi away</p>
+                    )}
+                  </div>
+                  <div className="item-modal-actions">
+                    <button
+                      className="item-modal-btn-buy"
+                      onClick={() => {
+                        setSelectedItem(null);
+                        nav("/chat", {
+                          state: {
+                            to: selectedItem.username,
+                            prefill: `Hi! I'd like to buy "${selectedItem.name}" at $${selectedItem.price.toFixed(2)}. When and where can we meet?`,
+                            source: "buy",
+                            item: {
+                              id: selectedItem._id,
+                              name: selectedItem.name,
+                              imageUrl: selectedItem.imageUrl || selectedItem.img || ""
+                            }
+                          }
+                        });
+                      }}
+                    >
+                      Buy Now
+                    </button>
+                    <button
+                      className="item-modal-btn-request"
+                      onClick={() => {
+                        setSelectedItem(null);
+                        setModalItem(selectedItem);
+                      }}
+                    >
+                      Request Item
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

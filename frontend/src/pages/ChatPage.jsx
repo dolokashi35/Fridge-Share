@@ -462,12 +462,11 @@ const ChatPage = ({ currentUser }) => {
                 >
                   <div style={{ position: 'relative' }}>
                     <img
-                      src={fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
-                      alt={fullItem?.name || selectedItem?.name || 'Item'}
-                      className="market-img"
-                    />
-                    {fullItem?.category && <span className="category-badge">{fullItem.category}</span>}
-                  </div>
+                    src={fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
+                    alt={fullItem?.name || selectedItem?.name || 'Item'}
+                    className="market-img"
+                  />
+                </div>
                   <div className="market-card-content">
                     <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
                     <div className="market-card-info-line">

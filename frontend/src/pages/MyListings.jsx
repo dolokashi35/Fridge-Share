@@ -123,6 +123,42 @@ export default function MyListings() {
     }
   };
 
+  // Open or create a chat thread tied to item and buyer
+  const openOrCreateThread = async (buyerUsername, item, initialMessage) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('fs_user'));
+      const token = user?.token;
+      // 1) Check for existing thread with this buyer + item
+      const res = await axios.get(`${BACKEND_URL}/api/messages`, {
+        params: { peer: buyerUsername, itemId: item._id },
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const threadExists = (res.data?.messages || []).length > 0;
+      // 2) If not exists, create first message
+      if (!threadExists && initialMessage) {
+        await axios.post(`${BACKEND_URL}/api/messages`, {
+          to: buyerUsername,
+          content: initialMessage,
+          itemId: item._id,
+          itemName: item.name,
+          itemImageUrl: item.imageUrl || item.img || ""
+        }, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+      }
+      // 3) Navigate to chat threaded by item
+      nav("/chat", {
+        state: {
+          to: buyerUsername,
+          item: { id: item._id, name: item.name, imageUrl: item.imageUrl || item.img || "" }
+        }
+      });
+    } catch (e) {
+      console.error("Open/create chat failed:", e);
+      alert("Could not open chat. Please try again.");
+    }
+  };
+
   async function handleDelete(itemId) {
     const user = JSON.parse(localStorage.getItem('fs_user'));
     const token = user?.token;
@@ -208,7 +244,17 @@ export default function MyListings() {
                           <button
                             className="market-card-btn btn-primary"
                             disabled={respondingId === o._id}
-                            onClick={() => respond(o._id, "accept")}
+                            onClick={async () => {
+                              await respond(o._id, "accept");
+                              const item = items.find(x => x._id === selectedItemId);
+                              if (item) {
+                                openOrCreateThread(
+                                  o.buyerUsername,
+                                  item,
+                                  `Hi! I accepted your offer for "${item.name}". When and where would you like to meet?`
+                                );
+                              }
+                            }}
                           >
                             Accept
                           </button>
@@ -221,9 +267,18 @@ export default function MyListings() {
                           </button>
                           <button
                             className="market-card-btn btn-blue"
-                            onClick={() => nav("/chat", { state: { to: o.buyerUsername, item: { id: selectedItemId, name: (items.find(x => x._id === selectedItemId)?.name) || '', imageUrl: (items.find(x => x._id === selectedItemId)?.imageUrl) || '' } } })}
+                            onClick={() => {
+                              const item = items.find(x => x._id === selectedItemId);
+                              if (item) {
+                                openOrCreateThread(
+                                  o.buyerUsername,
+                                  item,
+                                  `What price did you have in mind for "${item.name}"?`
+                                );
+                              }
+                            }}
                           >
-                            Message
+                            Chat
                           </button>
                         </div>
                       </div>
@@ -249,9 +304,9 @@ export default function MyListings() {
                         />
                         <span className="category-badge">{it.category}</span>
                       </div>
-                      <div className="market-card-content">
-                        <h3 className="market-card-title">{it.name}</h3>
-                        <p className="market-card-price">${it.price.toFixed(2)}</p>
+                <div className="market-card-content">
+                  <h3 className="market-card-title">{it.name}</h3>
+                  <p className="market-card-price">${it.price.toFixed(2)}</p>
                         <p className="market-card-meta">{truncate(it.description)}</p>
                         <p className="market-card-meta">Status: {it.status || it.handoffStatus || "completed"}</p>
                       </div>
@@ -309,7 +364,7 @@ export default function MyListings() {
                     ));
                   })}
                 </div>
-              </div>
+          </div>
             )}
           </>
         )}

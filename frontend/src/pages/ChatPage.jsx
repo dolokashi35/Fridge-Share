@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './chat.css';
+import './marketplace-modern.css';
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 
@@ -14,6 +15,7 @@ const ChatPage = ({ currentUser }) => {
   const [messagesAll, setMessagesAll] = useState([]);
   const [to, setTo] = useState(() => (location.state && location.state.to) || '');
   const [selectedItem, setSelectedItem] = useState(() => (location.state && location.state.item) || null);
+  const [fullItem, setFullItem] = useState(null);
   const [content, setContent] = useState(() => {
     const state = location.state || {};
     return state.source === 'buy' ? (state.prefill || '') : '';
@@ -111,6 +113,27 @@ const ChatPage = ({ currentUser }) => {
     };
     fetchAll();
   }, []);
+
+  // Load full item details for the right panel when item context changes
+  useEffect(() => {
+    const loadItem = async () => {
+      if (!selectedItem?.id) {
+        setFullItem(null);
+        return;
+      }
+      try {
+        const stored = localStorage.getItem('fs_user');
+        const token = stored ? JSON.parse(stored)?.token : null;
+        const res = await axios.get(`${BACKEND_URL}/items/${selectedItem.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        setFullItem(res.data || null);
+      } catch {
+        setFullItem(null);
+      }
+    };
+    loadItem();
+  }, [selectedItem]);
 
   // Send a message
   const handleSend = async (e) => {
@@ -245,27 +268,31 @@ const ChatPage = ({ currentUser }) => {
 
         {/* Right listing panel */}
         <aside className="chat-right">
-          <div className="chat-right-header">Item info</div>
+          <div className="chat-right-header">Listing</div>
           <div className="listing-panel">
-            <div className="listing-card">
-              {selectedItem?.imageUrl ? (
-                <img src={selectedItem.imageUrl} alt="" className="listing-image" />
-              ) : (
-                <div className="listing-image" />
-              )}
-              <div className="listing-meta">
-                {selectedItem?.name ? <div className="listing-title">{selectedItem.name}</div> : null}
-                {/* Optional: price if loaded elsewhere; keeping clean per request */}
-                <div className="panel-actions">
-                  {selectedItem?.id ? (
-                    <button
-                      className="panel-btn primary"
-                      onClick={() => nav(`/items/${selectedItem.id}`)}
-                    >
-                      View item
-                    </button>
-                  ) : null}
-                </div>
+            <div className="market-card mylist-card">
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={(fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img) || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
+                  alt={fullItem?.name || selectedItem?.name || 'Item'}
+                  className="market-img"
+                />
+                {fullItem?.category && <span className="category-badge">{fullItem.category}</span>}
+              </div>
+              <div className="market-card-content">
+                <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
+                {typeof fullItem?.price === 'number' && (
+                  <p className="market-card-price">${fullItem.price.toFixed(2)}</p>
+                )}
+                {fullItem?.description && (
+                  <p className="market-card-meta">{fullItem.description}</p>
+                )}
+                <p className="market-card-meta">
+                  Qty: {fullItem?.quantity ?? 'N/A'}
+                </p>
+                {fullItem?.username && (
+                  <p className="market-card-meta">Seller: <b>{fullItem.username}</b></p>
+                )}
               </div>
             </div>
           </div>

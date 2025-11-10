@@ -193,9 +193,17 @@ const ChatPage = ({ currentUser }) => {
                     {(c.peer || 'U').slice(0,2).toUpperCase()}
                   </div>
                   <div className="meta">
-                    <div className="name">{c.peer}</div>
+                    <div className="name-row">
+                      <div className="name">{c.peer}</div>
+                      {c.itemImageUrl && (
+                        <img 
+                          src={c.itemImageUrl} 
+                          alt="" 
+                          className="chat-item-thumbnail"
+                        />
+                      )}
+                    </div>
                     <div className="preview">
-                      {c.itemImageUrl ? <img src={c.itemImageUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, verticalAlign: 'middle', marginRight: 6 }} /> : null}
                       <span className="preview-text">{c.preview}</span>
                     </div>
                   </div>

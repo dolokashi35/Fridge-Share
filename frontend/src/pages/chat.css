@@ -335,45 +335,11 @@
   flex: 1;
   overflow-y: auto;
 }
-.listing-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
+/* Ensure marketplace card hover effects work in listing panel */
+.listing-panel .market-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
-.listing-image {
-  width: 100%;
-  height: 140px;                        /* smaller image */
-  object-fit: cover;
-  background: #f3f4f6;
-}
-.listing-meta {
-  padding: 12px;
-  display: grid;
-  gap: 6px;
-}
-.listing-title {
-  font-weight: 700;
-  color: #111827;
-}
-.listing-price {
-  color: #16a34a;
-  font-weight: 800;
-}
-.panel-actions {
-  display: grid;
-  gap: 8px;
-  margin-top: 6px;
-}
-.panel-btn {
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  border-radius: 10px;
-  padding: 10px 12px;
-  cursor: pointer;
-}
-.panel-btn.primary {
-  background: #0E7490;
-  color: #fff;
-  border-color: #0E7490;
+.listing-panel .market-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12) !important;
 }

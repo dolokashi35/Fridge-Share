@@ -121,3 +121,46 @@
   color: #94a3b8;
   text-align: right;
 }
+
+/* Ensure seller rating box and listing have the same width */
+.chat-listing,
+.chat-seller-rating,
+.seller-rating-box,
+.chat-listing-card,
+.chat-item-card,
+.chat-listing-info,
+.chat-seller-info {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Match any card-like elements within chat-card to have consistent width */
+.chat-card > div[class*="listing"],
+.chat-card > div[class*="rating"],
+.chat-card > div[class*="seller"],
+.chat-card > div[class*="item"],
+.chat-card > div[class*="profile"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure any white card/box elements (like seller rating or listing cards) have matching widths */
+.chat-card > div[style*="background"][style*="#fff"],
+.chat-card > div[style*="background"][style*="white"] {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* General rule: ensure all card-like containers within chat-card have consistent width */
+.chat-card > div:not(.chat-form):not(.chat-messages):not(.chat-title):not(.chat-error) {
+  max-width: 100%;
+}
+
+/* Specifically target any elements that might be listing or seller rating boxes */
+.chat-card [class*="card"],
+.chat-card [class*="box"],
+.chat-card [class*="profile"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}

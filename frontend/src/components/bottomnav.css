@@ -59,14 +59,16 @@
 
 /* 🟥 Active tab */
 .bottom-navbar-btn.active {
-  color: #ef4444;
+  color: #0E7490; /* teal accent */
   font-weight: 700;
+  border-bottom: 3px solid #0E7490;  /* accent underline */
+  border-radius: 0;                  /* underline look */
 }
 
 /* 🩶 Hover */
 .bottom-navbar-btn:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
+  color: #0E7490;
+  background: rgba(14, 116, 144, 0.08);
 }
 
 /* 🧭 Icons */
@@ -78,7 +80,7 @@
 
 /* 🔺 Post button (center one) */
 .bottom-navbar-btn:nth-child(2) {
-  background: #ef4444;
+  background: #0E7490; /* teal primary */
   color: white;
   font-weight: 600;
   display: flex;
@@ -88,13 +90,13 @@
   padding: 0.5rem 1.3rem;
   font-size: 1rem;
   border-radius: 9999px;
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+  box-shadow: 0 2px 6px rgba(14, 116, 144, 0.25);
   transition: all 0.2s ease;
   line-height: 1;
 }
 
 .bottom-navbar-btn:nth-child(2):hover {
-  background: #dc2626;
+  background: #0C6176; /* darker teal */
 }
 
 /* 🧍 Profile button (modern circular icon) */

@@ -65,6 +65,8 @@
   padding: 10px;
   border-radius: 12px;
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
 }
 .chat-list-item:hover {
   background: #f3f4f6;

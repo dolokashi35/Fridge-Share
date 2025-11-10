@@ -213,10 +213,15 @@ export default function Marketplace() {
                   <h3 className="market-card-title">{it.name}</h3>
                   <div className="market-card-info-line">
                     <span className="market-card-cat">{it.category}</span>
+                    <span className="market-card-separator">•</span>
                     <span className="market-card-price">${it.price.toFixed(2)}</span>
+                    <span className="market-card-separator">•</span>
                     <span className="market-card-meta">Qty: {it.quantity ?? "N/A"}</span>
                     {typeof it.distance === "number" && (
-                      <span className="market-card-meta">{(it.distance * 0.621371).toFixed(1)} mi</span>
+                      <>
+                        <span className="market-card-separator">•</span>
+                        <span className="market-card-meta">{(it.distance * 0.621371).toFixed(1)} mi</span>
+                      </>
                     )}
                   </div>
                   {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (

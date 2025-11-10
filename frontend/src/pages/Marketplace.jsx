@@ -27,7 +27,6 @@ export default function Marketplace() {
   const [selectedItem, setSelectedItem] = useState(null); // full item details for modal
   const [loadingItem, setLoadingItem] = useState(false);
   const [requests, setRequests] = useState(() => ({})); // itemId -> { offerId, status }
-  const [sellerStats, setSellerStats] = useState(() => ({})); // username -> { averageRating, purchaseCount }
   const [modalSellerStats, setModalSellerStats] = useState(null); // stats for seller in modal
   const location = useLocation();
   const nav = useNavigate();
@@ -69,40 +68,12 @@ export default function Marketplace() {
             params: { lat, lng, radius: 5000 },
             headers
           });
-          const itemsData = res.data.length ? res.data : SAMPLE;
-          setItems(itemsData);
-          
-          // Fetch seller stats for all unique sellers
-          const uniqueSellers = [...new Set(itemsData.map(it => it.username).filter(Boolean))];
-          const statsMap = {};
-          for (const seller of uniqueSellers) {
-            try {
-              const statsRes = await axios.get(`${BACKEND_URL}/users/stats/${seller}`);
-              statsMap[seller] = statsRes.data;
-            } catch {
-              statsMap[seller] = { averageRating: 0, purchaseCount: 0 };
-            }
-          }
-          setSellerStats(statsMap);
+          setItems(res.data.length ? res.data : SAMPLE);
         } catch {
           // Fallback to scoped items without distance
           try {
             const res = await axios.get(`${BACKEND_URL}/items`, { headers });
-            const itemsData = res.data.length ? res.data : SAMPLE;
-            setItems(itemsData);
-            
-            // Fetch seller stats
-            const uniqueSellers = [...new Set(itemsData.map(it => it.username).filter(Boolean))];
-            const statsMap = {};
-            for (const seller of uniqueSellers) {
-              try {
-                const statsRes = await axios.get(`${BACKEND_URL}/users/stats/${seller}`);
-                statsMap[seller] = statsRes.data;
-              } catch {
-                statsMap[seller] = { averageRating: 0, purchaseCount: 0 };
-              }
-            }
-            setSellerStats(statsMap);
+            setItems(res.data.length ? res.data : SAMPLE);
           } catch {
             setItems(SAMPLE);
           }

@@ -224,7 +224,12 @@ export default function Marketplace() {
                       state: {
                         to: it.username,
                         prefill: `Hi! I'd like to buy "${it.name}" at $${it.price.toFixed(2)}. When and where can we meet?`,
-                        source: "buy"
+                        source: "buy",
+                        item: {
+                          id: it._id,
+                          name: it.name,
+                          imageUrl: it.imageUrl || it.img || ""
+                        }
                       }
                     });
                       }}

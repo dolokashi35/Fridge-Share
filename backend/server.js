@@ -740,10 +740,17 @@ app.post("/api/offers/:id/cancel", auth, async (req, res) => {
 // ========================
 app.get("/api/messages", auth, async (req, res) => {
   try {
-    const { peer } = req.query;
+    const { peer, itemId } = req.query;
     const me = req.user.username;
     let match;
-    if (peer) {
+    if (peer && itemId) {
+      match = {
+        $and: [
+          { $or: [{ from: me, to: peer }, { from: peer, to: me }] },
+          { itemId }
+        ]
+      };
+    } else if (peer) {
       match = {
         $or: [
           { from: me, to: peer },
@@ -761,7 +768,10 @@ app.get("/api/messages", auth, async (req, res) => {
       from: d.from,
       to: d.to,
       content: d.content,
-      timestamp: d.timestamp
+      timestamp: d.timestamp,
+      itemId: d.itemId,
+      itemName: d.itemName,
+      itemImageUrl: d.itemImageUrl
     }));
     res.json({ messages });
   } catch (err) {
@@ -772,13 +782,16 @@ app.get("/api/messages", auth, async (req, res) => {
 
 app.post("/api/messages", auth, async (req, res) => {
   try {
-    const { to, content } = req.body;
+    const { to, content, itemId, itemName, itemImageUrl } = req.body;
     if (!to || !content) return res.status(400).json({ error: "Missing to or content" });
     const msg = await Message.create({
       from: req.user.username,
       to,
       content,
-      timestamp: new Date()
+      timestamp: new Date(),
+      itemId: itemId || null,
+      itemName: itemName || "",
+      itemImageUrl: itemImageUrl || ""
     });
     res.status(201).json({
       message: {
@@ -786,7 +799,10 @@ app.post("/api/messages", auth, async (req, res) => {
         from: msg.from,
         to: msg.to,
         content: msg.content,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
+        itemId: msg.itemId,
+        itemName: msg.itemName,
+        itemImageUrl: msg.itemImageUrl
       }
     });
   } catch (err) {

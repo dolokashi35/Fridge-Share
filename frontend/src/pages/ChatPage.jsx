@@ -11,6 +11,7 @@ const ChatPage = ({ currentUser }) => {
   const location = useLocation();
   const [messages, setMessages] = useState([]);
   const [to, setTo] = useState(() => (location.state && location.state.to) || '');
+  const [selectedItem, setSelectedItem] = useState(() => (location.state && location.state.item) || null);
   const [content, setContent] = useState(() => {
     const state = location.state || {};
     return state.source === 'buy' ? (state.prefill || '') : '';
@@ -29,25 +30,46 @@ const ChatPage = ({ currentUser }) => {
     for (const m of messages) {
       const peer = m.from === currentUser ? m.to : m.from;
       if (!peer) continue;
-      const prev = map.get(peer);
+      const key = `${peer}::${m.itemId || 'none'}`;
+      const prev = map.get(key);
       if (!prev || new Date(m.timestamp) > new Date(prev.timestamp)) {
-        map.set(peer, {
+        map.set(key, {
+          key,
           peer,
+          itemId: m.itemId || null,
+          itemName: m.itemName || '',
+          itemImageUrl: m.itemImageUrl || '',
           preview: m.content,
           timestamp: m.timestamp
         });
       }
     }
     // If navigated with a peer but no messages yet, show it
-    if (to && !map.has(to)) {
-      map.set(to, { peer: to, preview: 'New conversation', timestamp: new Date().toISOString() });
+    if (to) {
+      const key = `${to}::${selectedItem?.id || 'none'}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          peer: to,
+          itemId: selectedItem?.id || null,
+          itemName: selectedItem?.name || '',
+          itemImageUrl: selectedItem?.imageUrl || '',
+          preview: selectedItem ? `New chat about ${selectedItem.name}` : 'New conversation',
+          timestamp: new Date().toISOString()
+        });
+      }
     }
     return Array.from(map.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  }, [messages, currentUser, to]);
+  }, [messages, currentUser, to, selectedItem]);
   const filteredMessages = useMemo(() => {
     if (!to) return [];
-    return messages.filter(m => (m.from === currentUser && m.to === to) || (m.to === currentUser && m.from === to));
-  }, [messages, currentUser, to]);
+    return messages.filter(m => {
+      const involved = (m.from === currentUser && m.to === to) || (m.to === currentUser && m.from === to);
+      if (!involved) return false;
+      if (selectedItem?.id) return (m.itemId === selectedItem.id);
+      return true;
+    });
+  }, [messages, currentUser, to, selectedItem]);
 
   // Fetch messages
   useEffect(() => {
@@ -56,7 +78,7 @@ const ChatPage = ({ currentUser }) => {
         setLoading(true);
         const stored = localStorage.getItem('fs_user');
         const token = stored ? JSON.parse(stored)?.token : null;
-        const params = to ? { peer: to } : {};
+        const params = to ? (selectedItem?.id ? { peer: to, itemId: selectedItem.id } : { peer: to }) : {};
         const res = await axios.get(`${BACKEND_URL}/api/messages`, {
           params,
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -69,7 +91,7 @@ const ChatPage = ({ currentUser }) => {
       }
     };
     fetchMessages();
-  }, [to]);
+  }, [to, selectedItem]);
 
   // Send a message
   const handleSend = async (e) => {
@@ -82,13 +104,13 @@ const ChatPage = ({ currentUser }) => {
       const token = stored ? JSON.parse(stored)?.token : null;
       await axios.post(
         `${BACKEND_URL}/api/messages`,
-        { to, content },
+        { to, content, itemId: selectedItem?.id || null, itemName: selectedItem?.name || '', itemImageUrl: selectedItem?.imageUrl || '' },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       setContent('');
       // Refresh messages
       const res = await axios.get(`${BACKEND_URL}/api/messages`, {
-        params: { peer: to },
+        params: selectedItem?.id ? { peer: to, itemId: selectedItem.id } : { peer: to },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setMessages(res.data.messages || []);
@@ -112,10 +134,11 @@ const ChatPage = ({ currentUser }) => {
             ) : (
               conversations.map((c) => (
                 <div
-                  key={c.peer}
-                  className={"chat-list-item " + (to === c.peer ? "active" : "")}
+                  key={c.key}
+                  className={"chat-list-item " + (to === c.peer && ((selectedItem?.id || null) === (c.itemId || null)) ? "active" : "")}
                   onClick={() => {
                     setTo(c.peer);
+                    setSelectedItem(c.itemId ? { id: c.itemId, name: c.itemName, imageUrl: c.itemImageUrl } : null);
                     setTimeout(() => inputRef.current && inputRef.current.focus(), 0);
                   }}
                 >
@@ -124,7 +147,11 @@ const ChatPage = ({ currentUser }) => {
                   </div>
                   <div className="meta">
                     <div className="name">{c.peer}</div>
-                    <div className="preview">{c.preview}</div>
+                    <div className="preview">
+                      {c.itemImageUrl ? <img src={c.itemImageUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, verticalAlign: 'middle', marginRight: 6 }} /> : null}
+                      {c.itemName ? <span>{c.itemName} • </span> : null}
+                      {c.preview}
+                    </div>
                   </div>
                 </div>
               ))
@@ -138,7 +165,15 @@ const ChatPage = ({ currentUser }) => {
             <div className="chat-peer-avatar">{peerInitials}</div>
             <div className="chat-peer-title">
               <div className="chat-peer-name">{to || 'Conversation'}</div>
-              <div className="chat-peer-sub">Secure • Direct message</div>
+              <div className="chat-peer-sub">
+                {selectedItem?.name ? (
+                  <>
+                    <span style={{ marginRight: 6 }}>Item:</span>
+                    {selectedItem?.imageUrl ? <img src={selectedItem.imageUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, verticalAlign: 'middle', marginRight: 6 }} /> : null}
+                    <span>{selectedItem.name}</span>
+                  </>
+                ) : 'Secure • Direct message'}
+              </div>
             </div>
           </div>
 

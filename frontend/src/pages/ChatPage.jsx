@@ -1,6 +1,6 @@
 
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './chat.css';
@@ -13,6 +13,11 @@ const ChatPage = ({ currentUser }) => {
   const [content, setContent] = useState(() => (location.state && location.state.prefill) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const peerInitials = useMemo(() => {
+    const name = to || 'User';
+    const alpha = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    return alpha.slice(0, 2) || 'US';
+  }, [to]);
 
   // Fetch messages
   useEffect(() => {
@@ -62,40 +67,57 @@ const ChatPage = ({ currentUser }) => {
   return (
     <div className="chat-bg">
       <div className="chat-card">
-        <h2 className="chat-title">Messages</h2>
-        <form className="chat-form" onSubmit={handleSend}>
-          <input
-            type="text"
-            className="chat-input"
-            placeholder="Send to (username)"
-            value={to}
-            onChange={e => setTo(e.target.value)}
-          />
-          <input
-            type="text"
-            className="chat-input"
-            placeholder="Message"
-            value={content}
-            onChange={e => setContent(e.target.value)}
-          />
-          <button className="chat-btn" type="submit" disabled={loading}>Send</button>
-        </form>
+        <div className="chat-header">
+          <div className="chat-peer-avatar">{peerInitials}</div>
+          <div className="chat-peer-title">
+            <div className="chat-peer-name">{to || 'Conversation'}</div>
+            <div className="chat-peer-sub">Secure • Direct message</div>
+          </div>
+        </div>
+
         {error && <div className="chat-error">{error}</div>}
-        <div className="chat-messages">
-          {loading ? (
-            <div>Loading...</div>
+
+        <div className="chat-body">
+          {loading && messages.length === 0 ? (
+            <div className="offer-meta">Loading…</div>
           ) : messages.length === 0 ? (
-            <div>No messages yet.</div>
+            <div className="offer-meta">Say hello and propose a time and place.</div>
           ) : (
-            messages.map(msg => (
-              <div key={msg.id} className={"chat-message " + (msg.from === currentUser ? "chat-message-self" : "chat-message-other") }>
-                <div className="chat-message-meta">{msg.from === currentUser ? 'You' : msg.from} ➔ {msg.to === currentUser ? 'You' : msg.to}</div>
-                <div className="chat-message-content">{msg.content}</div>
-                <div className="chat-message-time">{new Date(msg.timestamp).toLocaleString()}</div>
-              </div>
-            ))
+            messages.map((msg) => {
+              const isSelf = msg.from === currentUser;
+              return (
+                <div key={msg.id} className={"chat-row " + (isSelf ? "self" : "")}>
+                  {!isSelf && <div className="chat-peer-avatar" style={{ width: 28, height: 28, fontSize: 12 }}>{(msg.from || 'U').slice(0,2).toUpperCase()}</div>}
+                  <div className={"bubble " + (isSelf ? "self" : "")}>
+                    <div>{msg.content}</div>
+                    <div className="bubble-meta">{new Date(msg.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
+
+        <form className="chat-composer" onSubmit={handleSend}>
+          {!to && (
+            <input
+              type="text"
+              className="chat-input"
+              placeholder="Send to (username)"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              style={{ maxWidth: 180 }}
+            />
+          )}
+          <input
+            type="text"
+            className="chat-input"
+            placeholder="Type a message…"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+          <button className="chat-send" type="submit" disabled={loading || !to || !content.trim()}>Send</button>
+        </form>
       </div>
     </div>
   );

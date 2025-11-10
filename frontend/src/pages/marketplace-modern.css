@@ -73,24 +73,16 @@ html, body {
   min-width: 200px;
 }
 
-.market-select {
+.market-select:not(:first-of-type) {
   border-left: 1px solid #e5e7eb;
   padding-left: 1rem;
   margin-left: 0.5rem;
 }
 
-.market-select:first-of-type {
-  border-left: none;
-  padding-left: 0.5rem;
-  margin-left: 0;
-}
-
-.market-input.small {
-  width: 80px;
-  text-align: center;
-  margin: 0 0.25rem;
+.market-input.small:not(:first-child) {
   border-left: 1px solid #e5e7eb;
-  padding-left: 0.5rem;
+  padding-left: 0.75rem;
+  margin-left: 0.5rem;
 }
 
 .market-select.active,

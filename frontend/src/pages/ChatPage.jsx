@@ -349,7 +349,7 @@ const ChatPage = ({ currentUser }) => {
                 if (item.type === 'date') {
                   return (
                     <div key={`date-${idx}`} className="chat-date-header">
-                      {item.date} {new Date(item.fullDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      {item.date}
                     </div>
                   );
                 }

@@ -26,7 +26,7 @@
   box-shadow: none;
   border: none;
   display: grid;
-  grid-template-columns: 270px 1fr 300px; /* smaller item panel */
+  grid-template-columns: 220px 1fr 300px; /* reduced sidebar width */
   overflow: hidden;
 }
 
@@ -226,7 +226,7 @@
   line-height: 1.4;
 }
 .bubble {
-  background: #F3F4F6;                 /* incoming: light gray */
+  background: #E3F2FD;                 /* incoming: light blue */
   color: #111827;
 }
 .bubble.self {

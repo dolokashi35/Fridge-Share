@@ -532,12 +532,6 @@ const ChatPage = ({ currentUser }) => {
                         </>
                       )}
                       <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
-                      {typeof fullItem?.distance === 'number' && (
-                        <>
-                          <span className="market-card-separator">•</span>
-                          <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
-                        </>
-                      )}
                     </div>
                     {fullItem?.description && (
                       <p className="market-card-description" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

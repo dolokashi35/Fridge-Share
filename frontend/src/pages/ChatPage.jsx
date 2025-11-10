@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './chat.css';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 
 const ChatPage = ({ currentUser }) => {
@@ -49,9 +50,12 @@ const ChatPage = ({ currentUser }) => {
     const fetchMessages = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/api/messages', {
-          headers: { Authorization: `Bearer ${token}` },
+        const stored = localStorage.getItem('fs_user');
+        const token = stored ? JSON.parse(stored)?.token : null;
+        const params = to ? { peer: to } : {};
+        const res = await axios.get(`${BACKEND_URL}/api/messages`, {
+          params,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         setMessages(res.data.messages || []);
       } catch (err) {
@@ -61,7 +65,7 @@ const ChatPage = ({ currentUser }) => {
       }
     };
     fetchMessages();
-  }, []);
+  }, [to]);
 
   // Send a message
   const handleSend = async (e) => {
@@ -70,16 +74,18 @@ const ChatPage = ({ currentUser }) => {
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
+      const stored = localStorage.getItem('fs_user');
+      const token = stored ? JSON.parse(stored)?.token : null;
       await axios.post(
-        '/api/messages',
+        `${BACKEND_URL}/api/messages`,
         { to, content },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       setContent('');
       // Refresh messages
-      const res = await axios.get('/api/messages', {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await axios.get(`${BACKEND_URL}/api/messages`, {
+        params: { peer: to },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setMessages(res.data.messages || []);
     } catch (err) {

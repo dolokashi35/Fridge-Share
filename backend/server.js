@@ -20,6 +20,7 @@ import Transaction from "./models/Transaction.js";
 import ChatRoom from "./models/ChatRoom.js";
 import { uploadBase64ToS3, removeImageFromS3 } from "./upload.js";
 import Offer from "./models/Offer.js";
+import Message from "./models/Message.js";
 
 dotenv.config();
 const app = express();
@@ -731,6 +732,66 @@ app.post("/api/offers/:id/cancel", auth, async (req, res) => {
   } catch (err) {
     console.error("❌ Cancel offer error:", err);
     res.status(500).json({ error: "Failed to cancel offer" });
+  }
+});
+
+// ========================
+// ✉️ Simple Messages (for general chat)
+// ========================
+app.get("/api/messages", auth, async (req, res) => {
+  try {
+    const { peer } = req.query;
+    const me = req.user.username;
+    let match;
+    if (peer) {
+      match = {
+        $or: [
+          { from: me, to: peer },
+          { from: peer, to: me }
+        ]
+      };
+    } else {
+      match = {
+        $or: [{ from: me }, { to: me }]
+      };
+    }
+    const docs = await Message.find(match).sort({ timestamp: 1 }).lean();
+    const messages = docs.map((d) => ({
+      id: d._id.toString(),
+      from: d.from,
+      to: d.to,
+      content: d.content,
+      timestamp: d.timestamp
+    }));
+    res.json({ messages });
+  } catch (err) {
+    console.error("❌ List messages error:", err);
+    res.status(500).json({ error: "Failed to load messages" });
+  }
+});
+
+app.post("/api/messages", auth, async (req, res) => {
+  try {
+    const { to, content } = req.body;
+    if (!to || !content) return res.status(400).json({ error: "Missing to or content" });
+    const msg = await Message.create({
+      from: req.user.username,
+      to,
+      content,
+      timestamp: new Date()
+    });
+    res.status(201).json({
+      message: {
+        id: msg._id.toString(),
+        from: msg.from,
+        to: msg.to,
+        content: msg.content,
+        timestamp: msg.timestamp
+      }
+    });
+  } catch (err) {
+    console.error("❌ Send message error:", err);
+    res.status(500).json({ error: "Failed to send message" });
   }
 });
 

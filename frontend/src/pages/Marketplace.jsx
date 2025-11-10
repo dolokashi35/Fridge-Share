@@ -244,6 +244,11 @@ export default function Marketplace() {
                       </>
                     )}
                   </div>
+                  {it.description && (
+                    <p className="market-card-description">
+                      {it.description}
+                    </p>
+                  )}
                   {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (
                     <p className="market-card-meta" style={{ color: "#16a34a", fontWeight: 600, marginTop: "0.25rem" }}>
                       Requested · Waiting for seller

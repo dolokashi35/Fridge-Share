@@ -154,6 +154,78 @@ html, body {
   gap: 24px;
 }
 
+/* ===== My Listings split layout ===== */
+.mylist-split {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+}
+.mylist-left {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.mylist-left-header {
+  padding: 10px 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+}
+.mylist-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 56vh;
+  overflow-y: auto;
+}
+.mylist-item-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  align-items: center;
+}
+.mylist-item-row:hover { background: #f8fafc; }
+.mylist-item-row.active { background: #111827; color: #fff; }
+.mylist-item-row img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.mylist-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mylist-item-meta .title { font-weight: 700; }
+.mylist-item-meta .sub { color: #64748b; font-size: 0.85rem; }
+.mylist-item-row.active .sub { color: #e5e7eb; }
+
+.mylist-right {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mylist-right-header {
+  padding: 10px 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mylist-offers-scroll {
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 56vh;
+  display: grid;
+  gap: 10px;
+}
+
 /* ===== My Listings sections ===== */
 .section-card {
   background: #fff;

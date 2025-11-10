@@ -56,6 +56,15 @@ export default function MyListings() {
     }
     return { active, past };
   }, [items]);
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  useEffect(() => {
+    if (!selectedItemId && grouped.active.length) {
+      setSelectedItemId(grouped.active[0]._id);
+    }
+    if (selectedItemId && !grouped.active.find(i => i._id === selectedItemId)) {
+      setSelectedItemId(grouped.active[0]?._id || null);
+    }
+  }, [grouped.active, selectedItemId]);
 
   const truncate = (text, len = 90) => {
     if (!text) return "";
@@ -157,38 +166,72 @@ export default function MyListings() {
           </div>
         ) : (
           <>
-            <div className="section-card" style={{ marginTop: 8 }}>
-              <div className="section-title">Active Listings</div>
-              <div className="market-grid mylist-grid">
-              {grouped.active.map(it => (
-                <div key={it._id} className="market-card mylist-card hover-animate">
-                  <div style={{ position: "relative" }}>
-                    <img
-                      src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60"}
-                      alt={it.name}
-                      className="market-img"
-                    />
-                    <span className="category-badge">{it.category}</span>
-                  </div>
-                  <div className="market-card-content">
-                    <h3 className="market-card-title">{it.name}</h3>
-                    <p className="market-card-price">${it.price.toFixed(2)}</p>
-                    <p className="market-card-meta">{truncate(it.description)}</p>
-                    <p className="market-card-meta">Qty: {it.quantity ?? 'N/A'} • {listedAgo(it.createdAt)}</p>
-                    {it.expiration && <p className="market-card-meta">Expires: {new Date(it.expiration).toLocaleDateString()}</p>}
-                    <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-                      <button className="market-card-btn btn-outline" onClick={() => nav(`/edit/${it._id}`)}>Edit</button>
-                      <button
-                        className="market-card-btn btn-danger"
-                        disabled={deletingId === it._id}
-                        onClick={() => handleDelete(it._id)}
-                      >
-                        {deletingId === it._id ? "Deleting…" : "Delete"}
-                      </button>
+            <div className="mylist-split" style={{ marginTop: 8 }}>
+              {/* Left: listings */}
+              <div className="mylist-left">
+                <div className="mylist-left-header">Active Listings</div>
+                <div className="mylist-list">
+                  {grouped.active.map((it) => (
+                    <div
+                      key={it._id}
+                      className={"mylist-item-row " + (selectedItemId === it._id ? "active" : "")}
+                      onClick={() => setSelectedItemId(it._id)}
+                    >
+                      <img src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=300&q=40"} alt={it.name} />
+                      <div className="mylist-item-meta">
+                        <div className="title">{it.name}</div>
+                        <div className="sub">${it.price.toFixed(2)} • Qty {it.quantity ?? 'N/A'}</div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Right: offers for selected */}
+              <div className="mylist-right">
+                <div className="mylist-right-header">
+                  Offers
+                  <span className="count-badge">
+                    {(offersByItem[selectedItemId] || []).length || 0}
+                  </span>
+                </div>
+                <div className="mylist-offers-scroll">
+                  {selectedItemId && (offersByItem[selectedItemId] || []).length > 0 ? (
+                    (offersByItem[selectedItemId] || []).map((o) => (
+                      <div key={o._id} className="offer-card">
+                        <div className="offer-title-line">
+                          {o.itemName || (items.find(x => x._id === selectedItemId)?.name) || 'Item'} • ${o.offerPrice.toFixed(2)}
+                        </div>
+                        <p className="offer-meta">Offer from <b>{o.buyerUsername}</b></p>
+                        {o.message && <p className="offer-meta">“{o.message}”</p>}
+                        <div className="offer-actions">
+                          <button
+                            className="market-card-btn btn-primary"
+                            disabled={respondingId === o._id}
+                            onClick={() => respond(o._id, "accept")}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="market-card-btn btn-neutral"
+                            disabled={respondingId === o._id}
+                            onClick={() => respond(o._id, "decline")}
+                          >
+                            Decline
+                          </button>
+                          <button
+                            className="market-card-btn btn-blue"
+                            onClick={() => nav("/chat", { state: { to: o.buyerUsername, item: { id: selectedItemId, name: (items.find(x => x._id === selectedItemId)?.name) || '', imageUrl: (items.find(x => x._id === selectedItemId)?.imageUrl) || '' } } })}
+                          >
+                            Message
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="offer-meta">No offers yet for this listing.</div>
+                  )}
+                </div>
               </div>
             </div>
 

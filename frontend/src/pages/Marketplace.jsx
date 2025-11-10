@@ -4,6 +4,19 @@ import axios from "axios";
 import "./marketplace-modern.css"; // Keep styling import
 import RequestModal from "../components/RequestModal";
 
+// Haversine distance in kilometers
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 const SAMPLE = [
   { id: 1, name: "Bananas", category: "Produce", price: 1.29, img: "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60" },
   { id: 2, name: "Carrots", category: "Produce", price: 0.99, img: "https://images.unsplash.com/photo-1506806732259-39c2d0268443?auto=format&fit=crop&w=600&q=60" },
@@ -17,7 +30,7 @@ const SAMPLE = [
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const categories = [
-  "All", "Produce", "Dairy", "Baked Goods", "Meat", "Seafood",
+  "All", "Produce", "Dairy", "Baked", "Meat", "Seafood",
   "Frozen", "Fresh", "Drinks", "Snacks", "Canned", "Spices", "Sauces"
 ];
 
@@ -155,7 +168,14 @@ export default function Marketplace() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       const res = await axios.get(`${BACKEND_URL}/items/${itemId}`, { headers });
-      setSelectedItem(res.data);
+      const data = res.data || {};
+      // If user location and item coordinates are available, compute distance client-side
+      if (userLoc && data?.location?.coordinates && data.location.coordinates.length === 2) {
+        const [lng, lat] = data.location.coordinates; // stored as [lng, lat]
+        const km = calculateDistanceKm(userLoc[0], userLoc[1], lat, lng);
+        data.distance = Math.round(km * 100) / 100; // store km to match backend nearby
+      }
+      setSelectedItem(data);
       
       // Fetch seller stats for the modal
       if (res.data.username) {

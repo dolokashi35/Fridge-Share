@@ -356,6 +356,11 @@ const ChatPage = ({ currentUser }) => {
                 const isSelf = item.from === currentUser;
                 return (
                   <div key={item.id || idx} className={"chat-row " + (isSelf ? "self" : "")}>
+                    {!isSelf && (
+                      <div className="chat-peer-avatar" style={{ width: 32, height: 32, fontSize: 12, marginRight: 8 }}>
+                        {(item.from || 'U').slice(0,2).toUpperCase()}
+                      </div>
+                    )}
                     <div className={"bubble " + (isSelf ? "self" : "")}>
                       <div className="bubble-content">{item.content}</div>
                     </div>

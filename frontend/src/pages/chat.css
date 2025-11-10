@@ -237,18 +237,21 @@
   line-height: 1.4;
   margin: 0;
   font-size: 0.95rem;
+  padding-bottom: 2px;
 }
 .bubble.self {
   background: #007AFF;                 /* outgoing: solid blue */
   color: #ffffff;
 }
 .bubble-time {
-  font-size: 0.7rem;
-  color: #9CA3AF;
-  margin-top: 4px;
-  padding: 0 2px;
+  font-size: 0.65rem;
+  color: rgba(156, 163, 175, 0.8);
   font-weight: 400;
   white-space: nowrap;
+  pointer-events: none;
+}
+.bubble.self .bubble-time {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .chat-composer {

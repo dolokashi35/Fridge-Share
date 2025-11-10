@@ -459,11 +459,11 @@ const ChatPage = ({ currentUser }) => {
                       </div>
                     )}
                     <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '72%' }}>
-                      <div className={"bubble " + (isSelf ? "self" : "")}>
+                      <div className={"bubble " + (isSelf ? "self" : "")} style={{ position: 'relative', paddingBottom: '20px' }}>
                         <div className="bubble-content">{item.content}</div>
-                      </div>
-                      <div className="bubble-time">
-                        {item.timeStr}
+                        <div className="bubble-time" style={{ position: 'absolute', bottom: '4px', right: '10px' }}>
+                          {item.timeStr}
+                        </div>
                       </div>
                     </div>
                   </div>

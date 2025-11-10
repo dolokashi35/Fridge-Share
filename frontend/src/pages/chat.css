@@ -70,8 +70,8 @@
   background: #f8fafc;
 }
 .chat-list-item.active {
-  background: #111827;
-  color: #fff;
+  background: #f1f5f9;
+  color: inherit;
 }
 .chat-list-item .meta {
   display: flex;
@@ -119,8 +119,8 @@
   border-radius: 9999px;
   display: grid;
   place-items: center;
-  background: #111827;
-  color: #fff;
+  background: #e5e7eb;
+  color: #111827;
   font-weight: 700;
 }
 .chat-peer-title {
@@ -172,9 +172,9 @@
   position: relative;
 }
 .bubble.self {
-  background: #111827;
-  color: #fff;
-  border-color: #111827;
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #e5e7eb;
 }
 .bubble-meta {
   font-size: 0.75rem;
@@ -203,8 +203,8 @@
 }
 .chat-input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15);
+  border-color: #94a3b8; /* neutral */
+  box-shadow: none;      /* remove red glow */
 }
 .chat-send {
   border: none;

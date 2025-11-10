@@ -190,7 +190,7 @@ html, body {
   align-items: center;
 }
 .mylist-item-row:hover { background: #f8fafc; }
-.mylist-item-row.active { background: #111827; color: #fff; }
+.mylist-item-row.active { background: #f1f5f9; color: inherit; }
 .mylist-item-row img {
   width: 80px;
   height: 80px;
@@ -204,7 +204,7 @@ html, body {
 }
 .mylist-item-meta .title { font-weight: 800; font-size: 1.05rem; }
 .mylist-item-meta .sub { color: #64748b; font-size: 0.95rem; }
-.mylist-item-row.active .sub { color: #e5e7eb; }
+.mylist-item-row.active .sub { color: #64748b; }
 
 .mylist-right {
   background: #fff;
@@ -246,8 +246,8 @@ html, body {
   gap: 8px;
 }
 .count-badge {
-  background: #111827;
-  color: #fff;
+  background: #e5e7eb;
+  color: #111827;
   border-radius: 9999px;
   font-size: 0.75rem;
   padding: 2px 8px;

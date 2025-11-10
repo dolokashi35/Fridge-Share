@@ -402,7 +402,7 @@ const ChatPage = ({ currentUser }) => {
                 <div className="chat-security-warning">
                   <div className="chat-security-icon">🛡️</div>
                   <div className="chat-security-text">
-                    Keep it on FridgeShare. Never share personal info like your email address or phone number. To stay protected, don't follow links to buy or sell outside of FridgeShare. Click the Buy button to purchase.
+                    Keep it on FridgeShare. Never share personal info like your email address or phone number. To stay protected, don't follow links to buy or sell outside of FridgeShare.
                   </div>
                 </div>
                 <div className="offer-meta">Say hello and propose a time and place.</div>
@@ -438,7 +438,7 @@ const ChatPage = ({ currentUser }) => {
                     <div key={`security-${idx}`} className="chat-security-warning">
                       <div className="chat-security-icon">🛡️</div>
                       <div className="chat-security-text">
-                        Keep it on FridgeShare. Never share personal info like your email address or phone number. To stay protected, don't follow links to buy or sell outside of FridgeShare. Click the Buy button to purchase.
+                        Keep it on FridgeShare. Never share personal info like your email address or phone number. To stay protected, don't follow links to buy or sell outside of FridgeShare.
                       </div>
                     </div>
                   );

@@ -349,4 +349,12 @@
 .listing-panel .market-card-content {
   min-height: auto !important;
   height: auto !important;
+  flex: none !important;
+}
+.listing-panel .market-card {
+  display: flex;
+  flex-direction: column;
+}
+.listing-panel .market-img {
+  flex-shrink: 0;
 }

@@ -37,6 +37,7 @@
   flex-direction: column;
   animation: slideIn 0.45s ease-out;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
+  overflow: hidden; /* prevent visual spill from inner padding/rounded corners */
 }
 
 .profile-card:hover {
@@ -173,6 +174,7 @@
   flex-direction: column;
   gap: 2rem;
   align-items: stretch;
+  box-sizing: border-box; /* include padding in width to avoid horizontal overflow */
 }
 
 /* Info Block */
@@ -217,6 +219,8 @@
   gap: 1.5rem;
   flex-wrap: wrap;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-stat-item {
@@ -267,6 +271,7 @@
   width: 100%;
   justify-content: space-between;
   flex-wrap: wrap;
+  box-sizing: border-box;
 }
 
 /* Primary Button (Teal) */
@@ -338,6 +343,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  box-sizing: border-box;
 }
 
 .profile-form-group {
@@ -373,6 +379,8 @@
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Legacy button class for backward compatibility */
@@ -426,4 +434,11 @@
 
 .autocomplete-item:hover {
   background: #f0f0f0;
+}
+
+/* Responsive tweaks to ensure no horizontal overflow on small screens */
+@media (max-width: 480px) {
+  .profile-info { padding: 1.75rem 1.25rem 2rem; }
+  .profile-form { padding: 0 1.25rem 1.75rem; }
+  .profile-stats-grid { padding: 1rem; }
 }

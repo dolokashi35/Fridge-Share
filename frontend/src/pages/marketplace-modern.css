@@ -10,9 +10,11 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
   background: #fafafa;
-  color: var(--text-dark);
+  color: #0f172a; /* slate-900 */
   overflow-x: hidden;
 }
 
@@ -35,9 +37,10 @@ html, body {
 /* Page title */
 .market-title {
   text-align: center;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
   margin-bottom: 1rem; /* tighter per spec */
 }
 
@@ -55,7 +58,7 @@ html, body {
 }
 
 .market-input, .market-select {
-  border-radius: 9999px;
+  border-radius: 10px;
   border: 1px solid #e5e7eb;
   padding: 0.5rem 1rem;
   font-size: 0.95rem;
@@ -113,29 +116,30 @@ html, body {
 }
 
 .market-card-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--text-dark);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: #0f172a;
   margin-bottom: 0.2rem;
 }
 
 .market-card-cat {
-  color: var(--primary);
-  font-weight: 500;
+  color: #64748b; /* slate-500 */
+  font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 0.25rem;
 }
 
 .market-card-price {
-  color: var(--primary);
-  font-weight: 700;
+  color: #16a34a; /* green-600 */
+  font-weight: 800;
   margin-top: 0.25rem;
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .market-card-meta {
-  color: var(--gray);
-  font-size: 0.85rem;
+  color: #6b7280; /* gray-500 */
+  font-size: 0.9rem;
   margin: 0.1rem 0;
 }
 
@@ -157,7 +161,7 @@ html, body {
 /* ===== My Listings split layout ===== */
 .mylist-split {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 420px 1fr;
   gap: 16px;
 }
 .mylist-left {
@@ -167,8 +171,8 @@ html, body {
   overflow: hidden;
 }
 .mylist-left-header {
-  padding: 10px 12px;
-  font-weight: 700;
+  padding: 14px 16px;
+  font-weight: 800;
   border-bottom: 1px solid #e5e7eb;
 }
 .mylist-list {
@@ -179,17 +183,17 @@ html, body {
 }
 .mylist-item-row {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 10px;
-  padding: 10px 12px;
+  grid-template-columns: 80px 1fr;
+  gap: 14px;
+  padding: 14px 16px;
   cursor: pointer;
   align-items: center;
 }
 .mylist-item-row:hover { background: #f8fafc; }
 .mylist-item-row.active { background: #111827; color: #fff; }
 .mylist-item-row img {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -198,8 +202,8 @@ html, body {
   flex-direction: column;
   gap: 2px;
 }
-.mylist-item-meta .title { font-weight: 700; }
-.mylist-item-meta .sub { color: #64748b; font-size: 0.85rem; }
+.mylist-item-meta .title { font-weight: 800; font-size: 1.05rem; }
+.mylist-item-meta .sub { color: #64748b; font-size: 0.95rem; }
 .mylist-item-row.active .sub { color: #e5e7eb; }
 
 .mylist-right {

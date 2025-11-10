@@ -9,7 +9,8 @@
     "dev": "cd backend && npm run dev",
     "install-backend": "cd backend && npm install",
     "install-frontend": "cd frontend && npm install",
-    "install-all": "npm run install-backend && npm run install-frontend"
+    "install-all": "npm run install-backend && npm run install-frontend",
+    "autopush": "bash ./auto-push.sh"
   },
   "dependencies": {
     "@google-cloud/vision": "^5.3.3",

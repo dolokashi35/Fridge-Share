@@ -170,16 +170,6 @@ export default function Marketplace() {
               <option key={c}>{c}</option>
             ))}
           </select>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="market-select"
-          >
-            <option value="name-asc">Name (A → Z)</option>
-            <option value="name-desc">Name (Z → A)</option>
-            <option value="price-asc">Price (Low → High)</option>
-            <option value="price-desc">Price (High → Low)</option>
-          </select>
           <div className="market-range">
             <label>Distance (mi)</label>
             <input

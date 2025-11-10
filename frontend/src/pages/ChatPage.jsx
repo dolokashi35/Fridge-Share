@@ -426,7 +426,7 @@ const ChatPage = ({ currentUser }) => {
               </div>
             </div>
             {to && selectedItem?.id && fullItem && (
-              <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+              <div style={{ width: '100%', paddingTop: '16px', borderTop: '1px solid #e5e7eb', marginTop: '16px' }}>
                 {confirmation && otherConfirmed && !userConfirmed && (
                   <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
                     Waiting for {isSeller ? 'buyer' : 'seller'} to confirm

@@ -332,14 +332,21 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1;
+  align-items: flex-start;
   overflow-y: auto;
 }
 /* Ensure marketplace card hover effects work in listing panel */
 .listing-panel .market-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  width: 100%;
+  height: auto !important;
+  flex: none !important;
 }
 .listing-panel .market-card:hover {
   transform: translateY(-4px) !important;
   box-shadow: 0 10px 24px rgba(0,0,0,0.12) !important;
+}
+.listing-panel .market-card-content {
+  min-height: auto !important;
+  height: auto !important;
 }

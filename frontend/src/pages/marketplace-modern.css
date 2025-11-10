@@ -358,11 +358,12 @@ html, body {
 }
 
 .market-card-btn {
-  flex: 1;
+  flex: 1 1 0; /* equal flex basis - ensures same size */
+  min-width: 0; /* allow flex to shrink if needed */
   box-sizing: border-box;
   border: none;
   border-radius: 0.75rem; /* rounded-xl - micro-corner rounding */
-  padding: 0.625rem 0.75rem; /* py-2.5 - slightly taller */
+  padding: 0.625rem 0.5rem; /* consistent horizontal padding */
   font-weight: 600;
   font-size: 0.875rem;
   line-height: 1;

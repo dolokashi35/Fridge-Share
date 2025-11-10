@@ -253,7 +253,7 @@ export default function Marketplace() {
                     });
                       }}
                     >
-                  Buy Now • ${it.price.toFixed(2)}
+                  Buy Now
                     </button>
                     <button
                       className="market-card-btn message"

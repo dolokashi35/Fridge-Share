@@ -11,6 +11,7 @@ const ChatPage = ({ currentUser }) => {
   const location = useLocation();
   const nav = useNavigate();
   const [messages, setMessages] = useState([]);
+  const [messagesAll, setMessagesAll] = useState([]);
   const [to, setTo] = useState(() => (location.state && location.state.to) || '');
   const [selectedItem, setSelectedItem] = useState(() => (location.state && location.state.item) || null);
   const [content, setContent] = useState(() => {
@@ -28,7 +29,7 @@ const ChatPage = ({ currentUser }) => {
   const conversations = useMemo(() => {
     // Build unique peers with last message preview and time
     const map = new Map();
-    for (const m of messages) {
+    for (const m of messagesAll) {
       const peer = m.from === currentUser ? m.to : m.from;
       if (!peer) continue;
       const key = `${peer}::${m.itemId || 'none'}`;
@@ -61,7 +62,7 @@ const ChatPage = ({ currentUser }) => {
       }
     }
     return Array.from(map.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  }, [messages, currentUser, to, selectedItem]);
+  }, [messagesAll, currentUser, to, selectedItem]);
   const filteredMessages = useMemo(() => {
     if (!to) return [];
     return messages.filter(m => {
@@ -72,7 +73,7 @@ const ChatPage = ({ currentUser }) => {
     });
   }, [messages, currentUser, to, selectedItem]);
 
-  // Fetch messages
+  // Fetch thread messages for the selected peer/item
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -93,6 +94,23 @@ const ChatPage = ({ currentUser }) => {
     };
     fetchMessages();
   }, [to, selectedItem]);
+
+  // Fetch all messages (for sidebar)
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const stored = localStorage.getItem('fs_user');
+        const token = stored ? JSON.parse(stored)?.token : null;
+        const res = await axios.get(`${BACKEND_URL}/api/messages`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        setMessagesAll(res.data.messages || []);
+      } catch {
+        // ignore
+      }
+    };
+    fetchAll();
+  }, []);
 
   // Send a message
   const handleSend = async (e) => {
@@ -115,6 +133,11 @@ const ChatPage = ({ currentUser }) => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setMessages(res.data.messages || []);
+      // Refresh sidebar conversations
+      const allRes = await axios.get(`${BACKEND_URL}/api/messages`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setMessagesAll(allRes.data.messages || []);
     } catch (err) {
       setError('Failed to send message');
     } finally {

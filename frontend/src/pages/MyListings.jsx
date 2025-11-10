@@ -207,7 +207,9 @@ export default function MyListings() {
               <div className="mylist-left">
                 <div className="mylist-left-header">Active Listings</div>
                 <div className="mylist-list">
-                  {grouped.active.map((it) => (
+                  {grouped.active.map((it) => {
+                    const pendCount = (offersByItem[it._id] || []).filter(o => o.status === "pending" || o.status === "countered").length;
+                    return (
                     <div
                       key={it._id}
                       className={"mylist-item-row " + (selectedItemId === it._id ? "active" : "")}
@@ -215,11 +217,15 @@ export default function MyListings() {
                     >
                       <img src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=300&q=40"} alt={it.name} />
                       <div className="mylist-item-meta">
-                        <div className="title">{it.name}</div>
+                        <div className="title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {it.name}
+                          {pendCount > 0 && <span className="count-badge">{pendCount}</span>}
+                        </div>
                         <div className="sub">${it.price.toFixed(2)} • Qty {it.quantity ?? 'N/A'}</div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -228,12 +234,16 @@ export default function MyListings() {
                 <div className="mylist-right-header">
                   Offers
                   <span className="count-badge">
-                    {(offersByItem[selectedItemId] || []).length || 0}
+                    {(offersByItem[selectedItemId] || []).filter(o => o.status === "pending" || o.status === "countered").length || 0}
                   </span>
                 </div>
                 <div className="mylist-offers-scroll">
-                  {selectedItemId && (offersByItem[selectedItemId] || []).length > 0 ? (
-                    (offersByItem[selectedItemId] || []).map((o) => (
+                  {(() => {
+                    const list = (offersByItem[selectedItemId] || []).filter(
+                      (o) => o.status === "pending" || o.status === "countered"
+                    );
+                    return selectedItemId && list.length > 0 ? (
+                      list.map((o) => (
                       <div key={o._id} className="offer-card">
                         <div className="offer-title-line">
                           {o.itemName || (items.find(x => x._id === selectedItemId)?.name) || 'Item'} • ${o.offerPrice.toFixed(2)}
@@ -245,6 +255,12 @@ export default function MyListings() {
                             className="market-card-btn btn-primary"
                             disabled={respondingId === o._id}
                             onClick={async () => {
+                              // Optimistically remove offer from list
+                              setOffersByItem((prev) => {
+                                const next = { ...prev };
+                                next[selectedItemId] = (next[selectedItemId] || []).filter(x => x._id !== o._id);
+                                return next;
+                              });
                               await respond(o._id, "accept");
                               const item = items.find(x => x._id === selectedItemId);
                               if (item) {
@@ -261,7 +277,15 @@ export default function MyListings() {
                           <button
                             className="market-card-btn btn-neutral"
                             disabled={respondingId === o._id}
-                            onClick={() => respond(o._id, "decline")}
+                            onClick={async () => {
+                              // Optimistically remove the offer from the visible list
+                              setOffersByItem((prev) => {
+                                const next = { ...prev };
+                                next[selectedItemId] = (next[selectedItemId] || []).filter(x => x._id !== o._id);
+                                return next;
+                              });
+                              await respond(o._id, "decline");
+                            }}
                           >
                             Decline
                           </button>
@@ -270,6 +294,12 @@ export default function MyListings() {
                             onClick={() => {
                               const item = items.find(x => x._id === selectedItemId);
                               if (item) {
+                                // Optimistically remove offer when moving to chat (negotiation continues in thread)
+                                setOffersByItem((prev) => {
+                                  const next = { ...prev };
+                                  next[selectedItemId] = (next[selectedItemId] || []).filter(x => x._id !== o._id);
+                                  return next;
+                                });
                                 openOrCreateThread(
                                   o.buyerUsername,
                                   item,
@@ -282,10 +312,11 @@ export default function MyListings() {
                           </button>
                         </div>
                       </div>
-                    ))
-                  ) : (
+                      ))
+                    ) : (
                     <div className="offer-meta">No offers yet for this listing.</div>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -316,56 +347,7 @@ export default function MyListings() {
               </div>
             )}
 
-            {/* Pending offers per Active item (basic UI) */}
-            {grouped.active.length > 0 && (
-              <div className="section-card" style={{ marginTop: 24 }}>
-                <div className="section-title">
-                  Incoming Offers
-                  <span className="count-badge">
-                    {
-                      Object.values(offersByItem).reduce((acc, arr) =>
-                        acc + (arr || []).filter(o => o.status === "pending" || o.status === "countered").length, 0
-                      )
-                    }
-                  </span>
-                </div>
-                <div className="market-grid mylist-grid">
-                  {grouped.active.map((it) => {
-                    const offers = (offersByItem[it._id] || []).filter(o => o.status === "pending" || o.status === "countered");
-                    if (!offers.length) return null;
-                    return offers.map((o) => (
-                      <div key={o._id} className="offer-card">
-                        <div className="offer-title-line">{it.name} • ${it.price.toFixed(2)}</div>
-                        <p className="offer-meta">Offer from <b>{o.buyerUsername}</b>: ${o.offerPrice.toFixed(2)}</p>
-                        {o.message && <p className="offer-meta">“{o.message}”</p>}
-                        <div className="offer-actions">
-                          <button
-                            className="market-card-btn btn-primary"
-                            disabled={respondingId === o._id}
-                            onClick={() => respond(o._id, "accept")}
-                          >
-                            Accept
-                          </button>
-                          <button
-                            className="market-card-btn btn-neutral"
-                            disabled={respondingId === o._id}
-                            onClick={() => respond(o._id, "decline")}
-                          >
-                            Decline
-                          </button>
-                          <button
-                            className="market-card-btn btn-blue"
-                            onClick={() => nav("/chat", { state: { to: o.buyerUsername } })}
-                          >
-                            Message
-                          </button>
-                        </div>
-                      </div>
-                    ));
-                  })}
-                </div>
-          </div>
-            )}
+            {/* Removed global incoming offers section; offers are shown per selected listing on the right. */}
           </>
         )}
       </div>

@@ -223,7 +223,8 @@ export default function Marketplace() {
                     nav("/chat", {
                       state: {
                         to: it.username,
-                        prefill: `Hi! I'd like to buy "${it.name}" at $${it.price.toFixed(2)}. When and where can we meet?`
+                        prefill: `Hi! I'd like to buy "${it.name}" at $${it.price.toFixed(2)}. When and where can we meet?`,
+                        source: "buy"
                       }
                     });
                       }}
@@ -288,10 +289,7 @@ export default function Marketplace() {
               [modalItem._id]: { offerId: null, status: "pending" }
             }));
           }
-          // If buyer added a note while countering, open chat to negotiate
-          if (note && note.trim().length > 0) {
-            nav("/chat", { state: { to: modalItem.username, prefill: note } });
-          }
+          // Do not auto-open chat here; chat prefill only for Buy flow
         }}
       />
     </div>

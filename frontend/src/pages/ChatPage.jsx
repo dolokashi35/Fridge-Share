@@ -11,7 +11,10 @@ const ChatPage = ({ currentUser }) => {
   const location = useLocation();
   const [messages, setMessages] = useState([]);
   const [to, setTo] = useState(() => (location.state && location.state.to) || '');
-  const [content, setContent] = useState(() => (location.state && location.state.prefill) || '');
+  const [content, setContent] = useState(() => {
+    const state = location.state || {};
+    return state.source === 'buy' ? (state.prefill || '') : '';
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef(null);

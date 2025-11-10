@@ -225,19 +225,18 @@
 .bubble {
   padding: 10px 14px;
   border-radius: 18px;
-  position: relative;
   background: #F5F7FA;                 /* incoming: very light blue-gray, almost white */
   color: #1F2937;
   border: none;
   width: fit-content;
   max-width: 100%;
+  margin-bottom: 0;
 }
 .bubble-content {
   word-wrap: break-word;
   line-height: 1.4;
   margin: 0;
   font-size: 0.95rem;
-  padding-bottom: 2px;
 }
 .bubble.self {
   background: #007AFF;                 /* outgoing: solid blue */
@@ -249,9 +248,19 @@
   font-weight: 400;
   white-space: nowrap;
   pointer-events: none;
+  margin-top: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  display: block;
+  line-height: 1.2;
 }
-.bubble.self .bubble-time {
-  color: rgba(255, 255, 255, 0.7);
+.chat-row.self .bubble-time {
+  text-align: right;
+  color: rgba(156, 163, 175, 0.8);
+}
+.chat-row:not(.self) .bubble-time {
+  text-align: left;
+  color: rgba(156, 163, 175, 0.8);
 }
 
 .chat-composer {

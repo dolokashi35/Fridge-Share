@@ -250,6 +250,73 @@ const ChatPage = ({ currentUser }) => {
     fetchConfirmation();
   }, [to, selectedItem]);
 
+  // Auto-send message when coming from "Buy Now" button
+  const hasAutoSentRef = useRef(false);
+  const cameFromBuyRef = useRef(location.state?.source === 'buy');
+  
+  useEffect(() => {
+    const autoSendBuyMessage = async () => {
+      // Check if we came from buy action (either from location.state or if content was pre-filled)
+      const cameFromBuy = cameFromBuyRef.current || (initialState.content && initialState.content.length > 0);
+      const shouldAutoSend = cameFromBuy && 
+                             content && 
+                             content.trim().length > 0 &&
+                             to && 
+                             !hasAutoSentRef.current && 
+                             !loading;
+      
+      if (shouldAutoSend) {
+        hasAutoSentRef.current = true; // Mark as sent to prevent duplicate sends
+        try {
+          setLoading(true);
+          setError('');
+          const stored = localStorage.getItem('fs_user');
+          const token = stored ? JSON.parse(stored)?.token : null;
+          await axios.post(
+            `${BACKEND_URL}/api/messages`,
+            { to, content, itemId: selectedItem?.id || null, itemName: selectedItem?.name || '', itemImageUrl: selectedItem?.imageUrl || '' },
+            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+          );
+          setContent('');
+          // Refresh messages
+          const res = await axios.get(`${BACKEND_URL}/api/messages`, {
+            params: selectedItem?.id ? { peer: to, itemId: selectedItem.id } : { peer: to },
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          setMessages(res.data.messages || []);
+          // Refresh confirmation status
+          if (selectedItem?.id && to) {
+            try {
+              const confRes = await axios.get(`${BACKEND_URL}/api/purchase-confirmation`, {
+                params: { itemId: selectedItem.id, peer: to },
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+              });
+              setConfirmation(confRes.data.confirmation);
+            } catch {}
+          }
+          // Refresh sidebar conversations
+          try {
+            const allRes = await axios.get(`${BACKEND_URL}/api/messages`, {
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+            setMessagesAll(allRes.data.messages || []);
+          } catch {}
+        } catch (err) {
+          setError('Failed to send message');
+          console.error('Auto-send error:', err);
+          hasAutoSentRef.current = false; // Reset on error so user can retry
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    // Small delay to ensure component is fully mounted and state is set
+    const timer = setTimeout(() => {
+      autoSendBuyMessage();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [content, to, selectedItem, loading]); // Run when these are set
+
   // Send a message
   const handleSend = async (e) => {
     e.preventDefault();
@@ -458,12 +525,12 @@ const ChatPage = ({ currentUser }) => {
                         {(item.from || 'U').slice(0,2).toUpperCase()}
                       </div>
                     )}
-                    <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '72%' }}>
-                      <div className={"bubble " + (isSelf ? "self" : "")} style={{ position: 'relative', paddingBottom: '20px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '72%', alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
+                      <div className={"bubble " + (isSelf ? "self" : "")}>
                         <div className="bubble-content">{item.content}</div>
-                        <div className="bubble-time" style={{ position: 'absolute', bottom: '4px', right: '10px' }}>
-                          {item.timeStr}
-                        </div>
+                      </div>
+                      <div className="bubble-time" style={{ width: '100%' }}>
+                        {item.timeStr}
                       </div>
                     </div>
                   </div>

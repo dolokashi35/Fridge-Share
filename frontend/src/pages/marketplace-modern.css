@@ -135,9 +135,10 @@ html, body {
 /* ✅ Grid for items */
 .market-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, 300px);
   gap: 24px; /* more deliberate gap */
   align-items: stretch; /* ensure all cards stretch to same height */
+  justify-content: center; /* center the grid */
 }
 
 /* Item card */
@@ -151,6 +152,8 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%; /* ensure all cards have same height in grid */
+  width: 300px; /* fixed width - doesn't change based on text */
+  box-sizing: border-box;
 }
 
 .mylist-card {
@@ -647,13 +650,21 @@ html, body {
 /* Responsive grid */
 @media (max-width: 1100px) {
   .market-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, 280px);
+  }
+  .market-card {
+    width: 280px;
   }
 }
 
 @media (max-width: 700px) {
   .market-grid {
     grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+  .market-card {
+    width: 100%;
+    max-width: 100%;
   }
 }
 

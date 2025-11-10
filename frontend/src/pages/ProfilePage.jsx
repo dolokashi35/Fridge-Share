@@ -28,6 +28,21 @@ function CustomPopper(props) {
   );
 }
 
+// Generate avatar initials from name or username
+function getInitials(name, username) {
+  if (name && name.trim()) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+  if (username) {
+    return username[0].toUpperCase();
+  }
+  return "?";
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,20 +130,30 @@ export default function ProfilePage() {
     }
   }
 
+  const initials = getInitials(user?.profile?.name, user?.username);
+
   return (
     <div className="profile-bg">
       <div className="profile-card">
+        {/* Header with gradient and avatar */}
+        <div className="profile-header">
+          <div className="profile-avatar" title={user?.profile?.name || user?.username}>
+            {initials}
+          </div>
+        </div>
+
         <h1 className="profile-title">My Profile</h1>
 
         {editing ? (
           <form className="profile-form" onSubmit={handleSave}>
-            <div>
-              <b>Username:</b> {user.username}
+            <div className="profile-info-item">
+              <span className="profile-label">Username</span>
+              <span className="profile-value">{user.username}</span>
             </div>
 
             {/* Name */}
-            <div>
-              <label>Name:</label>
+            <div className="profile-form-group">
+              <label className="profile-form-label">Name</label>
               <input
                 className="profile-input"
                 value={name}
@@ -138,8 +163,8 @@ export default function ProfilePage() {
             </div>
 
             {/* College Autocomplete */}
-            <div style={{ position: "relative", zIndex: 10 }}>
-              <label>College:</label>
+            <div className="profile-form-group" style={{ position: "relative", zIndex: 10 }}>
+              <label className="profile-form-label">College</label>
               <Autocomplete
                 options={colleges}
                 value={college}
@@ -151,7 +176,7 @@ export default function ProfilePage() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Search for your college"
+                    placeholder="Search for your college"
                     variant="outlined"
                     fullWidth
                     required
@@ -166,16 +191,16 @@ export default function ProfilePage() {
               />
             </div>
 
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="profile-form-actions">
               <button
-                className="profile-btn"
+                className="profile-btn-primary"
                 type="submit"
                 disabled={saving}
               >
                 {saving ? "Saving..." : "Save"}
               </button>
               <button
-                className="profile-btn"
+                className="profile-btn-secondary"
                 type="button"
                 onClick={() => setEditing(false)}
                 disabled={saving}
@@ -186,53 +211,61 @@ export default function ProfilePage() {
           </form>
         ) : (
           <div className="profile-info">
-            <div>
-              <b>Username:</b> {user.username}
+            {/* Basic Info Block */}
+            <div className="profile-info-block">
+              <div className="profile-info-item">
+                <span className="profile-label">Name</span>
+                <span className="profile-value">{user.profile.name || "Not set"}</span>
+              </div>
+              <div className="profile-info-item">
+                <span className="profile-label">Email</span>
+                <span className="profile-value">{user.username}</span>
+              </div>
+              <div className="profile-info-item">
+                <span className="profile-label">College</span>
+                <span className="profile-value">{user.profile.college || "Not set"}</span>
+              </div>
+              <div className="profile-info-item">
+                <span className="profile-label">Member since</span>
+                <span className="profile-value">Active member</span>
+              </div>
             </div>
-            <div>
-              <b>Name:</b> {user.profile.name || "Not set"}
-            </div>
-            <div>
-              <b>College:</b> {user.profile.college || "Not set"}
-            </div>
+
+            {/* Stats Grid */}
             {!loadingStats && (
-              <>
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '2rem', 
-                  marginTop: '1rem',
-                  paddingTop: '1rem',
-                  borderTop: '1px solid #e5e7eb'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>
-                      Rating
-                    </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
-                      {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '—'} ⭐
-                    </div>
+              <div className="profile-stats-grid">
+                <div className="profile-stat-item">
+                  <div className="profile-stat-label">
+                    <span className="profile-stat-icon">⭐</span>
+                    Rating
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>
-                      Purchases
-                    </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
-                      {stats.purchaseCount}
-                    </div>
+                  <div className="profile-stat-value">
+                    {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '—'}
                   </div>
                 </div>
-              </>
+                <div className="profile-stat-divider"></div>
+                <div className="profile-stat-item">
+                  <div className="profile-stat-label">
+                    <span className="profile-stat-icon">📦</span>
+                    Purchases
+                  </div>
+                  <div className="profile-stat-value">
+                    {stats.purchaseCount}
+                  </div>
+                </div>
+              </div>
             )}
+
+            {/* Action Buttons */}
             <div className="profile-actions">
               <button
-                className="profile-btn"
+                className="profile-btn-primary"
                 onClick={() => setEditing(true)}
               >
                 Edit Profile
               </button>
               <button
-                className="profile-btn"
-                style={{ background: "#ef4444" }}
+                className="profile-btn-secondary"
                 onClick={() => {
                   try {
                     localStorage.removeItem("fs_user");
@@ -242,7 +275,7 @@ export default function ProfilePage() {
                   }
                 }}
               >
-                Log out
+                Log Out
               </button>
             </div>
           </div>

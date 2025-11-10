@@ -905,6 +905,57 @@ app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
       confirmation.completed = true;
       await confirmation.save();
       
+      // Update user stats BEFORE deleting the confirmation
+      // buyerRating = rating buyer gives to seller (so this affects seller's rating)
+      // sellerRating = rating seller gives to buyer (so this affects buyer's rating)
+      
+      const buyerRating = confirmation.buyerRating; // Rating given TO seller
+      const sellerRating = confirmation.sellerRating; // Rating given TO buyer
+      
+      // Update seller's stats (based on buyerRating - rating given by buyer to seller)
+      if (buyerRating) {
+        const seller = await User.findOne({ username: sellerUsername });
+        if (seller) {
+          // Get all ratings where this user was the seller (buyerRating from buyers)
+          const sellerConfirmations = await PurchaseConfirmation.find({
+            sellerUsername,
+            buyerRating: { $ne: null },
+            completed: true
+          });
+          
+          const sellerRatingsArray = sellerConfirmations.map(c => c.buyerRating);
+          const newSellerAvg = sellerRatingsArray.length > 0
+            ? sellerRatingsArray.reduce((a, b) => a + b, 0) / sellerRatingsArray.length
+            : 0;
+          
+          seller.averageRating = Math.round(newSellerAvg * 10) / 10;
+          seller.purchaseCount = (seller.purchaseCount || 0) + 1;
+          await seller.save();
+        }
+      }
+      
+      // Update buyer's stats (based on sellerRating - rating given by seller to buyer)
+      if (sellerRating) {
+        const buyer = await User.findOne({ username: buyerUsername });
+        if (buyer) {
+          // Get all ratings where this user was the buyer (sellerRating from sellers)
+          const buyerConfirmations = await PurchaseConfirmation.find({
+            buyerUsername,
+            sellerRating: { $ne: null },
+            completed: true
+          });
+          
+          const buyerRatingsArray = buyerConfirmations.map(c => c.sellerRating);
+          const newBuyerAvg = buyerRatingsArray.length > 0
+            ? buyerRatingsArray.reduce((a, b) => a + b, 0) / buyerRatingsArray.length
+            : 0;
+          
+          buyer.averageRating = Math.round(newBuyerAvg * 10) / 10;
+          buyer.purchaseCount = (buyer.purchaseCount || 0) + 1;
+          await buyer.save();
+        }
+      }
+      
       // Delete all messages for this item thread
       await Message.deleteMany({
         $or: [
@@ -916,7 +967,7 @@ app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
       // Delete the item listing
       await Item.findByIdAndDelete(itemId);
       
-      // Delete the confirmation record
+      // Delete the confirmation record (after updating stats)
       await PurchaseConfirmation.findByIdAndDelete(confirmation._id);
       
       return res.json({ 

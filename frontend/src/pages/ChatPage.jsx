@@ -13,13 +13,39 @@ const ChatPage = ({ currentUser }) => {
   const nav = useNavigate();
   const [messages, setMessages] = useState([]);
   const [messagesAll, setMessagesAll] = useState([]);
-  const [to, setTo] = useState(() => (location.state && location.state.to) || '');
-  const [selectedItem, setSelectedItem] = useState(() => (location.state && location.state.item) || null);
+  
+  // Initialize state from location.state (for navigation) or localStorage (for persistence on reload)
+  const getInitialState = () => {
+    // First, check if we're navigating with state (new chat)
+    if (location.state && location.state.to) {
+      return {
+        to: location.state.to,
+        selectedItem: location.state.item || null,
+        content: location.state.source === 'buy' ? (location.state.prefill || '') : ''
+      };
+    }
+    // Otherwise, try to restore from localStorage
+    try {
+      const saved = localStorage.getItem('fs_chat_state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          to: parsed.to || '',
+          selectedItem: parsed.selectedItem || null,
+          content: ''
+        };
+      }
+    } catch (e) {
+      console.error('Failed to load chat state:', e);
+    }
+    return { to: '', selectedItem: null, content: '' };
+  };
+
+  const initialState = getInitialState();
+  const [to, setTo] = useState(initialState.to);
+  const [selectedItem, setSelectedItem] = useState(initialState.selectedItem);
   const [fullItem, setFullItem] = useState(null);
-  const [content, setContent] = useState(() => {
-    const state = location.state || {};
-    return state.source === 'buy' ? (state.prefill || '') : '';
-  });
+  const [content, setContent] = useState(initialState.content);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [confirmation, setConfirmation] = useState(null);
@@ -29,6 +55,27 @@ const ChatPage = ({ currentUser }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const inputRef = useRef(null);
+
+  // Persist chat state to localStorage whenever to or selectedItem changes
+  useEffect(() => {
+    if (to) {
+      try {
+        localStorage.setItem('fs_chat_state', JSON.stringify({
+          to,
+          selectedItem: selectedItem ? {
+            id: selectedItem.id,
+            name: selectedItem.name,
+            imageUrl: selectedItem.imageUrl
+          } : null
+        }));
+      } catch (e) {
+        console.error('Failed to save chat state:', e);
+      }
+    } else {
+      // Clear state when no chat is selected
+      localStorage.removeItem('fs_chat_state');
+    }
+  }, [to, selectedItem]);
   const peerInitials = useMemo(() => {
     const name = to || 'User';
     const alpha = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -302,7 +349,9 @@ const ChatPage = ({ currentUser }) => {
                   onClick={() => {
                     setTo(c.peer);
                     setSelectedItem(c.itemId ? { id: c.itemId, name: c.itemName, imageUrl: c.itemImageUrl } : null);
-                    setTimeout(() => inputRef.current && inputRef.current.focus(), 0);
+                    setContent('');
+                    // Update URL without navigation state to avoid losing it on reload
+                    nav('/chat', { replace: true });
                   }}
                 >
                   <div className="chat-peer-avatar" style={{ width: 36, height: 36, fontSize: 13 }}>
@@ -329,18 +378,6 @@ const ChatPage = ({ currentUser }) => {
 
         {/* Main chat area */}
         <section className="chat-main">
-          <div className="chat-header">
-            <div className="chat-peer-avatar">{peerInitials}</div>
-            <div className="chat-peer-title">
-              <div className="chat-peer-name">{to || 'Conversation'}</div>
-              <div className="chat-peer-sub">
-                {selectedItem?.imageUrl ? (
-                  <img src={selectedItem.imageUrl} alt="" style={{ width: 20, height: 20, borderRadius: 4 }} />
-                ) : 'Secure • Direct message'}
-              </div>
-            </div>
-          </div>
-
           {error && <div className="chat-error">{error}</div>}
 
           <div className="chat-body">

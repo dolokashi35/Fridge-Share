@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
     name: String,
     college: String,
   },
+  averageRating: { type: Number, default: 0 }, // Average rating from all completed purchases
+  purchaseCount: { type: Number, default: 0 }, // Total number of completed purchases (as buyer or seller)
 });
 
 const User = mongoose.model("User", userSchema);
@@ -93,6 +95,25 @@ router.post("/profile", async (req, res) => {
     res.json({ message: "Profile updated successfully", user });
   } catch (err) {
     console.error("❌ Profile update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ Get user stats (rating and purchase count)
+router.get("/stats", auth, async (req, res) => {
+  try {
+    const username = req.user.username;
+    const user = await User.findOne({ username }).select("username averageRating purchaseCount");
+    
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    res.json({
+      username: user.username,
+      averageRating: user.averageRating || 0,
+      purchaseCount: user.purchaseCount || 0,
+    });
+  } catch (err) {
+    console.error("❌ Get user stats error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

@@ -235,6 +235,11 @@ export default function Marketplace() {
                   <p className="market-card-meta" style={{ marginTop: "0.25rem" }}>
                     Posted by: <b>{it.username || "Unknown"}</b>
                   </p>
+                  {it.createdAt && (
+                    <p className="market-card-meta" style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "0.1rem" }}>
+                      {new Date(it.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
                   {/* Handoff Status Badge */}
                   {getHandoffStatusBadge(it)}
                   <div className="market-card-actions">

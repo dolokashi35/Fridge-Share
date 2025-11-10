@@ -301,21 +301,71 @@ const ChatPage = ({ currentUser }) => {
             {loading && filteredMessages.length === 0 ? (
               <div className="offer-meta">Loading…</div>
             ) : filteredMessages.length === 0 ? (
-              <div className="offer-meta">Say hello and propose a time and place.</div>
-            ) : (
-              filteredMessages.map((msg) => {
-                const isSelf = msg.from === currentUser;
+              <>
+                <div className="chat-security-warning">
+                  <div className="chat-security-icon">🛡️</div>
+                  <div className="chat-security-text">
+                    Keep it on FridgeShare. Never share personal info like your email address or phone number. To stay protected, don't follow links to buy or sell outside of FridgeShare. Click the Buy button to purchase.
+                  </div>
+                </div>
+                <div className="offer-meta">Say hello and propose a time and place.</div>
+              </>
+            ) : (() => {
+              // Group messages by date and render with date headers
+              const grouped = [];
+              let currentDate = null;
+              
+              filteredMessages.forEach((msg, idx) => {
+                const msgDate = new Date(msg.timestamp);
+                const dateStr = msgDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+                const timeStr = msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                
+                // Check if we need a date header
+                if (dateStr !== currentDate) {
+                  currentDate = dateStr;
+                  grouped.push({ type: 'date', date: dateStr, fullDate: msgDate });
+                }
+                
+                // Add the message
+                grouped.push({ type: 'message', ...msg, timeStr });
+              });
+              
+              // Add security warning at the start if there are messages
+              if (grouped.length > 0) {
+                grouped.unshift({ type: 'security' });
+              }
+              
+              return grouped.map((item, idx) => {
+                if (item.type === 'security') {
+                  return (
+                    <div key={`security-${idx}`} className="chat-security-warning">
+                      <div className="chat-security-icon">🛡️</div>
+                      <div className="chat-security-text">
+                        Keep it on FridgeShare. Never share personal info like your email address or phone number. To stay protected, don't follow links to buy or sell outside of FridgeShare. Click the Buy button to purchase.
+                      </div>
+                    </div>
+                  );
+                }
+                if (item.type === 'date') {
+                  return (
+                    <div key={`date-${idx}`} className="chat-date-header">
+                      {item.date} {new Date(item.fullDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </div>
+                  );
+                }
+                const isSelf = item.from === currentUser;
                 return (
-                  <div key={msg.id} className={"chat-row " + (isSelf ? "self" : "")}>
-                    {!isSelf && <div className="chat-peer-avatar" style={{ width: 28, height: 28, fontSize: 12 }}>{(msg.from || 'U').slice(0,2).toUpperCase()}</div>}
+                  <div key={item.id || idx} className={"chat-row " + (isSelf ? "self" : "")}>
                     <div className={"bubble " + (isSelf ? "self" : "")}>
-                      <div>{msg.content}</div>
-                      <div className="bubble-meta">{new Date(msg.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+                      <div className="bubble-content">{item.content}</div>
+                    </div>
+                    <div className={"bubble-time " + (isSelf ? "self" : "")}>
+                      {item.timeStr}
                     </div>
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
 
           <form className="chat-composer" onSubmit={handleSend}>
@@ -332,13 +382,17 @@ const ChatPage = ({ currentUser }) => {
             <input
               type="text"
               className="chat-input"
-              placeholder="Type a message…"
+              placeholder="Type your message..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               ref={inputRef}
               autoFocus
             />
-            <button className="chat-send" type="submit" disabled={loading || !to || !content.trim()}>Send</button>
+            <button className="chat-send" type="submit" disabled={loading || !to || !content.trim()}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>
+              </svg>
+            </button>
           </form>
         </section>
 

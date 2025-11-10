@@ -432,28 +432,6 @@ const ChatPage = ({ currentUser }) => {
                 style={{ maxWidth: 180 }}
           />
             )}
-            {to && selectedItem?.id && fullItem && (
-              <button
-                type="button"
-                onClick={handleConfirmPurchase}
-                disabled={confirming || (confirmation && userConfirmed)}
-                style={{
-                  padding: '10px 16px',
-                  backgroundColor: confirmation && userConfirmed ? '#94a3b8' : '#0E7490',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  cursor: (confirming || (confirmation && userConfirmed)) ? 'not-allowed' : 'pointer',
-                  opacity: (confirming || (confirmation && userConfirmed)) ? 0.6 : 1,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
-              </button>
-            )}
           <input
             type="text"
             className="chat-input"
@@ -476,57 +454,96 @@ const ChatPage = ({ currentUser }) => {
           <div className="chat-right-header">Listing</div>
           <div className="listing-panel">
             {fullItem && (
-              <div 
-                className="market-card mylist-card" 
-                style={{ cursor: 'pointer' }}
-                onClick={() => setShowItemModal(true)}
-              >
-                <div style={{ position: 'relative' }}>
-                  <img
-                    src={fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
-                    alt={fullItem?.name || selectedItem?.name || 'Item'}
-                    className="market-img"
-                  />
-                  {fullItem?.category && <span className="category-badge">{fullItem.category}</span>}
-                </div>
-                <div className="market-card-content">
-                  <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
-                  <div className="market-card-info-line">
-                    {fullItem?.category && (
-                      <>
-                        <span className="market-card-cat">{fullItem.category}</span>
-                        <span className="market-card-separator">•</span>
-                      </>
+              <>
+                <div 
+                  className="market-card mylist-card" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setShowItemModal(true)}
+                >
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      src={fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
+                      alt={fullItem?.name || selectedItem?.name || 'Item'}
+                      className="market-img"
+                    />
+                    {fullItem?.category && <span className="category-badge">{fullItem.category}</span>}
+                  </div>
+                  <div className="market-card-content">
+                    <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
+                    <div className="market-card-info-line">
+                      {fullItem?.category && (
+                        <>
+                          <span className="market-card-cat">{fullItem.category}</span>
+                          <span className="market-card-separator">•</span>
+                        </>
+                      )}
+                      {typeof fullItem?.price === 'number' && (
+                        <>
+                          <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
+                          <span className="market-card-separator">•</span>
+                        </>
+                      )}
+                      <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
+                      {typeof fullItem?.distance === 'number' && (
+                        <>
+                          <span className="market-card-separator">•</span>
+                          <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
+                        </>
+                      )}
+                    </div>
+                    {fullItem?.description && (
+                      <p className="market-card-description">{fullItem.description}</p>
                     )}
-                    {typeof fullItem?.price === 'number' && (
-                      <>
-                        <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
-                        <span className="market-card-separator">•</span>
-                      </>
+                    {fullItem?.username && (
+                      <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>
+                        Posted by: <b>{fullItem.username}</b>
+                      </p>
                     )}
-                    <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
-                    {typeof fullItem?.distance === 'number' && (
-                      <>
-                        <span className="market-card-separator">•</span>
-                        <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
-                      </>
+                    {fullItem?.createdAt && (
+                      <p className="market-card-meta" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.1rem' }}>
+                        {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
                     )}
                   </div>
-                  {fullItem?.description && (
-                    <p className="market-card-description">{fullItem.description}</p>
-                  )}
-                  {fullItem?.username && (
-                    <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>
-                      Posted by: <b>{fullItem.username}</b>
-                    </p>
-                  )}
-                  {fullItem?.createdAt && (
-                    <p className="market-card-meta" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.1rem' }}>
-                      {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  )}
                 </div>
-              </div>
+                {to && selectedItem?.id && (
+                  <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                    {confirmation && otherConfirmed && !userConfirmed && (
+                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
+                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
+                      </p>
+                    )}
+                    {confirmation && userConfirmed && !otherConfirmed && (
+                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
+                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
+                      </p>
+                    )}
+                    {confirmation && userConfirmed && otherConfirmed && (
+                      <p style={{ fontSize: '0.875rem', color: '#16a34a', marginBottom: '12px', textAlign: 'center', fontWeight: 600 }}>
+                        Both parties confirmed
+                      </p>
+                    )}
+                    <button
+                      onClick={handleConfirmPurchase}
+                      disabled={confirming || (confirmation && userConfirmed)}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: confirmation && userConfirmed ? '#94a3b8' : '#0E7490',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontWeight: 600,
+                        fontSize: '0.95rem',
+                        cursor: (confirming || (confirmation && userConfirmed)) ? 'not-allowed' : 'pointer',
+                        opacity: (confirming || (confirmation && userConfirmed)) ? 0.6 : 1,
+                      }}
+                    >
+                      {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </aside>

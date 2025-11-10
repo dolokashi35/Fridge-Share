@@ -342,6 +342,7 @@
   gap: 12px;
   align-items: flex-start;
   overflow-y: auto;
+  height: 100%;
 }
 /* Ensure marketplace card hover effects work in listing panel */
 .listing-panel .market-card {

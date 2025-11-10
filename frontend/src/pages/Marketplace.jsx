@@ -40,6 +40,25 @@ export default function Marketplace() {
       const token = stored ? JSON.parse(stored)?.token : null;
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
+      // Load existing buyer requests so "Requested"/"Cancel Request" persists on reload
+      try {
+        if (token) {
+          const offerRes = await axios.get(`${BACKEND_URL}/api/offers`, {
+            params: { role: "buyer" },
+            headers
+          });
+          const map = {};
+          (offerRes.data || []).forEach((o) => {
+            if (o && (o.status === "pending" || o.status === "countered") && o.itemId) {
+              map[o.itemId] = { offerId: o._id, status: o.status };
+            }
+          });
+          setRequests(map);
+        }
+      } catch {
+        // ignore
+      }
+
       const fetchNearby = async (lat, lng) => {
         try {
           const res = await axios.get(`${BACKEND_URL}/api/items/nearby`, {

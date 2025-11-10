@@ -471,12 +471,6 @@ const ChatPage = ({ currentUser }) => {
                   <div className="market-card-content">
                     <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
                     <div className="market-card-info-line">
-                      {fullItem?.category && (
-                        <>
-                          <span className="market-card-cat">{fullItem.category}</span>
-                          <span className="market-card-separator">•</span>
-                        </>
-                      )}
                       {typeof fullItem?.price === 'number' && (
                         <>
                           <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
@@ -561,12 +555,6 @@ const ChatPage = ({ currentUser }) => {
               <div className="item-modal-body">
                 <h2 className="item-modal-title">{fullItem?.name || selectedItem?.name || 'Item'}</h2>
                 <div className="market-card-info-line" style={{ marginBottom: '12px' }}>
-                  {fullItem?.category && (
-                    <>
-                      <span className="market-card-cat">{fullItem.category}</span>
-                      <span className="market-card-separator">•</span>
-                    </>
-                  )}
                   {typeof fullItem?.price === 'number' && (
                     <>
                       <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
@@ -580,7 +568,7 @@ const ChatPage = ({ currentUser }) => {
                       <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
                     </>
                   )}
-                </div>
+              </div>
                 {fullItem?.description && (
                   <p className="item-modal-description">{fullItem.description}</p>
                 )}

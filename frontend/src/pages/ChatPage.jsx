@@ -357,15 +357,17 @@ const ChatPage = ({ currentUser }) => {
                 return (
                   <div key={item.id || idx} className={"chat-row " + (isSelf ? "self" : "")}>
                     {!isSelf && (
-                      <div className="chat-peer-avatar" style={{ width: 32, height: 32, fontSize: 12, marginRight: 8 }}>
+                      <div className="chat-peer-avatar">
                         {(item.from || 'U').slice(0,2).toUpperCase()}
                       </div>
                     )}
-                    <div className={"bubble " + (isSelf ? "self" : "")}>
-                      <div className="bubble-content">{item.content}</div>
-                    </div>
-                    <div className={"bubble-time " + (isSelf ? "self" : "")}>
-                      {item.timeStr}
+                    <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '72%' }}>
+                      <div className={"bubble " + (isSelf ? "self" : "")}>
+                        <div className="bubble-content">{item.content}</div>
+                      </div>
+                      <div className="bubble-time">
+                        {item.timeStr}
+                      </div>
                     </div>
                   </div>
                 );

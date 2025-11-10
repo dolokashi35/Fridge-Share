@@ -252,38 +252,28 @@ const ChatPage = ({ currentUser }) => {
               conversations.map((c) => (
                 <div
                   key={c.key}
-                  className={c.itemImageUrl ? "chat-list-card " + (to === c.peer && ((selectedItem?.id || null) === (c.itemId || null)) ? "active" : "") : "chat-list-item " + (to === c.peer && ((selectedItem?.id || null) === (c.itemId || null)) ? "active" : "")}
+                  className={"chat-list-item " + (to === c.peer && ((selectedItem?.id || null) === (c.itemId || null)) ? "active" : "")}
                   onClick={() => {
                     setTo(c.peer);
                     setSelectedItem(c.itemId ? { id: c.itemId, name: c.itemName, imageUrl: c.itemImageUrl } : null);
                     setTimeout(() => inputRef.current && inputRef.current.focus(), 0);
                   }}
                 >
-                  {c.itemImageUrl ? (
-                    <>
-                      <img 
-                        src={c.itemImageUrl} 
-                        alt="" 
-                        className="chat-list-card-img"
-                      />
-                      <div className="chat-list-card-content">
-                        <div className="chat-list-card-name">{c.peer}</div>
-                        <div className="chat-list-card-item">{c.itemName}</div>
-                        <div className="chat-list-card-preview">{c.preview}</div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="chat-peer-avatar" style={{ width: 36, height: 36, fontSize: 13 }}>
-                        {(c.peer || 'U').slice(0,2).toUpperCase()}
-                      </div>
-                      <div className="meta">
-                        <div className="name">{c.peer}</div>
-                        <div className="preview">
-                          <span className="preview-text">{c.preview}</span>
-                        </div>
-                      </div>
-                    </>
+                  <div className="chat-peer-avatar" style={{ width: 36, height: 36, fontSize: 13 }}>
+                    {(c.peer || 'U').slice(0,2).toUpperCase()}
+                  </div>
+                  <div className="meta">
+                    <div className="name">{c.peer}</div>
+                    <div className="preview">
+                      <span className="preview-text">{c.preview}</span>
+                    </div>
+                  </div>
+                  {c.itemImageUrl && (
+                    <img 
+                      src={c.itemImageUrl} 
+                      alt="" 
+                      className="chat-item-thumbnail"
+                    />
                   )}
                 </div>
               ))

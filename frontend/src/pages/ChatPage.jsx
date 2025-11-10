@@ -2,13 +2,14 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './chat.css';
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 
 const ChatPage = ({ currentUser }) => {
   const location = useLocation();
+  const nav = useNavigate();
   const [messages, setMessages] = useState([]);
   const [to, setTo] = useState(() => (location.state && location.state.to) || '');
   const [selectedItem, setSelectedItem] = useState(() => (location.state && location.state.item) || null);
@@ -218,6 +219,34 @@ const ChatPage = ({ currentUser }) => {
             <button className="chat-send" type="submit" disabled={loading || !to || !content.trim()}>Send</button>
           </form>
         </section>
+
+        {/* Right listing panel */}
+        <aside className="chat-right">
+          <div className="chat-right-header">Item info</div>
+          <div className="listing-panel">
+            <div className="listing-card">
+              {selectedItem?.imageUrl ? (
+                <img src={selectedItem.imageUrl} alt="" className="listing-image" />
+              ) : (
+                <div className="listing-image" />
+              )}
+              <div className="listing-meta">
+                {selectedItem?.name ? <div className="listing-title">{selectedItem.name}</div> : null}
+                {/* Optional: price if loaded elsewhere; keeping clean per request */}
+                <div className="panel-actions">
+                  {selectedItem?.id ? (
+                    <button
+                      className="panel-btn primary"
+                      onClick={() => nav(`/items/${selectedItem.id}`)}
+                    >
+                      View item
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

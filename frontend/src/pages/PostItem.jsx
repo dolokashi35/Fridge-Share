@@ -32,6 +32,8 @@ export default function PostItem() {
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  // transfer methods state (Pickup/Dropoff)
+  const [transferMethods, setTransferMethods] = useState(["Pickup"]);
   
   // Location states
   const [pickupLocation, setPickupLocation] = useState(null);
@@ -101,6 +103,14 @@ export default function PostItem() {
     setPickupLocation(location);
   };
 
+  // toggle transfer method selection
+  const toggleTransfer = (method) => {
+    setTransferMethods((prev) => {
+      if (prev.includes(method)) return prev.filter((m) => m !== method);
+      return [...prev, method];
+    });
+  };
+
   // ✨ Generate AI Description
   const generateDescription = async () => {
     if (!confirmedName) return alert("Please enter an item name first!");
@@ -167,7 +177,7 @@ export default function PostItem() {
         purchaseDate: purchaseDate,
         expirationDate: expiration || null,
         listingDuration: parseInt(listingDuration),
-        transferMethods: ["Pickup"],
+        transferMethods,
         imageUrl: imageSrc || "", // Use captured image if available
         username: user.username,
         location: {

@@ -68,12 +68,40 @@ export default function Marketplace() {
             params: { lat, lng, radius: 5000 },
             headers
           });
-          setItems(res.data.length ? res.data : SAMPLE);
+          const itemsData = res.data.length ? res.data : SAMPLE;
+          setItems(itemsData);
+          
+          // Fetch seller stats for all unique sellers
+          const uniqueSellers = [...new Set(itemsData.map(it => it.username).filter(Boolean))];
+          const statsMap = {};
+          for (const seller of uniqueSellers) {
+            try {
+              const statsRes = await axios.get(`${BACKEND_URL}/users/stats/${seller}`);
+              statsMap[seller] = statsRes.data;
+            } catch {
+              statsMap[seller] = { averageRating: 0, purchaseCount: 0 };
+            }
+          }
+          setSellerStats(statsMap);
         } catch {
           // Fallback to scoped items without distance
           try {
             const res = await axios.get(`${BACKEND_URL}/items`, { headers });
-            setItems(res.data.length ? res.data : SAMPLE);
+            const itemsData = res.data.length ? res.data : SAMPLE;
+            setItems(itemsData);
+            
+            // Fetch seller stats
+            const uniqueSellers = [...new Set(itemsData.map(it => it.username).filter(Boolean))];
+            const statsMap = {};
+            for (const seller of uniqueSellers) {
+              try {
+                const statsRes = await axios.get(`${BACKEND_URL}/users/stats/${seller}`);
+                statsMap[seller] = statsRes.data;
+              } catch {
+                statsMap[seller] = { averageRating: 0, purchaseCount: 0 };
+              }
+            }
+            setSellerStats(statsMap);
           } catch {
             setItems(SAMPLE);
           }

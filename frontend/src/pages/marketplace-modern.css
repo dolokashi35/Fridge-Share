@@ -656,3 +656,91 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Seller Profile Card */
+.seller-profile-card {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #F9FAFB;
+  border-radius: 0.75rem;
+  border: 1px solid #E5E7EB;
+}
+
+.seller-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.seller-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0E7490 0%, #0C6176 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.seller-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.seller-username {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seller-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.seller-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.seller-stars {
+  display: flex;
+  gap: 0.125rem;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.seller-stars .star-filled {
+  color: #F59E0B; /* amber-500 */
+}
+
+.seller-stars .star-half {
+  color: #F59E0B;
+  opacity: 0.6;
+}
+
+.seller-stars .star-empty {
+  color: #D1D5DB; /* gray-300 */
+}
+
+.seller-rating-text {
+  font-size: 0.8rem;
+  color: #6B7280;
+  font-weight: 600;
+}
+
+.seller-purchases {
+  font-size: 0.8rem;
+  color: #6B7280;
+}

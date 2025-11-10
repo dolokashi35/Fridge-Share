@@ -147,7 +147,10 @@ export default function Marketplace() {
     <div className="market-bg">
       {/* 🧭 Main Marketplace Content (Navbar handled globally in App.jsx) */}
       <div className="market-container">
-        <h1 className="market-title">Campus Grocery Marketplace</h1>
+        <div className="market-header">
+          <h1 className="market-title">Campus Grocery Marketplace</h1>
+          <p className="market-subtitle">Find and share groceries with your campus community</p>
+        </div>
 
         {/* Filters */}
         <div className="market-filters">

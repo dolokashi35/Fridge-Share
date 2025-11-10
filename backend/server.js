@@ -859,9 +859,12 @@ app.get("/api/purchase-confirmation", auth, async (req, res) => {
 // Confirm purchase (buyer or seller)
 app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
   try {
-    const { itemId, peer } = req.body;
+    const { itemId, peer, rating } = req.body;
     if (!itemId || !peer) {
       return res.status(400).json({ error: "itemId and peer required" });
+    }
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating (1-5) is required" });
     }
     const me = req.user.username;
     const otherUser = peer;
@@ -888,11 +891,13 @@ app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
       });
     }
     
-    // Update confirmation status
+    // Update confirmation status and rating
     if (isSeller) {
       confirmation.sellerConfirmed = true;
+      confirmation.sellerRating = rating;
     } else {
       confirmation.buyerConfirmed = true;
+      confirmation.buyerRating = rating;
     }
     
     // Check if both confirmed

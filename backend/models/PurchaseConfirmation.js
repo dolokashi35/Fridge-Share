@@ -7,6 +7,8 @@ const purchaseConfirmationSchema = new mongoose.Schema(
     sellerUsername: { type: String, required: true },
     buyerConfirmed: { type: Boolean, default: false },
     sellerConfirmed: { type: Boolean, default: false },
+    buyerRating: { type: Number, default: null }, // 1-5 stars
+    sellerRating: { type: Number, default: null }, // 1-5 stars
     completed: { type: Boolean, default: false }, // true when both confirmed
   },
   { timestamps: true }

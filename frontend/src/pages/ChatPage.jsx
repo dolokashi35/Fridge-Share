@@ -24,6 +24,10 @@ const ChatPage = ({ currentUser }) => {
   const [error, setError] = useState('');
   const [confirmation, setConfirmation] = useState(null);
   const [confirming, setConfirming] = useState(false);
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const inputRef = useRef(null);
   const peerInitials = useMemo(() => {
     const name = to || 'User';
@@ -231,29 +235,45 @@ const ChatPage = ({ currentUser }) => {
   // Handle purchase confirmation
   const handleConfirmPurchase = async () => {
     if (!to || !selectedItem?.id || confirming) return;
+    // Show rating modal instead of directly confirming
+    setShowItemModal(false);
+    setShowRatingModal(true);
+  };
+
+  // Handle rating submission and confirmation
+  const handleRatingSubmit = async () => {
+    if (rating === 0) {
+      alert("Please provide a rating to confirm purchase.");
+      return;
+    }
+    if (!to || !selectedItem?.id || confirming) return;
     try {
       setConfirming(true);
       const stored = localStorage.getItem('fs_user');
       const token = stored ? JSON.parse(stored)?.token : null;
       const res = await axios.post(
         `${BACKEND_URL}/api/purchase-confirmation/confirm`,
-        { itemId: selectedItem.id, peer: to },
+        { itemId: selectedItem.id, peer: to, rating },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       
       if (res.data.completed) {
         // Both confirmed - navigate away
+        setShowRatingModal(false);
         alert("Purchase completed! Chat and listing have been deleted.");
         nav("/marketplace");
       } else {
         // Update confirmation status
         setConfirmation(res.data.confirmation);
+        setShowRatingModal(false);
+        alert("Purchase confirmed! Waiting for the other party to confirm.");
       }
     } catch (err) {
       console.error("Confirm purchase error:", err);
       alert("Failed to confirm purchase. Please try again.");
     } finally {
       setConfirming(false);
+      setRating(0);
     }
   };
 
@@ -433,18 +453,75 @@ const ChatPage = ({ currentUser }) => {
         <aside className="chat-right">
           <div className="chat-right-header">Listing</div>
           <div className="listing-panel">
-            <div className="market-card mylist-card">
-              <div style={{ position: 'relative' }}>
-                <img
-                  src={(fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img) || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
-                  alt={fullItem?.name || selectedItem?.name || 'Item'}
-                  className="market-img"
-                />
-                {fullItem?.category && <span className="category-badge">{fullItem.category}</span>}
+            {fullItem && (
+              <div 
+                className="market-card mylist-card" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => setShowItemModal(true)}
+              >
+                <div style={{ position: 'relative' }}>
+                  <img
+                    src={fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
+                    alt={fullItem?.name || selectedItem?.name || 'Item'}
+                    className="market-img"
+                  />
+                  {fullItem?.category && <span className="category-badge">{fullItem.category}</span>}
+                </div>
+                <div className="market-card-content">
+                  <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
+                  <div className="market-card-info-line">
+                    {fullItem?.category && (
+                      <>
+                        <span className="market-card-cat">{fullItem.category}</span>
+                        <span className="market-card-separator">•</span>
+                      </>
+                    )}
+                    {typeof fullItem?.price === 'number' && (
+                      <>
+                        <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
+                        <span className="market-card-separator">•</span>
+                      </>
+                    )}
+                    <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
+                    {typeof fullItem?.distance === 'number' && (
+                      <>
+                        <span className="market-card-separator">•</span>
+                        <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
+                      </>
+                    )}
+                  </div>
+                  {fullItem?.description && (
+                    <p className="market-card-description">{fullItem.description}</p>
+                  )}
+                  {fullItem?.username && (
+                    <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>
+                      Posted by: <b>{fullItem.username}</b>
+                    </p>
+                  )}
+                  {fullItem?.createdAt && (
+                    <p className="market-card-meta" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.1rem' }}>
+                      {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="market-card-content">
-                <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
-                <div className="market-card-info-line">
+            )}
+          </div>
+        </aside>
+
+        {/* Item Detail Modal */}
+        {showItemModal && fullItem && (
+          <div className="item-modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowItemModal(false)}>
+            <div className="item-modal-content">
+              <button className="item-modal-close" onClick={() => setShowItemModal(false)}>×</button>
+              <img
+                src={fullItem?.imageUrl || selectedItem?.imageUrl || selectedItem?.img || 'https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=600&q=60'}
+                alt={fullItem?.name || selectedItem?.name || 'Item'}
+                className="item-modal-image"
+              />
+              <div className="item-modal-body">
+                <h2 className="item-modal-title">{fullItem?.name || selectedItem?.name || 'Item'}</h2>
+                <div className="market-card-info-line" style={{ marginBottom: '12px' }}>
                   {fullItem?.category && (
                     <>
                       <span className="market-card-cat">{fullItem.category}</span>
@@ -466,58 +543,112 @@ const ChatPage = ({ currentUser }) => {
                   )}
                 </div>
                 {fullItem?.description && (
-                  <p className="market-card-description">{fullItem.description}</p>
+                  <p className="item-modal-description">{fullItem.description}</p>
                 )}
                 {fullItem?.username && (
-                  <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>
-                    Posted by: <b>{fullItem.username}</b>
+                  <p className="item-modal-meta">
+                    <strong>Posted by:</strong> {fullItem.username}
                   </p>
                 )}
                 {fullItem?.createdAt && (
-                  <p className="market-card-meta" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.1rem' }}>
-                    {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  <p className="item-modal-meta">
+                    <strong>Posted:</strong> {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
+                )}
+                {to && selectedItem?.id && (
+                  <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+                    {confirmation && otherConfirmed && !userConfirmed && (
+                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '16px', textAlign: 'center' }}>
+                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
+                      </p>
+                    )}
+                    {confirmation && userConfirmed && !otherConfirmed && (
+                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '16px', textAlign: 'center' }}>
+                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
+                      </p>
+                    )}
+                    {confirmation && userConfirmed && otherConfirmed && (
+                      <p style={{ fontSize: '0.875rem', color: '#16a34a', marginBottom: '16px', textAlign: 'center', fontWeight: 600 }}>
+                        Both parties confirmed
+                      </p>
+                    )}
+                    <button
+                      onClick={handleConfirmPurchase}
+                      disabled={confirming || (confirmation && userConfirmed)}
+                      className="item-modal-btn-buy"
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                      }}
+                    >
+                      {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
-            {to && selectedItem?.id && fullItem && (
-              <div style={{ width: '100%', paddingTop: '16px', borderTop: '1px solid #e5e7eb', marginTop: '16px' }}>
-                {confirmation && otherConfirmed && !userConfirmed && (
-                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
-                    Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
-                  </p>
-                )}
-                {confirmation && userConfirmed && !otherConfirmed && (
-                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
-                    Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
-                  </p>
-                )}
-                {confirmation && userConfirmed && otherConfirmed && (
-                  <p style={{ fontSize: '0.875rem', color: '#16a34a', marginBottom: '12px', textAlign: 'center', fontWeight: 600 }}>
-                    Both parties confirmed
+          </div>
+        )}
+
+        {/* Rating Modal */}
+        {showRatingModal && (
+          <div className="item-modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowRatingModal(false)}>
+            <div className="item-modal-content" style={{ maxWidth: '400px' }}>
+              <button className="item-modal-close" onClick={() => setShowRatingModal(false)}>×</button>
+              <div style={{ padding: '30px', textAlign: 'center' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Rate Your Experience</h2>
+                <p style={{ color: '#64748b', marginBottom: '24px' }}>
+                  How was your transaction with {to}?
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '2.5rem',
+                        color: (hoverRating >= star || rating >= star) ? '#FFD700' : '#E5E7EB',
+                        transition: 'color 0.2s',
+                        padding: '0',
+                        lineHeight: '1',
+                      }}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                {rating > 0 && (
+                  <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '0.9rem' }}>
+                    {rating === 1 && 'Poor'}
+                    {rating === 2 && 'Fair'}
+                    {rating === 3 && 'Good'}
+                    {rating === 4 && 'Very Good'}
+                    {rating === 5 && 'Excellent'}
                   </p>
                 )}
                 <button
-                  onClick={handleConfirmPurchase}
-                  disabled={confirming || (confirmation && userConfirmed)}
+                  onClick={handleRatingSubmit}
+                  disabled={rating === 0 || confirming}
+                  className="item-modal-btn-buy"
                   style={{
                     width: '100%',
-                    padding: '12px',
-                    backgroundColor: confirmation && userConfirmed ? '#94a3b8' : '#0E7490',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontWeight: 600,
-                    cursor: (confirming || (confirmation && userConfirmed)) ? 'not-allowed' : 'pointer',
-                    opacity: (confirming || (confirmation && userConfirmed)) ? 0.6 : 1,
+                    padding: '14px',
+                    backgroundColor: rating === 0 ? '#D1D5DB' : '#0E7490',
+                    cursor: rating === 0 || confirming ? 'not-allowed' : 'pointer',
+                    opacity: rating === 0 || confirming ? 0.6 : 1,
                   }}
                 >
-                  {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
+                  {confirming ? 'Confirming...' : 'Confirm Purchase'}
                 </button>
               </div>
-          )}
-        </div>
-        </aside>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

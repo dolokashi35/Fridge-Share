@@ -618,51 +618,38 @@ const ChatPage = ({ currentUser }) => {
                     className="market-img"
                   />
                 </div>
-                  <div className="market-card-content">
-                    <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
-                    <div className="market-card-info-line" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      {(() => {
-                        const pieces = [];
-                        const cat = fullItem?.category || selectedItem?.category;
-                        const priceVal = (fullItem?.price ?? selectedItem?.price);
-                        const hasPrice = priceVal !== undefined && priceVal !== null;
-                        const qtyVal = (fullItem?.quantity ?? selectedItem?.quantity);
-                        const distVal = (fullItem?.distance ?? selectedItem?.distance);
-                        const hasDistance = distVal !== undefined && distVal !== null;
-
-                        if (cat) pieces.push(<span className="market-card-meta" key="cat">{cat}</span>);
-                        if (hasPrice) pieces.push(<span className="market-card-price" key="price">${(Number(priceVal) || 0).toFixed(2)}</span>);
-                        pieces.push(<span className="market-card-meta" key="qty">Qty: {qtyVal ?? 'N/A'}</span>);
-                        if (hasDistance) pieces.push(<span className="market-card-meta" key="dist">{((Number(distVal) || 0) * 0.621371).toFixed(1)} mi</span>);
-
-                        return pieces.map((el, idx) => (
-                          <React.Fragment key={idx}>
-                            {idx > 0 && <span className="market-card-separator">•</span>}
-                            {el}
-                          </React.Fragment>
-                        ));
-                      })()}
-                    </div>
+                  <div className="item-modal-body" style={{ padding: '1rem' }}>
+                    <h2 className="item-modal-title">{fullItem?.name || selectedItem?.name || 'Item'}</h2>
+                    {(fullItem?.category || selectedItem?.category) && (
+                      <p className="item-modal-category">{fullItem?.category || selectedItem?.category}</p>
+                    )}
+                    {(fullItem?.price ?? selectedItem?.price) !== undefined && (
+                      <p className="item-modal-price">${((fullItem?.price ?? selectedItem?.price) || 0).toFixed(2)}</p>
+                    )}
                     {fullItem?.description && (
-                      <p className="market-card-description" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        {fullItem.description}
-                      </p>
+                      <p className="item-modal-description" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{fullItem.description}</p>
                     )}
-                    {fullItem?.location?.name && (
-                      <p className="market-card-meta" style={{ marginTop: '0.25rem', fontSize: '0.85rem', color: '#64748b' }}>
-                        📍 {fullItem.location.name}
-                      </p>
-                    )}
-                    {fullItem?.username && (
-                      <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>
-                        Posted by: <b>{fullItem.username}</b>
-                      </p>
-                    )}
-                    {fullItem?.createdAt && (
-                      <p className="market-card-meta" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.1rem' }}>
-                        {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </p>
-                    )}
+                    <div className="item-modal-meta">
+                      <p><strong>Quantity:</strong> {fullItem?.quantity ?? selectedItem?.quantity ?? 'N/A'}</p>
+                      {fullItem?.purchaseDate && (
+                        <p><strong>Purchased:</strong> {new Date(fullItem.purchaseDate).toLocaleDateString()}</p>
+                      )}
+                      {fullItem?.expirationDate && (
+                        <p><strong>Expires:</strong> {new Date(fullItem.expirationDate).toLocaleDateString()}</p>
+                      )}
+                      {(fullItem?.username || selectedItem?.username) && (
+                        <p><strong>Posted by:</strong> {fullItem?.username || selectedItem?.username}</p>
+                      )}
+                      {fullItem?.createdAt && (
+                        <p><strong>Posted:</strong> {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      )}
+                      {typeof fullItem?.distance === 'number' && (
+                        <p><strong>Distance:</strong> {(fullItem.distance * 0.621371).toFixed(1)} mi away</p>
+                      )}
+                      {fullItem?.location?.name && (
+                        <p><strong>Location:</strong> 📍 {fullItem.location.name}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 

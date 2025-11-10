@@ -188,7 +188,7 @@ export default function Marketplace() {
               onChange={(e) => setMaxDistanceMi(e.target.value)}
               className="market-input small"
             />
-            <label>Max</label>
+            <label>Max Price</label>
             <input
               type="number"
               value={maxP}

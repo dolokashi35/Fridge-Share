@@ -6,7 +6,7 @@ const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 export default function RequestModal({ item, isOpen, onClose, onRequested }) {
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
-  const [selected, setSelected] = useState("10"); // '10' | '15' | 'keep' | 'custom'
+  const [selected, setSelected] = useState("10"); // '10' | '15' | 'custom'
   const [custom, setCustom] = useState("");
   const options = useMemo(() => {
     const base = Number(item?.price || 0);
@@ -15,7 +15,6 @@ export default function RequestModal({ item, isOpen, onClose, onRequested }) {
     return [
       { key: "15", label: `15% off → $${Number(fifteen).toFixed(2)}`, value: Number(fifteen) },
       { key: "10", label: `10% off → $${Number(ten).toFixed(2)}`, value: Number(ten) },
-      { key: "keep", label: `Keep $${base.toFixed(2)}`, value: base },
       { key: "custom", label: "Custom", value: null },
     ];
   }, [item]);
@@ -23,13 +22,12 @@ export default function RequestModal({ item, isOpen, onClose, onRequested }) {
   if (!isOpen || !item) return null;
 
   const computeSelectedPrice = () => {
-    const base = Number(item?.price || 0);
     if (selected === "custom") {
       const num = Number(custom);
       return Number.isFinite(num) && num >= 0 ? num : null;
     }
     const found = options.find((o) => o.key === selected);
-    return found ? found.value : base;
+    return found ? found.value : null;
   };
 
   const submitOffer = async () => {

@@ -27,19 +27,20 @@
 /* Card with slide-in animation */
 .profile-card {
   width: 100%;
-  max-width: 500px;
+  max-width: 720px;
   background: var(--color-white);
   border-radius: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 45px -20px rgba(15, 23, 42, 0.35);
   padding: 0;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.4s ease-out;
-  transition: box-shadow 0.3s ease;
+  animation: slideIn 0.45s ease-out;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .profile-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 28px 60px -24px rgba(15, 23, 42, 0.45);
+  transform: translateY(-2px);
 }
 
 @keyframes slideIn {
@@ -55,35 +56,55 @@
 
 /* Header with gradient background */
 .profile-header {
-  background: linear-gradient(135deg, rgba(14, 116, 144, 0.1) 0%, rgba(14, 116, 144, 0.05) 100%);
+  background: linear-gradient(140deg, rgba(14, 116, 144, 0.18) 0%, rgba(12, 97, 118, 0.25) 36%, rgba(15, 23, 42, 0.2) 100%);
   border-radius: 1.5rem 1.5rem 0 0;
-  padding: 2.5rem 2.5rem 3.5rem 2.5rem;
+  padding: 2.75rem 3rem 3.5rem;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-between;
+  align-items: flex-start;
   position: relative;
+  overflow: hidden;
+}
+
+.profile-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 55%);
+  pointer-events: none;
+}
+
+.profile-header-content {
+  position: relative;
+  z-index: 1;
+  max-width: 60%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 /* Circular avatar with pulse animation */
 .profile-avatar {
-  width: 96px;
-  height: 96px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(150deg, #0E7490 0%, #0C6176 55%, #0B5A63 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(14, 116, 144, 0.3);
+  box-shadow: 0 18px 38px rgba(12, 97, 118, 0.45);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-avatar:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(14, 116, 144, 0.4);
+  box-shadow: 0 24px 45px rgba(12, 97, 118, 0.5);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -98,19 +119,54 @@
 
 /* Title */
 .profile-title {
-  text-align: center;
-  font-size: 1.875rem; /* text-2xl */
+  text-align: left;
+  font-size: 2rem;
   font-weight: 600; /* font-semibold */
-  color: var(--color-text-primary);
-  margin: -2rem 2.5rem 2rem 2.5rem;
-  padding-top: 0.5rem;
-  letter-spacing: -0.01em;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.profile-subtitle {
+  margin: 0;
+  color: rgba(15, 23, 42, 0.7);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  max-width: 420px;
+}
+
+.profile-settings-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.profile-settings-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.profile-settings-btn svg {
+  color: #0F172A;
 }
 
 /* Profile Info Container */
 .profile-info {
   width: 100%;
-  padding: 0 2.5rem 2.5rem 2.5rem;
+  padding: 2.5rem 3rem 3rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -122,7 +178,7 @@
   flex-direction: column;
   gap: 1.25rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .profile-info-item {

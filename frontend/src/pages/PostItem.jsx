@@ -29,7 +29,6 @@ export default function PostItem() {
   const [expiration, setExpiration] = useState("");
   const [quantity, setQuantity] = useState("");
   const [listingDuration, setListingDuration] = useState("3");
-  const [transferMethods, setTransferMethods] = useState(["Pickup"]);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -97,14 +96,6 @@ export default function PostItem() {
     setConfidence("");
   };
 
-  const toggleTransfer = (method) => {
-    setTransferMethods((prev) =>
-      prev.includes(method)
-        ? prev.filter((m) => m !== method)
-        : [...prev, method]
-    );
-  };
-
   // Handle pickup location selection
   const handleLocationConfirm = (location) => {
     setPickupLocation(location);
@@ -150,7 +141,7 @@ export default function PostItem() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!confirmedName || !purchaseDate || !quantity || transferMethods.length === 0 || !pickupLocation) {
+    if (!confirmedName || !purchaseDate || !quantity || !pickupLocation) {
       alert("Please fill out all required fields including pickup location.");
       return;
     }
@@ -176,7 +167,7 @@ export default function PostItem() {
         purchaseDate: purchaseDate,
         expirationDate: expiration || null,
         listingDuration: parseInt(listingDuration),
-        transferMethods: transferMethods,
+        transferMethods: ["Pickup"],
         imageUrl: imageSrc || "", // Use captured image if available
         username: user.username,
         location: {

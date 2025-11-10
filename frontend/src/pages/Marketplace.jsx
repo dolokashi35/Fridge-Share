@@ -28,6 +28,7 @@ export default function Marketplace() {
   const [loadingItem, setLoadingItem] = useState(false);
   const [requests, setRequests] = useState(() => ({})); // itemId -> { offerId, status }
   const [sellerStats, setSellerStats] = useState(() => ({})); // username -> { averageRating, purchaseCount }
+  const [modalSellerStats, setModalSellerStats] = useState(null); // stats for seller in modal
   const location = useLocation();
   const nav = useNavigate();
   const [term, setTerm] = useState("");
@@ -184,6 +185,16 @@ export default function Marketplace() {
       
       const res = await axios.get(`${BACKEND_URL}/items/${itemId}`, { headers });
       setSelectedItem(res.data);
+      
+      // Fetch seller stats for the modal
+      if (res.data.username) {
+        try {
+          const statsRes = await axios.get(`${BACKEND_URL}/users/stats/${res.data.username}`);
+          setModalSellerStats(statsRes.data);
+        } catch {
+          setModalSellerStats({ averageRating: 0, purchaseCount: 0 });
+        }
+      }
     } catch (err) {
       console.error("Failed to load item details:", err);
       alert("Failed to load item details");
@@ -196,6 +207,7 @@ export default function Marketplace() {
   const handleModalClose = (e) => {
     if (e.target === e.currentTarget) {
       setSelectedItem(null);
+      setModalSellerStats(null);
     }
   };
 
@@ -297,44 +309,6 @@ export default function Marketplace() {
                   )}
                   {/* Handoff Status Badge */}
                   {getHandoffStatusBadge(it)}
-                  
-                  {/* Seller Profile Card */}
-                  {it.username && sellerStats[it.username] && (
-                    <div className="seller-profile-card" onClick={(e) => e.stopPropagation()}>
-                      <div className="seller-profile-header">
-                        <div className="seller-avatar">
-                          {(it.username || 'U').slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="seller-info">
-                          <div className="seller-username">{it.username}</div>
-                          <div className="seller-stats-row">
-                            <div className="seller-rating">
-                              <span className="seller-stars">
-                                {Array.from({ length: 5 }, (_, i) => {
-                                  const rating = sellerStats[it.username].averageRating || 0;
-                                  const filled = i < Math.floor(rating);
-                                  const half = i === Math.floor(rating) && rating % 1 >= 0.5;
-                                  return (
-                                    <span key={i} className={filled ? 'star-filled' : half ? 'star-half' : 'star-empty'}>
-                                      ★
-                                    </span>
-                                  );
-                                })}
-                              </span>
-                              <span className="seller-rating-text">
-                                {sellerStats[it.username].averageRating > 0 
-                                  ? sellerStats[it.username].averageRating.toFixed(1) 
-                                  : '—'}
-                              </span>
-                            </div>
-                            <div className="seller-purchases">
-                              {sellerStats[it.username].purchaseCount || 0} {sellerStats[it.username].purchaseCount === 1 ? 'purchase' : 'purchases'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   
                   <div className="market-card-actions" onClick={(e) => e.stopPropagation()}>
                 <button
@@ -465,6 +439,45 @@ export default function Marketplace() {
                       <p><strong>Distance:</strong> {(selectedItem.distance * 0.621371).toFixed(1)} mi away</p>
                     )}
                   </div>
+                  
+                  {/* Seller Profile Card in Modal */}
+                  {selectedItem.username && modalSellerStats && (
+                    <div className="seller-profile-card" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+                      <div className="seller-profile-header">
+                        <div className="seller-avatar">
+                          {(selectedItem.username || 'U').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="seller-info">
+                          <div className="seller-username">{selectedItem.username}</div>
+                          <div className="seller-stats-row">
+                            <div className="seller-rating">
+                              <span className="seller-stars">
+                                {Array.from({ length: 5 }, (_, i) => {
+                                  const rating = modalSellerStats.averageRating || 0;
+                                  const filled = i < Math.floor(rating);
+                                  const half = i === Math.floor(rating) && rating % 1 >= 0.5;
+                                  return (
+                                    <span key={i} className={filled ? 'star-filled' : half ? 'star-half' : 'star-empty'}>
+                                      ★
+                                    </span>
+                                  );
+                                })}
+                              </span>
+                              <span className="seller-rating-text">
+                                {modalSellerStats.averageRating > 0 
+                                  ? modalSellerStats.averageRating.toFixed(1) 
+                                  : '—'}
+                              </span>
+                            </div>
+                            <div className="seller-purchases">
+                              {modalSellerStats.purchaseCount || 0} {modalSellerStats.purchaseCount === 1 ? 'sale' : 'sales'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="item-modal-actions">
                     <button
                       className="item-modal-btn-buy"

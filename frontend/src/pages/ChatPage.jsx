@@ -54,6 +54,7 @@ const ChatPage = ({ currentUser }) => {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [sellerStats, setSellerStats] = useState(null); // stats for seller in chat listing
   const inputRef = useRef(null);
 
   // Persist chat state to localStorage whenever to or selectedItem changes
@@ -207,8 +208,21 @@ const ChatPage = ({ currentUser }) => {
         }
         
         setFullItem(itemData || null);
+        
+        // Fetch seller stats for the listing
+        if (itemData?.username) {
+          try {
+            const statsRes = await axios.get(`${BACKEND_URL}/users/stats/${itemData.username}`);
+            setSellerStats(statsRes.data);
+          } catch {
+            setSellerStats({ averageRating: 0, purchaseCount: 0 });
+          }
+        } else {
+          setSellerStats(null);
+        }
       } catch {
         setFullItem(null);
+        setSellerStats(null);
       }
     };
     loadItem();
@@ -542,6 +556,45 @@ const ChatPage = ({ currentUser }) => {
                     )}
                   </div>
                 </div>
+                
+                {/* Seller Profile Card in Chat Listing */}
+                {fullItem?.username && sellerStats && (
+                  <div className="seller-profile-card" style={{ marginTop: '1rem' }}>
+                    <div className="seller-profile-header">
+                      <div className="seller-avatar">
+                        {(fullItem.username || 'U').slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="seller-info">
+                        <div className="seller-username">{fullItem.username}</div>
+                        <div className="seller-stats-row">
+                          <div className="seller-rating">
+                            <span className="seller-stars">
+                              {Array.from({ length: 5 }, (_, i) => {
+                                const rating = sellerStats.averageRating || 0;
+                                const filled = i < Math.floor(rating);
+                                const half = i === Math.floor(rating) && rating % 1 >= 0.5;
+                                return (
+                                  <span key={i} className={filled ? 'star-filled' : half ? 'star-half' : 'star-empty'}>
+                                    ★
+                                  </span>
+                                );
+                              })}
+                            </span>
+                            <span className="seller-rating-text">
+                              {sellerStats.averageRating > 0 
+                                ? sellerStats.averageRating.toFixed(1) 
+                                : '—'}
+                            </span>
+                          </div>
+                          <div className="seller-purchases">
+                            {sellerStats.purchaseCount || 0} {sellerStats.purchaseCount === 1 ? 'purchase' : 'purchases'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {to && selectedItem?.id && (
                   <div style={{ marginTop: 'auto', paddingTop: '16px', width: '100%' }}>
                     {confirmation && otherConfirmed && !userConfirmed && (

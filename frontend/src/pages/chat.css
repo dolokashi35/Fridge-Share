@@ -232,12 +232,14 @@
 }
 
 .bubble {
-  max-width: 72%;
-  padding: 10px 12px;
-  border-radius: 16px;
+  padding: 10px 14px;
+  border-radius: 18px;
   position: relative;
   background: #F5F7FA;                 /* incoming: very light blue-gray, almost white */
   color: #1F2937;
+  border: none;
+  width: fit-content;
+  max-width: 100%;
 }
 .bubble-content {
   word-wrap: break-word;

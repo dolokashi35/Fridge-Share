@@ -922,20 +922,13 @@ app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
       if (buyerRating) {
         const seller = await User.findOne({ username: sellerUsername });
         if (seller) {
-          // Get all ratings where this user was the seller (buyerRating from buyers)
-          const sellerConfirmations = await PurchaseConfirmation.find({
-            sellerUsername,
-            buyerRating: { $ne: null },
-            completed: true
-          });
-          
-          const sellerRatingsArray = sellerConfirmations.map(c => c.buyerRating);
-          const newSellerAvg = sellerRatingsArray.length > 0
-            ? sellerRatingsArray.reduce((a, b) => a + b, 0) / sellerRatingsArray.length
-            : 0;
-          
-          seller.averageRating = Math.round(newSellerAvg * 10) / 10;
-          seller.purchaseCount = (seller.purchaseCount || 0) + 1;
+          const prevCount = seller.purchaseCount || 0;
+          const prevAvg = seller.averageRating || 0;
+          const newCount = prevCount + 1;
+          const newAvg = ((prevAvg * prevCount) + buyerRating) / newCount;
+
+          seller.purchaseCount = newCount;
+          seller.averageRating = Math.round(newAvg * 10) / 10;
           await seller.save();
         }
       }
@@ -944,20 +937,13 @@ app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
       if (sellerRating) {
         const buyer = await User.findOne({ username: buyerUsername });
         if (buyer) {
-          // Get all ratings where this user was the buyer (sellerRating from sellers)
-          const buyerConfirmations = await PurchaseConfirmation.find({
-            buyerUsername,
-            sellerRating: { $ne: null },
-            completed: true
-          });
-          
-          const buyerRatingsArray = buyerConfirmations.map(c => c.sellerRating);
-          const newBuyerAvg = buyerRatingsArray.length > 0
-            ? buyerRatingsArray.reduce((a, b) => a + b, 0) / buyerRatingsArray.length
-            : 0;
-          
-          buyer.averageRating = Math.round(newBuyerAvg * 10) / 10;
-          buyer.purchaseCount = (buyer.purchaseCount || 0) + 1;
+          const prevCount = buyer.purchaseCount || 0;
+          const prevAvg = buyer.averageRating || 0;
+          const newCount = prevCount + 1;
+          const newAvg = ((prevAvg * prevCount) + sellerRating) / newCount;
+
+          buyer.purchaseCount = newCount;
+          buyer.averageRating = Math.round(newAvg * 10) / 10;
           await buyer.save();
         }
       }

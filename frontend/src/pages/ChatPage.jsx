@@ -620,24 +620,24 @@ const ChatPage = ({ currentUser }) => {
                 </div>
                   <div className="market-card-content">
                     <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
-                    <div className="market-card-info-line">
-                      {fullItem?.category && (
+                    <div className="market-card-info-line" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      {(fullItem?.category || selectedItem?.category) && (
                         <>
-                          <span className="market-card-meta">{fullItem.category}</span>
+                          <span className="market-card-meta">{fullItem?.category || selectedItem?.category}</span>
                           <span className="market-card-separator">•</span>
                         </>
                       )}
-                      {typeof fullItem?.price === 'number' && (
+                      {((fullItem?.price !== undefined && fullItem?.price !== null) || (selectedItem?.price !== undefined && selectedItem?.price !== null)) && (
                         <>
-                          <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
+                          <span className="market-card-price">${(fullItem?.price || selectedItem?.price || 0).toFixed(2)}</span>
                           <span className="market-card-separator">•</span>
                         </>
                       )}
-                      <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
-                      {typeof fullItem?.distance === 'number' && (
+                      <span className="market-card-meta">Qty: {fullItem?.quantity ?? selectedItem?.quantity ?? 'N/A'}</span>
+                      {((fullItem?.distance !== undefined && fullItem?.distance !== null) || (selectedItem?.distance !== undefined && selectedItem?.distance !== null)) && (
                         <>
                           <span className="market-card-separator">•</span>
-                          <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
+                          <span className="market-card-meta">{((fullItem?.distance || selectedItem?.distance || 0) * 0.621371).toFixed(1)} mi</span>
                         </>
                       )}
                     </div>

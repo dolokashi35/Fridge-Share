@@ -257,14 +257,9 @@ export default function MyListings() {
                           </button>
                           <button
                             className="market-card-btn btn-blue"
-                            disabled={respondingId === o._id}
-                            onClick={() => {
-                              const cp = prompt("Counter price?");
-                              if (!cp) return;
-                              respond(o._id, "counter", Number(cp));
-                            }}
+                            onClick={() => nav("/chat", { state: { to: o.buyerUsername } })}
                           >
-                            Counter
+                            Message
                           </button>
                         </div>
                       </div>

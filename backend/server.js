@@ -660,11 +660,8 @@ app.post("/api/offers/:id/respond", auth, async (req, res) => {
       return res.json({ success: true, offer });
     }
     if (action === "counter") {
-      if (counterPrice == null) return res.status(400).json({ error: "Missing counterPrice" });
-      offer.status = "countered";
-      offer.counterPrice = Number(counterPrice);
-      await offer.save();
-      return res.json({ success: true, offer });
+      // Negotiation should move to chat; sellers cannot counter via API
+      return res.status(400).json({ error: "Seller counter via API is disabled. Use chat to negotiate." });
     }
     return res.status(400).json({ error: "Invalid action" });
   } catch (err) {

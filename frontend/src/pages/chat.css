@@ -385,6 +385,17 @@
   cursor: default !important;
 }
 
+/* Keep type, price, qty, and distance on the same line in chat listing */
+.listing-panel .market-card-info-line {
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+}
+
+.listing-panel .market-card-info-line > * {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* Ensure seller rating box and listing have the same width */
 .chat-listing,
 .chat-seller-rating,

@@ -8,6 +8,20 @@ import HandoffModal from '../components/HandoffModal';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
+// Calculate distance using Haversine formula
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  return distance;
+};
+
 export default function ItemDetail() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -35,22 +49,32 @@ export default function ItemDetail() {
         
         // Try to get item with distance from nearby endpoint if user location is available
         let itemData = null;
+        let userLocation = null;
+        
         if (navigator.geolocation) {
           try {
             const position = await new Promise((resolve, reject) => {
               navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
             });
-            const { latitude, longitude } = position.coords;
-            const nearbyRes = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
-              params: { lat: latitude, lng: longitude, radius: 50000 },
-              headers
-            });
-            const nearbyItem = nearbyRes.data.find(it => it._id === id || it.id === id);
-            if (nearbyItem) {
-              itemData = nearbyItem;
+            userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            
+            try {
+              const nearbyRes = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
+                params: { lat: userLocation.lat, lng: userLocation.lng, radius: 50000 },
+                headers
+              });
+              const nearbyItem = nearbyRes.data.find(it => it._id === id || it.id === id);
+              if (nearbyItem) {
+                itemData = nearbyItem;
+              }
+            } catch {
+              // Nearby endpoint failed, will try regular fetch and calculate distance
             }
           } catch {
-            // Fallback to regular item fetch
+            // Geolocation failed
           }
         }
         
@@ -58,6 +82,18 @@ export default function ItemDetail() {
         if (!itemData) {
           const res = await axios.get(`${BACKEND_URL}/items/${id}`, { headers });
           itemData = res.data;
+          
+          // Calculate distance client-side if we have user location and item location
+          if (userLocation && itemData.location && itemData.location.coordinates) {
+            const [itemLng, itemLat] = itemData.location.coordinates;
+            const distance = calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              itemLat,
+              itemLng
+            );
+            itemData.distance = Math.round(distance * 100) / 100; // Round to 2 decimal places
+          }
         }
         
         setItem(itemData);

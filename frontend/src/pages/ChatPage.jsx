@@ -259,7 +259,7 @@ const ChatPage = ({ currentUser }) => {
                     setTimeout(() => inputRef.current && inputRef.current.focus(), 0);
                   }}
                 >
-                  <div className="chat-peer-avatar" style={{ width: 32, height: 32, fontSize: 12 }}>
+                  <div className="chat-peer-avatar" style={{ width: 36, height: 36, fontSize: 13 }}>
                     {(c.peer || 'U').slice(0,2).toUpperCase()}
                   </div>
                   <div className="meta">
@@ -370,20 +370,20 @@ const ChatPage = ({ currentUser }) => {
 
           <form className="chat-composer" onSubmit={handleSend}>
             {!to && (
-              <input
-                type="text"
-                className="chat-input"
-                placeholder="Send to (username)"
-                value={to}
+          <input
+            type="text"
+            className="chat-input"
+            placeholder="Send to (username)"
+            value={to}
                 onChange={(e) => setTo(e.target.value)}
                 style={{ maxWidth: 180 }}
-              />
+          />
             )}
-            <input
-              type="text"
-              className="chat-input"
+          <input
+            type="text"
+            className="chat-input"
               placeholder="Type your message..."
-              value={content}
+            value={content}
               onChange={(e) => setContent(e.target.value)}
               ref={inputRef}
               autoFocus
@@ -393,7 +393,7 @@ const ChatPage = ({ currentUser }) => {
                 <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>
               </svg>
             </button>
-          </form>
+        </form>
         </section>
 
         {/* Right listing panel */}
@@ -460,8 +460,8 @@ const ChatPage = ({ currentUser }) => {
                   {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
                 </button>
               </div>
-            )}
-          </div>
+          )}
+        </div>
         </aside>
       </div>
     </div>

@@ -215,7 +215,7 @@ const ChatPage = ({ currentUser }) => {
             const statsRes = await axios.get(`${BACKEND_URL}/users/stats/${itemData.username}`);
             setSellerStats(statsRes.data);
           } catch {
-            setSellerStats({ averageRating: 0, purchaseCount: 0 });
+            setSellerStats({ averageRating: 0, salesCount: 0 });
           }
         } else {
           setSellerStats(null);
@@ -599,15 +599,16 @@ const ChatPage = ({ currentUser }) => {
                         </>
                       )}
                       <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
+                      {typeof fullItem?.distance === 'number' && (
+                        <>
+                          <span className="market-card-separator">•</span>
+                          <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
+                        </>
+                      )}
                     </div>
                     {fullItem?.description && (
                       <p className="market-card-description" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         {fullItem.description}
-                      </p>
-                    )}
-                    {typeof fullItem?.distance === 'number' && (
-                      <p className="market-card-meta" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#64748b' }}>
-                        📍 {(fullItem.distance * 0.621371).toFixed(1)} mi away
                       </p>
                     )}
                     {fullItem?.location?.name && (
@@ -658,7 +659,7 @@ const ChatPage = ({ currentUser }) => {
                             </span>
                           </div>
                           <div className="seller-purchases">
-                            {sellerStats.purchaseCount || 0} {sellerStats.purchaseCount === 1 ? 'purchase' : 'purchases'}
+                            {sellerStats.salesCount || 0} {sellerStats.salesCount === 1 ? 'sold' : 'sold'}
                           </div>
                         </div>
                       </div>

@@ -50,7 +50,7 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [college, setCollege] = useState("");
   const [saving, setSaving] = useState(false);
-  const [stats, setStats] = useState({ averageRating: 0, purchaseCount: 0 });
+  const [stats, setStats] = useState({ averageRating: 0, salesCount: 0, purchaseCount: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
   // ✅ Load user from localStorage
@@ -81,6 +81,7 @@ export default function ProfilePage() {
         });
         setStats({
           averageRating: res.data.averageRating || 0,
+          salesCount: res.data.salesCount || 0,
           purchaseCount: res.data.purchaseCount || 0,
         });
       } catch (err) {
@@ -268,6 +269,16 @@ export default function ProfilePage() {
                   </div>
                   <div className="profile-stat-value">
                     {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '—'}
+                  </div>
+                </div>
+                <div className="profile-stat-divider"></div>
+                <div className="profile-stat-item">
+                  <div className="profile-stat-label">
+                    <span className="profile-stat-icon">💰</span>
+                    Sales
+                  </div>
+                  <div className="profile-stat-value">
+                    {stats.salesCount}
                   </div>
                 </div>
                 <div className="profile-stat-divider"></div>

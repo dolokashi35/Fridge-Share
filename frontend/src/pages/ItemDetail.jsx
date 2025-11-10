@@ -29,8 +29,38 @@ export default function ItemDetail() {
     async function fetchItem() {
       setLoading(true);
       try {
-        const res = await axios.get(`${BACKEND_URL}/items/${id}`);
-        setItem(res.data);
+        const stored = localStorage.getItem('fs_user');
+        const token = stored ? JSON.parse(stored)?.token : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        // Try to get item with distance from nearby endpoint if user location is available
+        let itemData = null;
+        if (navigator.geolocation) {
+          try {
+            const position = await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            });
+            const { latitude, longitude } = position.coords;
+            const nearbyRes = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
+              params: { lat: latitude, lng: longitude, radius: 50000 },
+              headers
+            });
+            const nearbyItem = nearbyRes.data.find(it => it._id === id || it.id === id);
+            if (nearbyItem) {
+              itemData = nearbyItem;
+            }
+          } catch {
+            // Fallback to regular item fetch
+          }
+        }
+        
+        // If not found in nearby or geolocation failed, fetch regular item
+        if (!itemData) {
+          const res = await axios.get(`${BACKEND_URL}/items/${id}`, { headers });
+          itemData = res.data;
+        }
+        
+        setItem(itemData);
         setError(null);
       } catch (e) {
         setError("Item not found");
@@ -156,6 +186,11 @@ export default function ItemDetail() {
             <h1 className="market-detail-title">{item.name}</h1>
             <p className="market-detail-cat">{item.category}</p>
             <p className="market-detail-price">${item.price.toFixed(2)}</p>
+            {typeof item.distance === 'number' && (
+              <p className="market-detail-meta" style={{ marginTop: '0.5rem', fontSize: '0.95rem', color: '#64748b' }}>
+                📍 {(item.distance * 0.621371).toFixed(1)} mi away
+              </p>
+            )}
             <p className="market-detail-desc">{item.description}</p>
             <p className="market-detail-meta">Quantity: {item.quantity ?? 'N/A'}</p>
             <p className="market-detail-meta">Purchased: {item.purchaseDate ? new Date(item.purchaseDate).toLocaleDateString() : 'N/A'}</p>

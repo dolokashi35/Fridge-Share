@@ -209,7 +209,7 @@
 .profile-stats-grid {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   padding: 1.25rem 1.5rem;
   background: #f1f5f9;
   border-radius: 1rem;
@@ -223,8 +223,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .profile-stat-label {
@@ -250,6 +252,7 @@
   width: 1px;
   height: 48px;
   background: rgba(148, 163, 184, 0.4);
+  flex-shrink: 0;
 }
 
 /* Action Buttons */

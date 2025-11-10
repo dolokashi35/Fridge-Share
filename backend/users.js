@@ -14,8 +14,9 @@ const userSchema = new mongoose.Schema({
     name: String,
     college: String,
   },
-  averageRating: { type: Number, default: 0 }, // Average rating from all completed purchases
-  purchaseCount: { type: Number, default: 0 }, // Total number of completed purchases (as buyer or seller)
+  averageRating: { type: Number, default: 0 }, // Average rating from all completed sales
+  salesCount: { type: Number, default: 0 }, // Total number of items sold (public)
+  purchaseCount: { type: Number, default: 0 }, // Total number of items purchased (private)
 });
 
 const User = mongoose.model("User", userSchema);
@@ -99,18 +100,19 @@ router.post("/profile", async (req, res) => {
   }
 });
 
-// ✅ Get user stats (rating and purchase count) - for current user
+// ✅ Get user stats (rating, sales count, and purchase count) - for current user (private)
 router.get("/stats", auth, async (req, res) => {
   try {
     const username = req.user.username;
-    const user = await User.findOne({ username }).select("username averageRating purchaseCount");
+    const user = await User.findOne({ username }).select("username averageRating salesCount purchaseCount");
     
     if (!user) return res.status(404).json({ error: "User not found" });
     
     res.json({
       username: user.username,
       averageRating: user.averageRating || 0,
-      purchaseCount: user.purchaseCount || 0,
+      salesCount: user.salesCount || 0,
+      purchaseCount: user.purchaseCount || 0, // Private - only for current user
     });
   } catch (err) {
     console.error("❌ Get user stats error:", err);
@@ -118,18 +120,18 @@ router.get("/stats", auth, async (req, res) => {
   }
 });
 
-// ✅ Get user stats by username (public endpoint for viewing seller profiles)
+// ✅ Get user stats by username (public endpoint for viewing seller profiles - only shows sales)
 router.get("/stats/:username", async (req, res) => {
   try {
     const { username } = req.params;
-    const user = await User.findOne({ username }).select("username averageRating purchaseCount");
+    const user = await User.findOne({ username }).select("username averageRating salesCount");
     
     if (!user) return res.status(404).json({ error: "User not found" });
     
     res.json({
       username: user.username,
       averageRating: user.averageRating || 0,
-      purchaseCount: user.purchaseCount || 0,
+      salesCount: user.salesCount || 0, // Public - only sales count
     });
   } catch (err) {
     console.error("❌ Get user stats by username error:", err);

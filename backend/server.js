@@ -919,33 +919,37 @@ app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
       const sellerRating = confirmation.sellerRating; // Rating given TO buyer
       
       // Update seller's stats (based on buyerRating - rating given by buyer to seller)
-      if (buyerRating) {
-        const seller = await User.findOne({ username: sellerUsername });
-        if (seller) {
-          const prevCount = seller.purchaseCount || 0;
+      // Seller gets salesCount incremented (public stat) - always increment, update rating only if provided
+      const seller = await User.findOne({ username: sellerUsername });
+      if (seller) {
+        const prevSalesCount = seller.salesCount || 0;
+        const newSalesCount = prevSalesCount + 1;
+        seller.salesCount = newSalesCount;
+        
+        // Update rating only if buyer provided a rating
+        if (buyerRating) {
           const prevAvg = seller.averageRating || 0;
-          const newCount = prevCount + 1;
-          const newAvg = ((prevAvg * prevCount) + buyerRating) / newCount;
-
-          seller.purchaseCount = newCount;
+          const newAvg = ((prevAvg * prevSalesCount) + buyerRating) / newSalesCount;
           seller.averageRating = Math.round(newAvg * 10) / 10;
-          await seller.save();
         }
+        await seller.save();
       }
       
       // Update buyer's stats (based on sellerRating - rating given by seller to buyer)
-      if (sellerRating) {
-        const buyer = await User.findOne({ username: buyerUsername });
-        if (buyer) {
-          const prevCount = buyer.purchaseCount || 0;
+      // Buyer gets purchaseCount incremented (private stat) - always increment, update rating only if provided
+      const buyer = await User.findOne({ username: buyerUsername });
+      if (buyer) {
+        const prevPurchaseCount = buyer.purchaseCount || 0;
+        const newPurchaseCount = prevPurchaseCount + 1;
+        buyer.purchaseCount = newPurchaseCount;
+        
+        // Update rating only if seller provided a rating
+        if (sellerRating) {
           const prevAvg = buyer.averageRating || 0;
-          const newCount = prevCount + 1;
-          const newAvg = ((prevAvg * prevCount) + sellerRating) / newCount;
-
-          buyer.purchaseCount = newCount;
+          const newAvg = ((prevAvg * prevPurchaseCount) + sellerRating) / newPurchaseCount;
           buyer.averageRating = Math.round(newAvg * 10) / 10;
-          await buyer.save();
         }
+        await buyer.save();
       }
       
       // Delete all messages for this item thread

@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
+import MeetingLocationPicker from "../components/MeetingLocationPicker";
 import "./postitem.css";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const CATEGORIES = [
   "Produce", "Dairy", "Baked Goods", "Meat", "Seafood",
@@ -23,14 +24,34 @@ export default function PostItem() {
   const [manualCategory, setManualCategory] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [detectedText, setDetectedText] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [expiration, setExpiration] = useState("");
   const [quantity, setQuantity] = useState("");
   const [listingDuration, setListingDuration] = useState("3");
-  const [transferMethods, setTransferMethods] = useState(["Pickup"]);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  
+  // Location states
+  const [pickupLocation, setPickupLocation] = useState(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+
+  // Get user's current location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([latitude, longitude]);
+        },
+        (err) => {
+          console.error("Error getting user location:", err);
+        }
+      );
+    }
+  }, []);
 
   const captureImage = async () => {
     if (!camRef.current) return;
@@ -48,12 +69,15 @@ export default function PostItem() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = res.data;
-      setPredictedName(data.itemName || "Unknown");
-      setConfirmedName(data.itemName || "Unknown");
-      setDescription(data.description || "");
-      setPrice(data.price || "");
-      setConfidence(data.confidence || "");
+            const data = res.data;
+            setPredictedName(data.itemName || "Unknown");
+            setConfirmedName(data.itemName || "Unknown");
+            // Store detected text separately for description generation
+            setDetectedText(data.detectedText || "");
+            // Use AI-generated description from text analysis
+            setDescription(data.description || "");
+            setPrice(data.price || "");
+            setConfidence(data.confidence || "");
     } catch (err) {
       console.error("❌ AI analyze error:", err);
       alert("AI analysis failed. Please retry.");
@@ -67,16 +91,14 @@ export default function PostItem() {
     setPredictedName("");
     setConfirmedName("");
     setDescription("");
+    setDetectedText("");
     setPrice("");
     setConfidence("");
   };
 
-  const toggleTransfer = (method) => {
-    setTransferMethods((prev) =>
-      prev.includes(method)
-        ? prev.filter((m) => m !== method)
-        : [...prev, method]
-    );
+  // Handle pickup location selection
+  const handleLocationConfirm = (location) => {
+    setPickupLocation(location);
   };
 
   // ✨ Generate AI Description
@@ -87,6 +109,8 @@ export default function PostItem() {
       const res = await axios.post(`${BACKEND_URL}/api/generate-description`, {
         itemName: confirmedName,
         quantity: quantity || "1",
+        category: manualCategory,
+        detectedText: detectedText || "" // Pass the detected text from image analysis
       });
       setDescription(res.data.description);
     } catch (err) {
@@ -115,18 +139,62 @@ export default function PostItem() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!confirmedName || !purchaseDate || !quantity || transferMethods.length === 0) {
-      alert("Please fill out all required fields.");
+    if (!confirmedName || !purchaseDate || !quantity || !pickupLocation) {
+      alert("Please fill out all required fields including pickup location.");
       return;
     }
+    
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/marketplace");
+    
+    try {
+      // Get current user info
+      const user = JSON.parse(localStorage.getItem('fs_user'));
+      if (!user || !user.username) {
+        alert("Please log in to post items.");
+        navigate("/login");
+        return;
+      }
+
+      // Prepare item data
+      const itemData = {
+        name: confirmedName,
+        category: manualCategory || "Fresh", // Default category if none selected
+        price: parseFloat(price) || 0,
+        description: description || "",
+        quantity: parseInt(quantity),
+        purchaseDate: purchaseDate,
+        expirationDate: expiration || null,
+        listingDuration: parseInt(listingDuration),
+        transferMethods: ["Pickup"],
+        imageUrl: imageSrc || "", // Use captured image if available
+        username: user.username,
+        location: {
+          type: 'Point',
+          coordinates: [pickupLocation.coordinates[1], pickupLocation.coordinates[0]], // [lng, lat]
+          name: pickupLocation.name
+        }
+      };
+
+      // Submit to backend
+      const response = await axios.post(`${BACKEND_URL}/items`, itemData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+
+      console.log("✅ Item posted successfully:", response.data);
       alert("Item Posted Successfully!");
-    }, 1200);
+      navigate("/mylistings");
+      
+    } catch (error) {
+      console.error("❌ Error posting item:", error);
+      alert("Failed to post item. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -293,6 +361,47 @@ export default function PostItem() {
                 </div>
               </div>
             </section>
+
+            {/* 4️⃣ Pickup Location */}
+            <section className="post-card">
+              <h2>4. Pickup Location <span style={{ color: "#ef4444" }}>*</span></h2>
+              <div className="post-row">
+                <div style={{ flex: "1 1 100%" }}>
+                  <label className="post-label">Where can buyers pick up this item?</label>
+                  <div className="location-selection">
+                    {pickupLocation ? (
+                      <div className="selected-location-display">
+                        <div className="location-info">
+                          <span className="location-icon">📍</span>
+                          <div className="location-details">
+                            <div className="location-name">{pickupLocation.name}</div>
+                            <div className="location-type">{pickupLocation.type}</div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowLocationPicker(true)}
+                          className="change-location-btn"
+                        >
+                          Change Location
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowLocationPicker(true)}
+                        className="select-location-btn"
+                      >
+                        📍 Select Pickup Location
+                      </button>
+                    )}
+                  </div>
+                  <p className="location-help-text">
+                    Choose a safe, accessible location where buyers can pick up your item.
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
 
           {/* RIGHT COLUMN */}
@@ -389,6 +498,15 @@ export default function PostItem() {
           </p>
         </div>
       )}
+
+      {/* Meeting Location Picker Modal */}
+      <MeetingLocationPicker
+        isOpen={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onLocationConfirm={handleLocationConfirm}
+        userLocation={userLocation}
+        currentLocation={pickupLocation}
+      />
     </div>
   );
 }

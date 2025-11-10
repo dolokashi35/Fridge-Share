@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaHome, FaPlusCircle, FaUser, FaList, FaComments } from "react-icons/fa";
+import { FaHome, FaPlusCircle, FaUser, FaList, FaComments, FaMap } from "react-icons/fa";
 import "./bottomnav.css";
 import logo from "../assets/fridgeshare-logo.png"; // ✅ import your logo
 
@@ -9,6 +9,7 @@ export default function BottomNav() {
 
   const items = [
     { label: "Market", icon: <FaHome />, path: "/marketplace" },
+    { label: "Map", icon: <FaMap />, path: "/map" },
     { label: "Post", icon: <FaPlusCircle />, path: "/post" },
     { label: "My Listings", icon: <FaList />, path: "/mylistings" },
     { label: "Chat", icon: <FaComments />, path: "/chat" },
@@ -42,6 +43,9 @@ export default function BottomNav() {
           );
         })}
       </div>
+
+      {/* Separator */}
+      <div className="navbar-separator" />
 
       {/* Profile icon only */}
       <button

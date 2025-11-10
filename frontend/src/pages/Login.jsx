@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './login.css';
+import logo from '../assets/fridgeshare-logo.png';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export default function Login({ onAuth }) {
   const [username, setUsername] = useState('');
@@ -45,7 +46,11 @@ export default function Login({ onAuth }) {
     <div className="login-bg">
       <div className="login-card">
         <div className="login-icon">
-          <span role="img" aria-label="fridge" style={{ fontSize: 32 }}>🧊</span>
+          <img 
+            src={logo} 
+            alt="FridgeShare Logo" 
+            className="login-logo-img"
+          />
         </div>
 
         <div className="login-title">
@@ -56,12 +61,12 @@ export default function Login({ onAuth }) {
           {mode === 'login' ? 'Sign in to your account' : 'Create a new account'}
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit} style={{ width: '100%' }}>
+        <form className="login-form" onSubmit={handleSubmit}>
           <input
             className="login-input"
             value={username}
             onChange={e => setUsername(e.target.value)}
-            placeholder="Username"
+            placeholder="Email address (.edu)"
             autoFocus
             autoComplete="username"
             required
@@ -77,31 +82,31 @@ export default function Login({ onAuth }) {
           />
           {error && <div className="login-error">{error}</div>}
           <button className="login-btn" type="submit">
-            {mode === 'login' ? 'Login' : 'Sign Up'}
+            {mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
         <div className="login-switch">
           {mode === 'login' ? (
             <span>
-              New?{' '}
+              Don't have an account?{' '}
               <button
                 className="login-link"
                 type="button"
                 onClick={() => setMode('register')}
               >
-                Sign Up
+                Create Account
               </button>
             </span>
           ) : (
             <span>
-              Have an account?{' '}
+              Already have an account?{' '}
               <button
                 className="login-link"
                 type="button"
                 onClick={() => setMode('login')}
               >
-                Login
+                Sign In
               </button>
             </span>
           )}

@@ -9,7 +9,9 @@ import ItemDetail from "./pages/ItemDetail";
 import ProfilePage from "./pages/ProfilePage";
 import EditListing from "./pages/EditListing";
 import ChatPage from "./pages/ChatPage";
+import MapDiscovery from "./components/MapDiscovery";
 import BottomNav from "./components/BottomNav";
+import { SocketProvider } from "./contexts/SocketContext";
 
 function AppContent() {
   const [user, setUser] = useState(() => {
@@ -75,6 +77,20 @@ function AppContent() {
                 <Navigate to="/setup" />
               ) : (
                 <Marketplace />
+              )
+            }
+          />
+
+          {/* ✅ Map Discovery */}
+          <Route
+            path="/map"
+            element={
+              !user ? (
+                <Navigate to="/login" />
+              ) : !user.profile ? (
+                <Navigate to="/setup" />
+              ) : (
+                <MapDiscovery />
               )
             }
           />
@@ -174,7 +190,9 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <AppContent />
+      <SocketProvider>
+        <AppContent />
+      </SocketProvider>
     </Router>
   );
 }

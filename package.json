@@ -1,16 +1,23 @@
 {
-  "name": "fridge-share-backend",
+  "name": "fridge-share",
   "version": "1.0.0",
-  "description": "FridgeShare backend (Express + Google Vision + Gemini)",
+  "description": "FridgeShare full-stack application",
   "type": "module",
-  "main": "server.js",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "install-all": "npm run install-backend && npm run install-frontend",
+    "autopush": "bash ./auto-push.sh"
   },
   "dependencies": {
     "@google-cloud/vision": "^5.3.3",
     "@google/generative-ai": "^0.24.1",
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "bcryptjs": "^3.0.2",
+    "canvas": "^3.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
@@ -20,7 +27,9 @@
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "openai": "^5.19.1",
+    "qrcode": "^1.5.4",
     "react-leaflet": "^5.0.0",
+    "socket.io": "^4.8.1",
     "uuid": "^12.0.0"
   }
 }

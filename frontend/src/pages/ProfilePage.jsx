@@ -4,7 +4,7 @@ import { TextField, Autocomplete, Popper } from "@mui/material";
 import { colleges } from "../data/colleges";
 import "./profile.css";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // 👇 Custom Popper to keep dropdown below
 function CustomPopper(props) {
@@ -28,6 +28,21 @@ function CustomPopper(props) {
   );
 }
 
+// Generate avatar initials from name or username
+function getInitials(name, username) {
+  if (name && name.trim()) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+  if (username) {
+    return username[0].toUpperCase();
+  }
+  return "?";
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +50,8 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [college, setCollege] = useState("");
   const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState({ averageRating: 0, purchaseCount: 0 });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // ✅ Load user from localStorage
   useEffect(() => {
@@ -46,6 +63,33 @@ export default function ProfilePage() {
       setCollege(parsed.profile?.college || "");
     }
     setLoading(false);
+  }, []);
+
+  // ✅ Fetch user stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stored = localStorage.getItem("fs_user");
+        const token = stored ? JSON.parse(stored)?.token : null;
+        if (!token) {
+          setLoadingStats(false);
+          return;
+        }
+
+        const res = await axios.get(`${BACKEND_URL}/users/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStats({
+          averageRating: res.data.averageRating || 0,
+          purchaseCount: res.data.purchaseCount || 0,
+        });
+      } catch (err) {
+        console.error("Failed to fetch user stats:", err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   if (loading)
@@ -86,20 +130,57 @@ export default function ProfilePage() {
     }
   }
 
+  const initials = getInitials(user?.profile?.name, user?.username);
+
   return (
     <div className="profile-bg">
       <div className="profile-card">
-        <h1 className="profile-title">My Profile</h1>
+        {/* Header with gradient, toolbar, and avatar */}
+        <div className="profile-header">
+          <div className="profile-header-content">
+            <div>
+              <h1 className="profile-title">My Profile</h1>
+              <p className="profile-subtitle">
+                Manage your FridgeShare identity, reputation, and preferences in one place.
+              </p>
+            </div>
+            <button
+              className="profile-settings-btn"
+              type="button"
+              onClick={() => setEditing(true)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+              </svg>
+              Edit Profile
+            </button>
+          </div>
+          <div className="profile-avatar" title={user?.profile?.name || user?.username}>
+            {initials}
+          </div>
+        </div>
 
         {editing ? (
           <form className="profile-form" onSubmit={handleSave}>
-            <div>
-              <b>Username:</b> {user.username}
+            <div className="profile-info-item">
+              <span className="profile-label">Username</span>
+              <span className="profile-value">{user.username}</span>
             </div>
 
             {/* Name */}
-            <div>
-              <label>Name:</label>
+            <div className="profile-form-group">
+              <label className="profile-form-label">Name</label>
               <input
                 className="profile-input"
                 value={name}
@@ -109,8 +190,8 @@ export default function ProfilePage() {
             </div>
 
             {/* College Autocomplete */}
-            <div style={{ position: "relative", zIndex: 10 }}>
-              <label>College:</label>
+            <div className="profile-form-group" style={{ position: "relative", zIndex: 10 }}>
+              <label className="profile-form-label">College</label>
               <Autocomplete
                 options={colleges}
                 value={college}
@@ -122,7 +203,7 @@ export default function ProfilePage() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Search for your college"
+                    placeholder="Search for your college"
                     variant="outlined"
                     fullWidth
                     required
@@ -137,16 +218,16 @@ export default function ProfilePage() {
               />
             </div>
 
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="profile-form-actions">
               <button
-                className="profile-btn"
+                className="profile-btn-primary"
                 type="submit"
                 disabled={saving}
               >
                 {saving ? "Saving..." : "Save"}
               </button>
               <button
-                className="profile-btn"
+                className="profile-btn-secondary"
                 type="button"
                 onClick={() => setEditing(false)}
                 disabled={saving}
@@ -157,21 +238,73 @@ export default function ProfilePage() {
           </form>
         ) : (
           <div className="profile-info">
-            <div>
-              <b>Username:</b> {user.username}
+            {/* Basic Info Block */}
+            <div className="profile-info-block">
+              <div className="profile-info-item">
+                <span className="profile-label">Name</span>
+                <span className="profile-value">{user.profile.name || "Not set"}</span>
+              </div>
+              <div className="profile-info-item">
+                <span className="profile-label">Email</span>
+                <span className="profile-value">{user.username}</span>
+              </div>
+              <div className="profile-info-item">
+                <span className="profile-label">College</span>
+                <span className="profile-value">{user.profile.college || "Not set"}</span>
+              </div>
+              <div className="profile-info-item">
+                <span className="profile-label">Member since</span>
+                <span className="profile-value">Active member</span>
+              </div>
             </div>
-            <div>
-              <b>Name:</b> {user.profile.name || "Not set"}
+
+            {/* Stats Grid */}
+            {!loadingStats && (
+              <div className="profile-stats-grid">
+                <div className="profile-stat-item">
+                  <div className="profile-stat-label">
+                    <span className="profile-stat-icon">⭐</span>
+                    Rating
+                  </div>
+                  <div className="profile-stat-value">
+                    {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '—'}
+                  </div>
+                </div>
+                <div className="profile-stat-divider"></div>
+                <div className="profile-stat-item">
+                  <div className="profile-stat-label">
+                    <span className="profile-stat-icon">📦</span>
+                    Purchases
+                  </div>
+                  <div className="profile-stat-value">
+                    {stats.purchaseCount}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="profile-actions">
+              <button
+                className="profile-btn-primary"
+                onClick={() => setEditing(true)}
+              >
+                Edit Profile
+              </button>
+              <button
+                className="profile-btn-secondary"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("fs_user");
+                    localStorage.removeItem("userProfile"); // legacy key cleanup
+                  } finally {
+                    window.location.replace("/login");
+                  }
+                }}
+              >
+                Log Out
+              </button>
             </div>
-            <div>
-              <b>College:</b> {user.profile.college || "Not set"}
-            </div>
-            <button
-              className="profile-btn"
-              onClick={() => setEditing(true)}
-            >
-              Edit Profile
-            </button>
           </div>
         )}
       </div>

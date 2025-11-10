@@ -13,7 +13,7 @@
   background: #ffffff;
   height: 64px;
   border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 0 1.5rem;
 
   position: relative; /* ✅ allows logo to be absolutely positioned inside */
@@ -36,7 +36,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.5rem; /* gap-6 */
   flex: 1;
 }
 
@@ -48,37 +48,48 @@
   cursor: pointer;
   color: #374151;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 500; /* font-medium */
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem; /* py-3 */
   border-radius: 9999px;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition: all 0.15s ease;
+  position: relative;
 }
 
-/* 🟥 Active tab */
+/* 🟥 Active tab - light teal background, teal text */
 .bottom-navbar-btn.active {
-  color: #ef4444;
-  font-weight: 700;
+  color: #0E7490; /* teal text */
+  font-weight: 500; /* font-medium, not bold */
+  background: rgba(14, 116, 144, 0.1); /* light teal background */
 }
 
-/* 🩶 Hover */
-.bottom-navbar-btn:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
+.bottom-navbar-btn.active::after {
+  display: none; /* remove underline */
 }
 
-/* 🧭 Icons */
+/* 🩶 Hover - subtle color fade */
+.bottom-navbar-btn:hover:not(.active) {
+  color: #0E7490;
+  opacity: 0.75;
+}
+
+/* 🧭 Icons - slightly smaller, lower opacity */
 .bottom-navbar-icon {
-  font-size: 1rem;
+  font-size: 0.875rem; /* slightly smaller */
+  opacity: 0.8; /* lower opacity */
   position: relative;
   top: 1.5px;
 }
 
+.bottom-navbar-btn.active .bottom-navbar-icon {
+  opacity: 1; /* full opacity when active */
+}
+
 /* 🔺 Post button (center one) */
 .bottom-navbar-btn:nth-child(2) {
-  background: #ef4444;
+  background: #0E7490; /* teal primary */
   color: white;
   font-weight: 600;
   display: flex;
@@ -88,13 +99,22 @@
   padding: 0.5rem 1.3rem;
   font-size: 1rem;
   border-radius: 9999px;
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+  box-shadow: 0 2px 6px rgba(14, 116, 144, 0.25);
   transition: all 0.2s ease;
   line-height: 1;
 }
 
 .bottom-navbar-btn:nth-child(2):hover {
-  background: #dc2626;
+  background: #0d6880; /* darken by ~5-7% instead of 10-15% */
+}
+
+/* Separator between buttons and profile - adds structure */
+.navbar-separator {
+  width: 1px;
+  height: 32px;
+  background: #e5e7eb;
+  margin: 0 1rem;
+  flex-shrink: 0;
 }
 
 /* 🧍 Profile button (modern circular icon) */
@@ -113,7 +133,7 @@
 
 .profile-btn:hover {
   background: #111827;
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .profile-btn svg {

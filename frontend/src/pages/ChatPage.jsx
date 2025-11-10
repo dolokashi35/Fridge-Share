@@ -544,6 +544,16 @@ const ChatPage = ({ currentUser }) => {
                         {fullItem.description}
                       </p>
                     )}
+                    {typeof fullItem?.distance === 'number' && (
+                      <p className="market-card-meta" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#64748b' }}>
+                        📍 {(fullItem.distance * 0.621371).toFixed(1)} mi away
+                      </p>
+                    )}
+                    {fullItem?.location?.name && (
+                      <p className="market-card-meta" style={{ marginTop: '0.25rem', fontSize: '0.85rem', color: '#64748b' }}>
+                        📍 {fullItem.location.name}
+                      </p>
+                    )}
                     {fullItem?.username && (
                       <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>
                         Posted by: <b>{fullItem.username}</b>
@@ -560,13 +570,13 @@ const ChatPage = ({ currentUser }) => {
                 {/* Seller Profile Card in Chat Listing */}
                 {fullItem?.username && sellerStats && (
                   <div className="seller-profile-card" style={{ marginTop: '1rem' }}>
-                    <div className="seller-profile-header">
+                    <div className="seller-profile-header" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                       <div className="seller-avatar">
                         {(fullItem.username || 'U').slice(0, 2).toUpperCase()}
                       </div>
-                      <div className="seller-info">
-                        <div className="seller-username">{fullItem.username}</div>
-                        <div className="seller-stats-row">
+                      <div className="seller-info" style={{ width: '100%' }}>
+                        <div className="seller-username" style={{ textAlign: 'center', marginBottom: '0.5rem' }}>{fullItem.username}</div>
+                        <div className="seller-stats-row" style={{ justifyContent: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                           <div className="seller-rating">
                             <span className="seller-stars">
                               {Array.from({ length: 5 }, (_, i) => {

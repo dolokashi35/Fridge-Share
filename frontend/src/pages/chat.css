@@ -67,6 +67,7 @@
   cursor: pointer;
   width: 100%;
   box-sizing: border-box;
+  overflow: hidden; /* prevent any overflow */
 }
 .chat-list-item:hover {
   background: #f3f4f6;
@@ -80,16 +81,18 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
+  flex: 1 1 0; /* equal flex basis, allow shrinking */
   min-width: 0; /* allow truncation */
   overflow: hidden; /* prevent overflow */
+  max-width: calc(100% - 100px); /* reserve space for avatar + image + gaps */
 }
 .chat-list-item .name {
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  width: 100%;
+  display: block;
 }
 .chat-list-item .preview {
   font-size: 0.85rem;

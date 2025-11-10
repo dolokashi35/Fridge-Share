@@ -621,25 +621,27 @@ const ChatPage = ({ currentUser }) => {
                   <div className="market-card-content">
                     <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
                     <div className="market-card-info-line" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      {(fullItem?.category || selectedItem?.category) && (
-                        <>
-                          <span className="market-card-meta">{fullItem?.category || selectedItem?.category}</span>
-                          <span className="market-card-separator">•</span>
-                        </>
-                      )}
-                      {((fullItem?.price !== undefined && fullItem?.price !== null) || (selectedItem?.price !== undefined && selectedItem?.price !== null)) && (
-                        <>
-                          <span className="market-card-price">${(fullItem?.price || selectedItem?.price || 0).toFixed(2)}</span>
-                          <span className="market-card-separator">•</span>
-                        </>
-                      )}
-                      <span className="market-card-meta">Qty: {fullItem?.quantity ?? selectedItem?.quantity ?? 'N/A'}</span>
-                      {((fullItem?.distance !== undefined && fullItem?.distance !== null) || (selectedItem?.distance !== undefined && selectedItem?.distance !== null)) && (
-                        <>
-                          <span className="market-card-separator">•</span>
-                          <span className="market-card-meta">{((fullItem?.distance || selectedItem?.distance || 0) * 0.621371).toFixed(1)} mi</span>
-                        </>
-                      )}
+                      {(() => {
+                        const pieces = [];
+                        const cat = fullItem?.category || selectedItem?.category;
+                        const priceVal = (fullItem?.price ?? selectedItem?.price);
+                        const hasPrice = priceVal !== undefined && priceVal !== null;
+                        const qtyVal = (fullItem?.quantity ?? selectedItem?.quantity);
+                        const distVal = (fullItem?.distance ?? selectedItem?.distance);
+                        const hasDistance = distVal !== undefined && distVal !== null;
+
+                        if (cat) pieces.push(<span className="market-card-meta" key="cat">{cat}</span>);
+                        if (hasPrice) pieces.push(<span className="market-card-price" key="price">${(Number(priceVal) || 0).toFixed(2)}</span>);
+                        pieces.push(<span className="market-card-meta" key="qty">Qty: {qtyVal ?? 'N/A'}</span>);
+                        if (hasDistance) pieces.push(<span className="market-card-meta" key="dist">{((Number(distVal) || 0) * 0.621371).toFixed(1)} mi</span>);
+
+                        return pieces.map((el, idx) => (
+                          <React.Fragment key={idx}>
+                            {idx > 0 && <span className="market-card-separator">•</span>}
+                            {el}
+                          </React.Fragment>
+                        ));
+                      })()}
                     </div>
                     {fullItem?.description && (
                       <p className="market-card-description" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

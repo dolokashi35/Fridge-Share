@@ -83,8 +83,22 @@
 .chat-list-item .preview {
   font-size: 0.85rem;
   color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .chat-list-item.active .preview { color: #e5e7eb; }
+/* ensure the text portion truncates */
+.chat-list-item .preview-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .chat-header {
   display: flex;

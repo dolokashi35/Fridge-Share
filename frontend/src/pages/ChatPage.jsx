@@ -150,7 +150,7 @@ const ChatPage = ({ currentUser }) => {
                     <div className="name">{c.peer}</div>
                     <div className="preview">
                       {c.itemImageUrl ? <img src={c.itemImageUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, verticalAlign: 'middle', marginRight: 6 }} /> : null}
-                      {c.preview}
+                      <span className="preview-text">{c.preview}</span>
                     </div>
                   </div>
                 </div>

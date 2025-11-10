@@ -243,13 +243,23 @@ export default function MyListings() {
                       (o) => o.status === "pending" || o.status === "countered"
                     );
                     return selectedItemId && list.length > 0 ? (
-                      list.map((o) => (
+                      list.map((o) => {
+                        const item = items.find(x => x._id === selectedItemId);
+                        const originalPrice = item?.price || 0;
+                        const offerPrice = o.offerPrice;
+                        const discountPercent = originalPrice > 0 ? ((originalPrice - offerPrice) / originalPrice * 100).toFixed(0) : 0;
+                        return (
                       <div key={o._id} className="offer-card">
-                        <div className="offer-title-line">
-                          {o.itemName || (items.find(x => x._id === selectedItemId)?.name) || 'Item'} • ${o.offerPrice.toFixed(2)}
+                        <div className="offer-pricing">
+                          <div className="offer-price-row">
+                            <span className="offer-original-price">${originalPrice.toFixed(2)}</span>
+                            <span className="offer-arrow">→</span>
+                            <span className="offer-counter-price">${offerPrice.toFixed(2)}</span>
+                            <span className="offer-discount-badge">-{discountPercent}%</span>
+                          </div>
                         </div>
                         <p className="offer-meta">Offer from <b>{o.buyerUsername}</b></p>
-                        {o.message && <p className="offer-meta">“{o.message}”</p>}
+                        {o.message && <p className="offer-meta">"{o.message}"</p>}
                         <div className="offer-actions">
                           <button
                             className="market-card-btn btn-primary"
@@ -312,7 +322,8 @@ export default function MyListings() {
                           </button>
                         </div>
                       </div>
-                      ))
+                        );
+                      })
                     ) : (
                     <div className="offer-meta">No offers yet for this listing.</div>
                     );

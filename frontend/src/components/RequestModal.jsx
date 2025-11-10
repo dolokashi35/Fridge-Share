@@ -46,7 +46,7 @@ export default function RequestModal({ item, isOpen, onClose, onRequested }) {
         { itemId: item._id, offerPrice, message: note },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
-      onRequested?.(res.data?.offer || { offerPrice, note });
+      onRequested?.({ offer: res.data?.offer || null, note });
       onClose();
     } catch (e) {
       alert("Failed to send request.");

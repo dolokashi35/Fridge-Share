@@ -215,11 +215,17 @@ export default function Marketplace() {
                   {/* Handoff Status Badge */}
                   {getHandoffStatusBadge(it)}
                   <div className="market-card-actions">
-                    <button
+                <button
                       className="market-card-btn request"
                       onClick={(e) => {
                         e.stopPropagation();
-                    nav(`/items/${it._id}`); // simple buy flow placeholder
+                    // Start chat to negotiate time/price/location for Buy
+                    nav("/chat", {
+                      state: {
+                        to: it.username,
+                        prefill: `Hi! I'd like to buy "${it.name}" at $${it.price.toFixed(2)}. When and where can we meet?`
+                      }
+                    });
                       }}
                     >
                   Buy at ${it.price.toFixed(2)}
@@ -268,7 +274,9 @@ export default function Marketplace() {
         item={modalItem}
         isOpen={!!modalItem}
         onClose={() => setModalItem(null)}
-        onRequested={(offer) => {
+        onRequested={(payload) => {
+          const offer = payload?.offer;
+          const note = payload?.note;
           if (modalItem?._id && offer?._id) {
             setRequests((prev) => ({
               ...prev,
@@ -280,8 +288,10 @@ export default function Marketplace() {
               [modalItem._id]: { offerId: null, status: "pending" }
             }));
           }
-          // Optionally navigate to chat placeholder
-          // nav("/chat");
+          // If buyer added a note while countering, open chat to negotiate
+          if (note && note.trim().length > 0) {
+            nav("/chat", { state: { to: modalItem.username, prefill: note } });
+          }
         }}
       />
     </div>

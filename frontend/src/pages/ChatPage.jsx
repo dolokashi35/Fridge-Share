@@ -10,7 +10,7 @@ const ChatPage = ({ currentUser }) => {
   const location = useLocation();
   const [messages, setMessages] = useState([]);
   const [to, setTo] = useState(() => (location.state && location.state.to) || '');
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(() => (location.state && location.state.prefill) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

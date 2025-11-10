@@ -11,20 +11,19 @@
 .chat-bg {
   min-height: 100vh;
   width: 100vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block; /* full-screen layout */
   font-family: 'Inter', sans-serif;
   background: var(--color-bg);
 }
 
 .chat-card {
   width: 100%;
-  max-width: 960px;
+  max-width: none;
+  height: 100vh;
   background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 12px 28px rgba(0,0,0,0.10);
-  border: 1px solid var(--color-border);
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
   display: grid;
   grid-template-columns: 270px 1fr;
   overflow: hidden;
@@ -35,7 +34,7 @@
   background: #fff;
   display: flex;
   flex-direction: column;
-  min-height: 520px;
+  height: 100vh;
 }
 .chat-sidebar-header {
   padding: 14px;
@@ -126,6 +125,7 @@
 .chat-main {
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 .chat-body {
   display: flex;
@@ -133,8 +133,8 @@
   gap: 10px;
   padding: 14px;
   background: #fafafa;
-  min-height: 360px;
-  max-height: 60vh;
+  flex: 1;          /* take remaining height */
+  min-height: 0;    /* allow children to shrink */
   overflow-y: auto;
 }
 

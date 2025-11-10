@@ -187,7 +187,7 @@ html, body {
 }
 
 .market-card-meta {
-  color: #94a3b8;     /* lighter gray for meta */
+  color: #64748b;     /* darker gray for better readability */
   font-size: 0.85rem;
   margin: 0.1rem 0;
 }
@@ -416,6 +416,14 @@ html, body {
   color: var(--gray);
   grid-column: 1 / -1;
   padding: 2rem;
+}
+
+/* Item detail page description */
+.market-detail-desc {
+  color: #64748b; /* darker gray for better readability */
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0.75rem 0;
 }
 
 /* Responsive grid */

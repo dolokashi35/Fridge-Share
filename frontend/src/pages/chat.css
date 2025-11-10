@@ -80,9 +80,14 @@
   gap: 2px;
   flex: 1;
   min-width: 0; /* allow truncation */
+  overflow: hidden; /* prevent overflow */
 }
 .chat-list-item .name {
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .chat-list-item .preview {
   font-size: 0.85rem;

@@ -1,6 +1,6 @@
 
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './chat.css';
@@ -14,6 +14,7 @@ const ChatPage = ({ currentUser }) => {
   const [content, setContent] = useState(() => (location.state && location.state.prefill) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const inputRef = useRef(null);
   const peerInitials = useMemo(() => {
     const name = to || 'User';
     const alpha = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -110,7 +111,10 @@ const ChatPage = ({ currentUser }) => {
                 <div
                   key={c.peer}
                   className={"chat-list-item " + (to === c.peer ? "active" : "")}
-                  onClick={() => setTo(c.peer)}
+                  onClick={() => {
+                    setTo(c.peer);
+                    setTimeout(() => inputRef.current && inputRef.current.focus(), 0);
+                  }}
                 >
                   <div className="chat-peer-avatar" style={{ width: 32, height: 32, fontSize: 12 }}>
                     {(c.peer || 'U').slice(0,2).toUpperCase()}
@@ -175,6 +179,8 @@ const ChatPage = ({ currentUser }) => {
               placeholder="Type a message…"
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              ref={inputRef}
+              autoFocus
             />
             <button className="chat-send" type="submit" disabled={loading || !to || !content.trim()}>Send</button>
           </form>

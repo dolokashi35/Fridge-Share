@@ -61,7 +61,10 @@ const io = new Server(server, {
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   },
+  transports: ['websocket', 'polling'], // Allow both transports
 });
 const port = process.env.PORT || 8080;
 
@@ -83,6 +86,9 @@ app.use(
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 app.use(express.json({ limit: "10mb" }));

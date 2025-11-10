@@ -27,6 +27,7 @@ export default function Marketplace() {
   const [selectedItem, setSelectedItem] = useState(null); // full item details for modal
   const [loadingItem, setLoadingItem] = useState(false);
   const [requests, setRequests] = useState(() => ({})); // itemId -> { offerId, status }
+  const [sellerStats, setSellerStats] = useState(() => ({})); // username -> { averageRating, purchaseCount }
   const location = useLocation();
   const nav = useNavigate();
   const [term, setTerm] = useState("");
@@ -262,6 +263,45 @@ export default function Marketplace() {
                   )}
                   {/* Handoff Status Badge */}
                   {getHandoffStatusBadge(it)}
+                  
+                  {/* Seller Profile Card */}
+                  {it.username && sellerStats[it.username] && (
+                    <div className="seller-profile-card" onClick={(e) => e.stopPropagation()}>
+                      <div className="seller-profile-header">
+                        <div className="seller-avatar">
+                          {(it.username || 'U').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="seller-info">
+                          <div className="seller-username">{it.username}</div>
+                          <div className="seller-stats-row">
+                            <div className="seller-rating">
+                              <span className="seller-stars">
+                                {Array.from({ length: 5 }, (_, i) => {
+                                  const rating = sellerStats[it.username].averageRating || 0;
+                                  const filled = i < Math.floor(rating);
+                                  const half = i === Math.floor(rating) && rating % 1 >= 0.5;
+                                  return (
+                                    <span key={i} className={filled ? 'star-filled' : half ? 'star-half' : 'star-empty'}>
+                                      ★
+                                    </span>
+                                  );
+                                })}
+                              </span>
+                              <span className="seller-rating-text">
+                                {sellerStats[it.username].averageRating > 0 
+                                  ? sellerStats[it.username].averageRating.toFixed(1) 
+                                  : '—'}
+                              </span>
+                            </div>
+                            <div className="seller-purchases">
+                              {sellerStats[it.username].purchaseCount || 0} {sellerStats[it.username].purchaseCount === 1 ? 'purchase' : 'purchases'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="market-card-actions" onClick={(e) => e.stopPropagation()}>
                 <button
                       className="market-card-btn request"

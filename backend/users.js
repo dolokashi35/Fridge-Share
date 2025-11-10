@@ -99,7 +99,7 @@ router.post("/profile", async (req, res) => {
   }
 });
 
-// ✅ Get user stats (rating and purchase count)
+// ✅ Get user stats (rating and purchase count) - for current user
 router.get("/stats", auth, async (req, res) => {
   try {
     const username = req.user.username;
@@ -114,6 +114,25 @@ router.get("/stats", auth, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Get user stats error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ Get user stats by username (public endpoint for viewing seller profiles)
+router.get("/stats/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username }).select("username averageRating purchaseCount");
+    
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    res.json({
+      username: user.username,
+      averageRating: user.averageRating || 0,
+      purchaseCount: user.purchaseCount || 0,
+    });
+  } catch (err) {
+    console.error("❌ Get user stats by username error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

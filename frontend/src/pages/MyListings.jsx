@@ -13,7 +13,11 @@ export default function MyListings() {
 
   const fetchMyItems = useCallback(async () => {
     setLoading(true);
-    const user = JSON.parse(localStorage.getItem('fs_user'));
+    let user = null;
+    try {
+      const raw = localStorage.getItem('fs_user');
+      user = raw ? JSON.parse(raw) : null;
+    } catch {}
     const token = user?.token;
     try {
       const res = await axios.get(`${BACKEND_URL}/items/mine`, {
@@ -84,7 +88,11 @@ export default function MyListings() {
   const [respondingId, setRespondingId] = useState(null);
   const loadOffers = useCallback(async () => {
     try {
-      const user = JSON.parse(localStorage.getItem('fs_user'));
+      let user = null;
+      try {
+        const raw = localStorage.getItem('fs_user');
+        user = raw ? JSON.parse(raw) : null;
+      } catch {}
       const token = user?.token;
       const res = await axios.get(`${BACKEND_URL}/api/offers`, {
         params: { role: "seller" },
@@ -108,7 +116,11 @@ export default function MyListings() {
   const respond = async (offerId, action, counterPrice) => {
     try {
       setRespondingId(offerId);
-      const user = JSON.parse(localStorage.getItem('fs_user'));
+      let user = null;
+      try {
+        const raw = localStorage.getItem('fs_user');
+        user = raw ? JSON.parse(raw) : null;
+      } catch {}
       const token = user?.token;
       await axios.post(`${BACKEND_URL}/api/offers/${offerId}/respond`, {
         action, counterPrice
@@ -160,7 +172,11 @@ export default function MyListings() {
   };
 
   async function handleDelete(itemId) {
-    const user = JSON.parse(localStorage.getItem('fs_user'));
+    let user = null;
+    try {
+      const raw = localStorage.getItem('fs_user');
+      user = raw ? JSON.parse(raw) : null;
+    } catch {}
     const token = user?.token;
     if (!token) {
       alert("Please log in to delete a listing.");

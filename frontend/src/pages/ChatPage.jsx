@@ -149,7 +149,6 @@ const ChatPage = ({ currentUser }) => {
                     <div className="name">{c.peer}</div>
                     <div className="preview">
                       {c.itemImageUrl ? <img src={c.itemImageUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, verticalAlign: 'middle', marginRight: 6 }} /> : null}
-                      {c.itemName ? <span>{c.itemName} • </span> : null}
                       {c.preview}
                     </div>
                   </div>
@@ -166,12 +165,8 @@ const ChatPage = ({ currentUser }) => {
             <div className="chat-peer-title">
               <div className="chat-peer-name">{to || 'Conversation'}</div>
               <div className="chat-peer-sub">
-                {selectedItem?.name ? (
-                  <>
-                    <span style={{ marginRight: 6 }}>Item:</span>
-                    {selectedItem?.imageUrl ? <img src={selectedItem.imageUrl} alt="" style={{ width: 18, height: 18, borderRadius: 4, verticalAlign: 'middle', marginRight: 6 }} /> : null}
-                    <span>{selectedItem.name}</span>
-                  </>
+                {selectedItem?.imageUrl ? (
+                  <img src={selectedItem.imageUrl} alt="" style={{ width: 20, height: 20, borderRadius: 4 }} />
                 ) : 'Secure • Direct message'}
               </div>
             </div>

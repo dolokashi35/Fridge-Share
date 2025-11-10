@@ -409,6 +409,9 @@ export default function Marketplace() {
                     {typeof selectedItem.distance === "number" && (
                       <p><strong>Distance:</strong> {(selectedItem.distance * 0.621371).toFixed(1)} mi away</p>
                     )}
+                    {selectedItem.location?.name && (
+                      <p><strong>Location:</strong> 📍 {selectedItem.location.name}</p>
+                    )}
                   </div>
                   
                   {/* Seller Profile Card in Modal */}

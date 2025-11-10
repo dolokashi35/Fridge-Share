@@ -126,10 +126,36 @@ const ChatPage = ({ currentUser }) => {
       try {
         const stored = localStorage.getItem('fs_user');
         const token = stored ? JSON.parse(stored)?.token : null;
-        const res = await axios.get(`${BACKEND_URL}/items/${selectedItem.id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        setFullItem(res.data || null);
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        // Try to get item with distance from nearby endpoint if user location is available
+        let itemData = null;
+        if (navigator.geolocation) {
+          try {
+            const position = await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            });
+            const { latitude, longitude } = position.coords;
+            const nearbyRes = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
+              params: { lat: latitude, lng: longitude, radius: 50000 },
+              headers
+            });
+            const nearbyItem = nearbyRes.data.find(it => it._id === selectedItem.id);
+            if (nearbyItem) {
+              itemData = nearbyItem;
+            }
+          } catch {
+            // Fallback to regular item fetch
+          }
+        }
+        
+        // If not found in nearby or geolocation failed, fetch regular item
+        if (!itemData) {
+          const res = await axios.get(`${BACKEND_URL}/items/${selectedItem.id}`, { headers });
+          itemData = res.data;
+        }
+        
+        setFullItem(itemData || null);
       } catch {
         setFullItem(null);
       }
@@ -418,17 +444,39 @@ const ChatPage = ({ currentUser }) => {
               </div>
               <div className="market-card-content">
                 <h3 className="market-card-title">{fullItem?.name || selectedItem?.name || 'Item'}</h3>
-                {typeof fullItem?.price === 'number' && (
-                  <p className="market-card-price">${fullItem.price.toFixed(2)}</p>
-                )}
+                <div className="market-card-info-line">
+                  {fullItem?.category && (
+                    <>
+                      <span className="market-card-cat">{fullItem.category}</span>
+                      <span className="market-card-separator">•</span>
+                    </>
+                  )}
+                  {typeof fullItem?.price === 'number' && (
+                    <>
+                      <span className="market-card-price">${fullItem.price.toFixed(2)}</span>
+                      <span className="market-card-separator">•</span>
+                    </>
+                  )}
+                  <span className="market-card-meta">Qty: {fullItem?.quantity ?? 'N/A'}</span>
+                  {typeof fullItem?.distance === 'number' && (
+                    <>
+                      <span className="market-card-separator">•</span>
+                      <span className="market-card-meta">{(fullItem.distance * 0.621371).toFixed(1)} mi</span>
+                    </>
+                  )}
+                </div>
                 {fullItem?.description && (
-                  <p className="market-card-meta">{fullItem.description}</p>
+                  <p className="market-card-description">{fullItem.description}</p>
                 )}
-                <p className="market-card-meta">
-                  Qty: {fullItem?.quantity ?? 'N/A'}
-                </p>
                 {fullItem?.username && (
-                  <p className="market-card-meta">Seller: <b>{fullItem.username}</b></p>
+                  <p className="market-card-meta" style={{ marginTop: '0.25rem' }}>
+                    Posted by: <b>{fullItem.username}</b>
+                  </p>
+                )}
+                {fullItem?.createdAt && (
+                  <p className="market-card-meta" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.1rem' }}>
+                    {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
                 )}
               </div>
             </div>

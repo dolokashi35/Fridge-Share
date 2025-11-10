@@ -91,19 +91,68 @@ export default function MeetingLocationPicker({
     setSelectedLocation(location);
   };
 
-  const handleUseMyLocation = () => {
+  const handleUseMyLocation = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
-          const customLocation = {
-            id: 'my-location',
-            name: 'My Current Location',
-            coordinates: [latitude, longitude],
-            type: 'custom'
-          };
-          setSelectedLocation(customLocation);
-          setMapCenter([latitude, longitude]);
+          
+          // Reverse geocode to get actual address
+          try {
+            const reverseUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
+            const reverseRes = await fetch(reverseUrl, {
+              headers: {
+                'User-Agent': 'FridgeShare/1.0'
+              }
+            });
+            const reverseData = await reverseRes.json();
+            
+            // Use the display name from reverse geocoding, or fallback to formatted address
+            let locationName = 'My Current Location';
+            if (reverseData && reverseData.display_name) {
+              // Try to get a shorter, more readable address
+              const addr = reverseData.address;
+              if (addr) {
+                // Build a readable address from components
+                const parts = [];
+                if (addr.road) parts.push(addr.road);
+                if (addr.house_number) parts.unshift(addr.house_number);
+                if (addr.city || addr.town || addr.village) {
+                  parts.push(addr.city || addr.town || addr.village);
+                } else if (addr.suburb) {
+                  parts.push(addr.suburb);
+                }
+                if (addr.state) parts.push(addr.state);
+                
+                locationName = parts.length > 0 
+                  ? parts.join(', ') 
+                  : reverseData.display_name.split(',').slice(0, 3).join(', '); // First 3 parts of full address
+              } else {
+                // Fallback to first part of display_name
+                locationName = reverseData.display_name.split(',')[0];
+              }
+            }
+            
+            const customLocation = {
+              id: 'my-location',
+              name: locationName,
+              coordinates: [latitude, longitude],
+              type: 'custom'
+            };
+            setSelectedLocation(customLocation);
+            setMapCenter([latitude, longitude]);
+          } catch (err) {
+            console.error('Reverse geocoding failed:', err);
+            // Fallback to coordinates if reverse geocoding fails
+            const customLocation = {
+              id: 'my-location',
+              name: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+              coordinates: [latitude, longitude],
+              type: 'custom'
+            };
+            setSelectedLocation(customLocation);
+            setMapCenter([latitude, longitude]);
+          }
         },
         (err) => {
           console.error('Error getting location:', err);

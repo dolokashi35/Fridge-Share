@@ -161,7 +161,7 @@ export default function Marketplace() {
           <select
             value={cat}
             onChange={(e) => setCat(e.target.value)}
-            className="market-select"
+            className={`market-select ${cat !== "All" ? "active" : ""}`}
           >
             {categories.map((c) => (
               <option key={c}>{c}</option>

@@ -44,6 +44,9 @@ export default function BottomNav() {
         })}
       </div>
 
+      {/* Separator */}
+      <div className="navbar-separator" />
+
       {/* Profile icon only */}
       <button
         onClick={() => nav(profileItem.path)}

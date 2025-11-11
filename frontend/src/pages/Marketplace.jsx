@@ -40,6 +40,12 @@ export default function Marketplace() {
   const [selectedItem, setSelectedItem] = useState(null); // full item details for modal
   const [loadingItem, setLoadingItem] = useState(false);
   const [requests, setRequests] = useState(() => ({})); // itemId -> { offerId, status }
+  const [hiddenIds, setHiddenIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem('fs_hidden_items');
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch { return new Set(); }
+  });
   const [modalSellerStats, setModalSellerStats] = useState(null); // stats for seller in modal
   const location = useLocation();
   const nav = useNavigate();
@@ -132,6 +138,7 @@ export default function Marketplace() {
 
   const filtered = useMemo(() => {
     let list = items.filter((it) => {
+      if (hiddenIds.has(it._id)) return false; // hide user-confirmed items
       const okCat = cat === "All" || it.category === cat;
       const okTerm = it.name.toLowerCase().includes(term.toLowerCase());
       const okPrice = it.price <= Number(maxP);
@@ -142,7 +149,13 @@ export default function Marketplace() {
       return okCat && okTerm && okPrice && okDistance;
     });
 
+    const isRequested = (id) => !!(requests[id] && (requests[id].status === "pending" || requests[id].status === "countered"));
+
     list.sort((a, b) => {
+      // Requested items to the top
+      const ra = isRequested(a._id) ? 1 : 0;
+      const rb = isRequested(b._id) ? 1 : 0;
+      if (rb - ra !== 0) return rb - ra;
       switch (sort) {
         case "name-asc":
           return a.name.localeCompare(b.name);
@@ -192,6 +205,15 @@ export default function Marketplace() {
     } finally {
       setLoadingItem(false);
     }
+  };
+
+  const hideItem = (id) => {
+    setHiddenIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      try { localStorage.setItem('fs_hidden_items', JSON.stringify([...next])); } catch {}
+      return next;
+    });
   };
 
   // Close modal when clicking outside
@@ -306,6 +328,10 @@ export default function Marketplace() {
                       className="market-card-btn request"
                       onClick={(e) => {
                         e.stopPropagation();
+                    // Confirm buy and hide listing locally
+                    const ok = window.confirm("Buy now? This will start a chat and hide this listing from your marketplace.");
+                    if (!ok) return;
+                    hideItem(it._id);
                     // Start chat to negotiate time/price/location for Buy
                     nav("/chat", {
                       state: {
@@ -476,6 +502,9 @@ export default function Marketplace() {
                     <button
                       className="item-modal-btn-buy"
                       onClick={() => {
+                        const ok = window.confirm("Buy now? This will start a chat and hide this listing from your marketplace.");
+                        if (!ok) return;
+                        hideItem(selectedItem._id);
                         setSelectedItem(null);
                         nav("/chat", {
                           state: {

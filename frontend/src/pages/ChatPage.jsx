@@ -421,15 +421,11 @@ const ChatPage = ({ currentUser }) => {
       );
       
       if (res.data.completed) {
-        // Both confirmed - navigate away
         setShowRatingModal(false);
-        alert("Purchase completed! Chat and listing have been deleted.");
         nav("/marketplace");
       } else {
-        // Update confirmation status
         setConfirmation(res.data.confirmation);
         setShowRatingModal(false);
-        alert("Purchase confirmed! Waiting for the other party to confirm.");
       }
     } catch (err) {
       console.error("Confirm purchase error:", err);
@@ -693,21 +689,7 @@ const ChatPage = ({ currentUser }) => {
                 
                 {to && selectedItem?.id && (
                   <div style={{ marginTop: 'auto', paddingTop: '16px', width: '100%' }}>
-                    {confirmation && otherConfirmed && !userConfirmed && (
-                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
-                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
-                      </p>
-                    )}
-                    {confirmation && userConfirmed && !otherConfirmed && (
-                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
-                        Waiting for {isSeller ? 'buyer' : 'seller'} to confirm
-                      </p>
-                    )}
-                    {confirmation && userConfirmed && otherConfirmed && (
-                      <p style={{ fontSize: '0.875rem', color: '#16a34a', marginBottom: '12px', textAlign: 'center', fontWeight: 600 }}>
-                        Both parties confirmed
-                      </p>
-                    )}
+                    {/* Status text intentionally removed for a cleaner UX */}
                     <button
                       onClick={handleConfirmPurchase}
                       disabled={confirming || (confirmation && userConfirmed)}

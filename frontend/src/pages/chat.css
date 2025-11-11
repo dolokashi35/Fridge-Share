@@ -398,6 +398,16 @@
   white-space: nowrap;
 }
 
+/* Tighter typography for listing details (reduce overall height) */
+.listing-panel .item-modal-body { padding: 0.75rem 0.75rem 0.5rem; }
+.listing-panel .item-modal-title { margin: 0 0 0.2rem; font-size: 1.1rem; }
+.listing-panel .item-modal-category { margin: 0 0 0.2rem; font-size: 0.9rem; }
+.listing-panel .item-modal-price { margin: 0 0 0.4rem; font-size: 1rem; }
+.listing-panel .item-modal-description { margin: 0 0 0.5rem; font-size: 0.92rem; line-height: 1.35; }
+.listing-panel .item-modal-meta { gap: 0.25rem; padding-top: 0.5rem; margin-bottom: 0.5rem; }
+.listing-panel .item-modal-meta p { margin: 0.1rem 0; font-size: 0.9rem; }
+.listing-panel .seller-profile-card { margin-top: 0.75rem; }
+
 /* Ensure seller rating box and listing have the same width */
 .chat-listing,
 .chat-seller-rating,

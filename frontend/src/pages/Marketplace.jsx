@@ -285,11 +285,11 @@ export default function Marketplace() {
                       {it.description}
                     </p>
                   )}
-                  {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (
-                    <p className="market-card-meta" style={{ color: "#16a34a", fontWeight: 600, marginTop: "0.25rem" }}>
-                      Requested · Waiting for seller
-                    </p>
-                  )}
+                  <div className="market-request-slot">
+                    {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") ? (
+                      <span className="market-card-meta market-requested-text">Requested · Waiting for seller</span>
+                    ) : null}
+                  </div>
                   <p className="market-card-meta" style={{ marginTop: "0.25rem" }}>
                     Posted by: <b>{it.username || "Unknown"}</b>
                   </p>

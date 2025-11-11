@@ -247,6 +247,17 @@ html, body {
   text-overflow: ellipsis;
 }
 
+/* Reserve fixed space for request status to avoid card height shifts */
+.market-request-slot {
+  min-height: 20px; /* ~ one line */
+  display: flex;
+  align-items: center;
+}
+.market-requested-text {
+  color: #16a34a;
+  font-weight: 600;
+}
+
 .market-card-meta {
   color: #111827;     /* black for descriptions */
   font-size: 0.85rem;

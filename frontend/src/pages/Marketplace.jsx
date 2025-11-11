@@ -171,7 +171,7 @@ export default function Marketplace() {
       }
     });
     return list;
-  }, [items, term, cat, sort, maxDistanceMi, maxP]);
+  }, [items, term, cat, sort, maxDistanceMi, maxP, requests, hiddenIds]);
 
   // Handle item click - fetch full details and show modal
   const handleItemClick = async (itemId) => {
@@ -292,7 +292,7 @@ export default function Marketplace() {
             filtered.map((it) => (
               <div
                 key={it._id}
-                className="market-card"
+                className={`market-card ${requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") ? 'requested-card' : ''}`}
                 onClick={() => handleItemClick(it._id)}
               >
                 <img 
@@ -300,6 +300,9 @@ export default function Marketplace() {
                   alt={it.name} 
                   className="market-img" 
                 />
+                {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (
+                  <div className="requested-banner">Requested</div>
+                )}
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>
                   <div className="market-card-info-line">
@@ -310,6 +313,7 @@ export default function Marketplace() {
                       </>
                     )}
                     <span className="market-card-price">${it.price.toFixed(2)}</span>
+                    {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (<span className="requested-pill">Requested</span>)}
                     <span className="market-card-separator">•</span>
                     <span className="market-card-meta">Qty: {it.quantity ?? "N/A"}</span>
                     {typeof it.distance === "number" && (
@@ -533,7 +537,7 @@ export default function Marketplace() {
           <div style={{ background: '#fff', borderRadius: 12, width: 340, maxWidth: '90%', padding: '16px 16px 12px', boxShadow: '0 12px 30px rgba(0,0,0,0.2)' }}>
             <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Confirm Purchase</h3>
             <p style={{ margin: '8px 0 16px', color: '#64748b', fontSize: 14 }}>
-              Start a chat to purchase "{confirmItem?.name}" and hide this listing from your marketplace?
+              Start a chat to purchase
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <button

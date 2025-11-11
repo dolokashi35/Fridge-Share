@@ -176,19 +176,19 @@ html, body {
 
 .market-img {
   width: 100%;
-  height: 192px; /* h-48 = consistent image heights */
+  height: 168px; /* slightly shorter to tighten card */
   object-fit: cover;
   border-radius: 1rem 1rem 0 0; /* rounded-t-2xl */
   flex-shrink: 0; /* prevent image from shrinking */
 }
 
 .market-card-content {
-  padding: 1rem; /* p-4 */
-  line-height: 1.625; /* leading-relaxed */
+  padding: 0.75rem; /* tighter */
+  line-height: 1.55; /* tighter line height */
   display: flex;
   flex-direction: column;
   flex: 1; /* allow content to grow */
-  min-height: 180px; /* reduced from 200px for shorter boxes */
+  min-height: 150px; /* shorter card */
 }
 
 .market-card-title {
@@ -196,23 +196,25 @@ html, body {
   font-weight: 600; /* semibold */
   letter-spacing: -0.005em;
   color: #0f172a;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
-  min-height: 2.8em; /* always reserve 2 lines of space */
-  max-height: 2.8em; /* 2 lines * 1.4 line-height */
+  line-height: 1.35;
+  min-height: 2.7em; /* reserve ~2 lines */
+  max-height: 2.7em;
 }
 
 .market-card-info-line {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
   font-size: 0.85rem;
+  white-space: nowrap;        /* keep one line */
+  overflow: hidden;           /* cut overflow */
+  text-overflow: ellipsis;    /* show ... */
 }
 
 .market-card-separator {
@@ -239,9 +241,9 @@ html, body {
 
 .market-card-description {
   color: #64748b;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  margin: 0.5rem 0 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  margin: 0.4rem 0 0.2rem; /* tighter */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

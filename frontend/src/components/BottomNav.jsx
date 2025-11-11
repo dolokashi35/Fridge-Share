@@ -49,7 +49,19 @@ export default function BottomNav() {
 
       {/* Profile icon only */}
       <button
-        onClick={() => nav(profileItem.path)}
+        onClick={() => {
+          try {
+            const raw = localStorage.getItem('fs_user');
+            const user = raw ? JSON.parse(raw) : null;
+            if (user && user.username) {
+              nav(profileItem.path);
+            } else {
+              nav('/login');
+            }
+          } catch {
+            nav('/login');
+          }
+        }}
         className="bottom-navbar-btn profile-btn"
       >
         <FaUser />

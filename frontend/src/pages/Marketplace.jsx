@@ -47,6 +47,7 @@ export default function Marketplace() {
     } catch { return new Set(); }
   });
   const [modalSellerStats, setModalSellerStats] = useState(null); // stats for seller in modal
+  const [confirmItem, setConfirmItem] = useState(null); // item awaiting purchase confirmation
   const location = useLocation();
   const nav = useNavigate();
   const [term, setTerm] = useState("");
@@ -216,6 +217,22 @@ export default function Marketplace() {
     });
   };
 
+  const navigateToChat = (item) => {
+    setSelectedItem(null);
+    nav("/chat", {
+      state: {
+        to: item.username,
+        prefill: `Hi! I'd like to buy "${item.name}" at $${item.price.toFixed(2)}. When and where can we meet?`,
+        source: "buy",
+        item: {
+          id: item._id,
+          name: item.name,
+          imageUrl: item.imageUrl || item.img || ""
+        }
+      }
+    });
+  };
+
   // Close modal when clicking outside
   const handleModalClose = (e) => {
     if (e.target === e.currentTarget) {
@@ -328,23 +345,8 @@ export default function Marketplace() {
                       className="market-card-btn request"
                       onClick={(e) => {
                         e.stopPropagation();
-                    // Confirm buy and hide listing locally
-                    const ok = window.confirm("Buy now? This will start a chat and hide this listing from your marketplace.");
-                    if (!ok) return;
-                    hideItem(it._id);
-                    // Start chat to negotiate time/price/location for Buy
-                    nav("/chat", {
-                      state: {
-                        to: it.username,
-                        prefill: `Hi! I'd like to buy "${it.name}" at $${it.price.toFixed(2)}. When and where can we meet?`,
-                        source: "buy",
-                        item: {
-                          id: it._id,
-                          name: it.name,
-                          imageUrl: it.imageUrl || it.img || ""
-                        }
-                      }
-                    });
+                    // Open confirm dialog
+                    setConfirmItem(it);
                       }}
                     >
                   Buy Now
@@ -502,22 +504,7 @@ export default function Marketplace() {
                     <button
                       className="item-modal-btn-buy"
                       onClick={() => {
-                        const ok = window.confirm("Buy now? This will start a chat and hide this listing from your marketplace.");
-                        if (!ok) return;
-                        hideItem(selectedItem._id);
-                        setSelectedItem(null);
-                        nav("/chat", {
-                          state: {
-                            to: selectedItem.username,
-                            prefill: `Hi! I'd like to buy "${selectedItem.name}" at $${selectedItem.price.toFixed(2)}. When and where can we meet?`,
-                            source: "buy",
-                            item: {
-                              id: selectedItem._id,
-                              name: selectedItem.name,
-                              imageUrl: selectedItem.imageUrl || selectedItem.img || ""
-                            }
-                          }
-                        });
+                        setConfirmItem(selectedItem);
                       }}
                     >
                       Buy Now
@@ -535,6 +522,41 @@ export default function Marketplace() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {confirmItem && (
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmItem(null); }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}
+        >
+          <div style={{ background: '#fff', borderRadius: 12, width: 340, maxWidth: '90%', padding: '16px 16px 12px', boxShadow: '0 12px 30px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Confirm Purchase</h3>
+            <p style={{ margin: '8px 0 16px', color: '#64748b', fontSize: 14 }}>
+              Start a chat to purchase "{confirmItem?.name}" and hide this listing from your marketplace?
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="market-card-btn request"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  if (!confirmItem) return;
+                  hideItem(confirmItem._id);
+                  const item = confirmItem;
+                  setConfirmItem(null);
+                  navigateToChat(item);
+                }}
+              >
+                Confirm
+              </button>
+              <button
+                className="market-card-btn message"
+                style={{ flex: 1 }}
+                onClick={() => setConfirmItem(null)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

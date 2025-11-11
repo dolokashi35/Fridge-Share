@@ -301,7 +301,7 @@ export default function Marketplace() {
                   className="market-img" 
                 />
                 {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (
-                  <div className="requested-banner">Requested</div>
+                  <div className="requested-dot" title="Requested"></div>
                 )}
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>
@@ -313,7 +313,6 @@ export default function Marketplace() {
                       </>
                     )}
                     <span className="market-card-price">${it.price.toFixed(2)}</span>
-                    {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (<span className="requested-pill">Requested</span>)}
                     <span className="market-card-separator">•</span>
                     <span className="market-card-meta">Qty: {it.quantity ?? "N/A"}</span>
                     {typeof it.distance === "number" && (
@@ -328,11 +327,7 @@ export default function Marketplace() {
                       {it.description}
                     </p>
                   )}
-                  <div className="market-request-slot">
-                    {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") ? (
-                      <span className="market-card-meta market-requested-text">Requested · Waiting for seller</span>
-                    ) : null}
-                  </div>
+                  {/* no requested label to keep height static and minimal */}
                   <p className="market-card-meta" style={{ marginTop: "0.25rem" }}>
                     Posted by: <b>{it.username || "Unknown"}</b>
                   </p>

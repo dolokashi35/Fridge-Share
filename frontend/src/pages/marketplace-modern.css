@@ -247,16 +247,9 @@ html, body {
   text-overflow: ellipsis;
 }
 
-/* Reserve fixed space for request status to avoid card height shifts */
-.market-request-slot {
-  min-height: 20px; /* ~ one line */
-  display: flex;
-  align-items: center;
-}
-.market-requested-text {
-  color: #16a34a;
-  font-weight: 600;
-}
+/* legacy reserved slot no longer used */
+.market-request-slot { display: none; }
+.market-requested-text { display: none; }
 
 .market-card-meta {
   color: #111827;     /* black for descriptions */
@@ -695,25 +688,16 @@ html, body {
 
 /* Requested state visuals */
 .requested-card { position: relative; }
-.requested-card .market-img { filter: saturate(0.8) brightness(0.9); }
-.requested-banner {
+.requested-card .market-img { filter: saturate(0.9) brightness(0.95); }
+.requested-dot {
   position: absolute;
   top: 10px;
   right: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   background: #0E7490;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-}
-.requested-pill {
-  margin-left: 8px;
-  background: #0E7490;
-  color: #fff;
-  border-radius: 9999px;
-  padding: 2px 8px;
-  font-size: 0.75rem;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.12);
 }
 
 /* Responsive grid */

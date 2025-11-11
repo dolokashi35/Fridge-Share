@@ -271,7 +271,7 @@ html, body {
 /* ===== My Listings split layout ===== */
 .mylist-split {
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 460px 1fr; /* slightly wider to avoid wrapping */
   gap: 16px;
 }
 .mylist-left {
@@ -313,6 +313,9 @@ html, body {
   gap: 2px;
 }
 .mylist-item-meta .title { font-weight: 800; font-size: 1.05rem; }
+.mylist-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.count-badge { min-width: 32px; text-align: center; }
+.badge-placeholder { visibility: hidden; }
 .mylist-item-meta .sub { color: #64748b; font-size: 0.95rem; }
 .mylist-item-row.active .sub { color: #64748b; }
 

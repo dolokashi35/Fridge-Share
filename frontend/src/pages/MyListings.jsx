@@ -234,8 +234,8 @@ export default function MyListings() {
                       <img src={it.imageUrl || it.img || "https://images.unsplash.com/photo-1574226516831-e1dff420e12f?auto=format&fit=crop&w=300&q=40"} alt={it.name} />
                       <div className="mylist-item-meta">
                         <div className="title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          {it.name}
-                          {pendCount > 0 && <span className="count-badge">{pendCount}</span>}
+                          <span className="mylist-title-text">{it.name}</span>
+                          <span className={`count-badge ${pendCount > 0 ? '' : 'badge-placeholder'}`}>{pendCount > 0 ? pendCount : '0'}</span>
                         </div>
                         <div className="sub">${it.price.toFixed(2)} • Qty {it.quantity ?? 'N/A'}</div>
                       </div>

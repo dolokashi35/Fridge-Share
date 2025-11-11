@@ -6,6 +6,18 @@ import logo from "../assets/fridgeshare-logo.png"; // ✅ import your logo
 export default function BottomNav() {
   const nav = useNavigate();
   const { pathname } = useLocation();
+  const getInitials = (name, username) => {
+    if (name && name.trim()) {
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      return name[0].toUpperCase();
+    }
+    if (username) return (username[0] || '?').toUpperCase();
+    return null;
+  };
+  let user = null;
+  try { const raw = localStorage.getItem('fs_user'); user = raw ? JSON.parse(raw) : null; } catch {}
+  const initials = getInitials(user?.profile?.name, user?.username);
 
   const items = [
     { label: "Market", icon: <FaHome />, path: "/marketplace" },
@@ -64,7 +76,11 @@ export default function BottomNav() {
         }}
         className="bottom-navbar-btn profile-btn"
       >
-        <FaUser />
+        {initials ? (
+          <span className="profile-initials-badge" aria-label="My Profile">{initials}</span>
+        ) : (
+          <FaUser />
+        )}
       </button>
     </div>
   );

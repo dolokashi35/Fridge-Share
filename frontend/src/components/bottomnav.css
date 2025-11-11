@@ -139,3 +139,18 @@
 .profile-btn svg {
   font-size: 0.8rem;
 }
+
+/* Initials badge (mini avatar) */
+.profile-initials-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #fff;
+  background: linear-gradient(150deg, #0E7490 0%, #0C6176 55%, #0B5A63 100%);
+  box-shadow: 0 2px 6px rgba(14,116,144,0.25);
+}

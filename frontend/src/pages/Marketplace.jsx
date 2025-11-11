@@ -301,7 +301,7 @@ export default function Marketplace() {
                   className="market-img" 
                 />
                 {requests[it._id] && (requests[it._id].status === "pending" || requests[it._id].status === "countered") && (
-                  <div className="requested-dot" title="Requested"></div>
+                  <div className="requested-banner">Requested</div>
                 )}
                 <div className="market-card-content">
                   <h3 className="market-card-title">{it.name}</h3>

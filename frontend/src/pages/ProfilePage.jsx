@@ -84,13 +84,28 @@ export default function ProfilePage() {
     try {
       const stored = localStorage.getItem("fs_user");
       const token = stored ? JSON.parse(stored)?.token : null;
-      const res = await axios.post(`${BACKEND_URL}/payments/connect/link`, {
-        returnUrl: window.location.origin + "/profile?onboard=done",
-        refreshUrl: window.location.origin + "/profile?onboard=refresh",
-      }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      if (res.data?.url) window.location.href = res.data.url;
+      if (!token) {
+        alert("Please log in to set up payouts.");
+        return;
+      }
+      const payload = {
+        returnUrl: `${window.location.origin}/profile?onboard=done`,
+        refreshUrl: `${window.location.origin}/profile?onboard=refresh`,
+      };
+      const res = await axios.post(
+        `${BACKEND_URL}/payments/connect/link`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        console.error("Onboarding link response:", res.data);
+        alert("Could not start payouts onboarding. Check backend Stripe config.");
+      }
     } catch (e) {
-      alert("Failed to start onboarding");
+      console.error("Onboarding error:", e?.response?.data || e?.message || e);
+      alert(e?.response?.data?.error || "Failed to start onboarding.");
     }
   }
 

@@ -2,6 +2,8 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
@@ -19,6 +21,9 @@ const userSchema = new mongoose.Schema({
   purchaseCount: { type: Number, default: 0 }, // Total number of items purchased (private)
   stripeAccountId: { type: String, default: null },
   isStripeOnboarded: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: false },
+  verifyTokenHash: { type: String, default: null },
+  verifyTokenExpires: { type: Date, default: null },
 });
 
 const User = mongoose.model("User", userSchema);
@@ -156,3 +161,73 @@ export function auth(req, res, next) {
 
 // ✅ Export router + model
 export { router, User };
+
+// ========================
+// 📧 .edu Email Verification
+// ========================
+
+function createTransport() {
+  if (process.env.SMTP_HOST) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: false,
+      auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
+    });
+  }
+  // Fallback: JSON transport (logs to console)
+  return nodemailer.createTransport({ jsonTransport: true });
+}
+
+// Send verification email (requires auth)
+router.post("/verify/send", auth, async (req, res) => {
+  try {
+    const me = await User.findOne({ username: req.user.username });
+    if (!me) return res.status(404).json({ error: "User not found" });
+    const eduRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.edu$/i;
+    if (!eduRegex.test(me.username)) {
+      return res.status(400).json({ error: "Only .edu emails can be verified" });
+    }
+    const raw = crypto.randomBytes(32).toString("hex");
+    const hash = crypto.createHash("sha256").update(raw).digest("hex");
+    me.verifyTokenHash = hash;
+    me.verifyTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+    await me.save();
+
+    const verifyUrl = `${(process.env.FRONTEND_URL || req.headers.origin || "").replace(/\/$/, "")}/verify?token=${raw}&email=${encodeURIComponent(me.username)}`;
+    const from = process.env.SMTP_FROM || "no-reply@fridgeshare";
+
+    const html = `
+      <p>Verify your .edu email for FridgeShare.</p>
+      <p><a href="${verifyUrl}">Click here to verify</a>. This link expires in 24 hours.</p>
+    `;
+    const transport = createTransport();
+    await transport.sendMail({ to: me.username, from, subject: "Verify your FridgeShare email", html });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("verify/send error:", e);
+    res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+// Confirm verification link
+router.post("/verify", async (req, res) => {
+  try {
+    const { email, token } = req.body || {};
+    if (!email || !token) return res.status(400).json({ error: "email and token required" });
+    const user = await User.findOne({ username: email });
+    if (!user || !user.verifyTokenHash || !user.verifyTokenExpires) return res.status(400).json({ error: "Invalid or expired token" });
+    if (user.verifyTokenExpires.getTime() < Date.now()) return res.status(400).json({ error: "Token expired" });
+    const hash = crypto.createHash("sha256").update(token).digest("hex");
+    if (hash !== user.verifyTokenHash) return res.status(400).json({ error: "Invalid token" });
+    user.isVerified = true;
+    user.verifyTokenHash = null;
+    user.verifyTokenExpires = null;
+    await user.save();
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("verify confirm error:", e);
+    res.status(500).json({ error: "Failed to verify" });
+  }
+});

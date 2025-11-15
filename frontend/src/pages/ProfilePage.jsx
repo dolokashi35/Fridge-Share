@@ -50,6 +50,7 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [college, setCollege] = useState("");
   const [saving, setSaving] = useState(false);
+  const [onboarded, setOnboarded] = useState(false);
   const [stats, setStats] = useState({ averageRating: 0, salesCount: 0, purchaseCount: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -64,6 +65,34 @@ export default function ProfilePage() {
     }
     setLoading(false);
   }, []);
+
+  // Load Stripe Connect status
+  useEffect(() => {
+    const go = async () => {
+      try {
+        const stored = localStorage.getItem("fs_user");
+        const token = stored ? JSON.parse(stored)?.token : null;
+        if (!token) return;
+        const res = await axios.get(`${BACKEND_URL}/payments/connect/status`, { headers: { Authorization: `Bearer ${token}` } });
+        setOnboarded(!!res.data?.onboarded);
+      } catch {}
+    };
+    go();
+  }, []);
+
+  async function handleOnboard() {
+    try {
+      const stored = localStorage.getItem("fs_user");
+      const token = stored ? JSON.parse(stored)?.token : null;
+      const res = await axios.post(`${BACKEND_URL}/payments/connect/link`, {
+        returnUrl: window.location.origin + "/profile?onboard=done",
+        refreshUrl: window.location.origin + "/profile?onboard=refresh",
+      }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (res.data?.url) window.location.href = res.data.url;
+    } catch (e) {
+      alert("Failed to start onboarding");
+    }
+  }
 
   // ✅ Fetch user stats
   useEffect(() => {
@@ -257,6 +286,14 @@ export default function ProfilePage() {
                 <span className="profile-label">Member since</span>
                 <span className="profile-value">Active member</span>
               </div>
+            </div>
+            <div className="profile-info-item">
+              <span className="profile-label">Payouts</span>
+              {onboarded ? (
+                <span className="profile-value">Connected</span>
+              ) : (
+                <button className="profile-btn-primary" onClick={handleOnboard}>Set up payouts</button>
+              )}
             </div>
 
             {/* Stats Grid */}

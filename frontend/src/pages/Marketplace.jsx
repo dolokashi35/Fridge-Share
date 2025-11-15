@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./marketplace-modern.css"; // Keep styling import
 import RequestModal from "../components/RequestModal";
+import PayModal from "../components/PayModal";
 
 // Haversine distance in kilometers
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
@@ -47,6 +48,7 @@ export default function Marketplace() {
     } catch { return new Set(); }
   });
   const [modalSellerStats, setModalSellerStats] = useState(null); // stats for seller in modal
+  const [payItem, setPayItem] = useState(null);
   const [confirmItem, setConfirmItem] = useState(null); // item awaiting purchase confirmation
   const location = useLocation();
   const nav = useNavigate();
@@ -517,6 +519,12 @@ export default function Marketplace() {
                     >
                       Request Item
                     </button>
+                    <button
+                      className="item-modal-btn-request"
+                      onClick={() => setPayItem(selectedItem)}
+                    >
+                      Pay
+                    </button>
                   </div>
                 </div>
               </>
@@ -559,6 +567,7 @@ export default function Marketplace() {
           </div>
         </div>
       )}
+      <PayModal item={payItem} isOpen={!!payItem} onClose={() => setPayItem(null)} />
     </div>
   );
 }

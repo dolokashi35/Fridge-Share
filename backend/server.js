@@ -12,6 +12,7 @@ import vision from "@google-cloud/vision";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import Stripe from "stripe";
 import crypto from "crypto";
 import qrcode from "qrcode";
 import { router as userRouter, User, auth } from "./users.js"; // ✅ ESM named export
@@ -26,6 +27,7 @@ import PurchaseConfirmation from "./models/PurchaseConfirmation.js";
 dotenv.config();
 const app = express();
 const server = createServer(app);
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // ========================
 // 🛡️ Dynamic & Safe CORS Setup (Vercel + Render + env)
@@ -100,6 +102,129 @@ const upload = multer({ dest: "uploads/" });
 // 👥 Mount User Routes
 // ========================
 app.use("/users", userRouter); // ✅ Enables /users/register, /users/login, /users/profile
+
+// ========================
+// 💳 Stripe Payments (Connect)
+// ========================
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.log("⚠️ STRIPE_SECRET_KEY not set - payment routes disabled");
+}
+
+// Create or refresh onboarding link for seller
+app.post("/payments/connect/link", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const me = await User.findOne({ username: req.user.username });
+    if (!me) return res.status(404).json({ error: "User not found" });
+
+    let accountId = me.stripeAccountId;
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: "US",
+        capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+        business_type: "individual"
+      });
+      accountId = account.id;
+      me.stripeAccountId = accountId;
+      await me.save();
+    }
+
+    const { returnUrl, refreshUrl } = req.body || {};
+    const link = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: refreshUrl || `${req.headers.origin || ''}/profile?onboard=refresh`,
+      return_url: returnUrl || `${req.headers.origin || ''}/profile?onboard=done`,
+      type: "account_onboarding",
+    });
+    res.json({ url: link.url, accountId });
+  } catch (e) {
+    console.error("Create connect link error:", e);
+    res.status(500).json({ error: "Failed to create connect link" });
+  }
+});
+
+// Check onboarding status for current user
+app.get("/payments/connect/status", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const me = await User.findOne({ username: req.user.username });
+    if (!me || !me.stripeAccountId) return res.json({ onboarded: false });
+    const acct = await stripe.accounts.retrieve(me.stripeAccountId);
+    const onboarded = !!acct.details_submitted;
+    if (me.isStripeOnboarded !== onboarded) {
+      me.isStripeOnboarded = onboarded;
+      await me.save();
+    }
+    res.json({ onboarded });
+  } catch (e) {
+    console.error("Connect status error:", e);
+    res.status(500).json({ error: "Failed to check status" });
+  }
+});
+
+// Create a PaymentIntent to pay a seller
+app.post("/payments/intent", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const { itemId, amountCents, currency = "usd" } = req.body || {};
+    if (!itemId || !amountCents) return res.status(400).json({ error: "itemId and amountCents required" });
+
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    const seller = await User.findOne({ username: item.username });
+    if (!seller || !seller.stripeAccountId) return res.status(400).json({ error: "Seller not onboarded" });
+
+    const appFee = 0; // set your fee in cents if desired
+
+    const intent = await stripe.paymentIntents.create({
+      amount: Number(amountCents),
+      currency,
+      automatic_payment_methods: { enabled: true },
+      transfer_data: { destination: seller.stripeAccountId },
+      application_fee_amount: appFee,
+      metadata: {
+        itemId: String(item._id),
+        sellerUsername: item.username,
+        buyerUsername: req.user.username,
+      },
+    });
+    res.json({ clientSecret: intent.client_secret });
+  } catch (e) {
+    console.error("Create PaymentIntent error:", e);
+    res.status(500).json({ error: "Failed to create payment intent" });
+  }
+});
+
+// Stripe webhook
+app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (req, res) => {
+  if (!stripe) return res.status(503).end();
+  let event;
+  try {
+    const sig = req.headers['stripe-signature'];
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      event = req.body; // unsafe fallback for local only
+    } else {
+      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    }
+  } catch (err) {
+    console.error('Stripe webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    if (event.type === 'payment_intent.succeeded') {
+      const pi = event.data.object;
+      const itemId = pi.metadata?.itemId;
+      if (itemId) {
+        await Item.findByIdAndUpdate(itemId, { status: 'sold' });
+      }
+    }
+  } catch (e) {
+    console.error('Stripe webhook handling error:', e);
+  }
+  res.json({ received: true });
+});
 
 // ========================
 // 👁️ Google Vision Setup

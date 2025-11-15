@@ -17,6 +17,8 @@ const userSchema = new mongoose.Schema({
   averageRating: { type: Number, default: 0 }, // Average rating from all completed sales
   salesCount: { type: Number, default: 0 }, // Total number of items sold (public)
   purchaseCount: { type: Number, default: 0 }, // Total number of items purchased (private)
+  stripeAccountId: { type: String, default: null },
+  isStripeOnboarded: { type: Boolean, default: false },
 });
 
 const User = mongoose.model("User", userSchema);

@@ -53,6 +53,7 @@ export default function ProfilePage() {
   const [onboarded, setOnboarded] = useState(false);
   const [verified, setVerified] = useState(false);
   const [verifySending, setVerifySending] = useState(false);
+  const [testSending, setTestSending] = useState(false);
   const [stats, setStats] = useState({ averageRating: 0, salesCount: 0, purchaseCount: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -123,6 +124,20 @@ export default function ProfilePage() {
       alert(e?.response?.data?.error || "Failed to send verification email.");
     } finally {
       setVerifySending(false);
+    }
+  }
+
+  async function handleSendTestEmail() {
+    try {
+      setTestSending(true);
+      const stored = localStorage.getItem("fs_user");
+      const token = stored ? JSON.parse(stored)?.token : null;
+      await axios.post(`${BACKEND_URL}/users/test-email`, {}, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      alert("Test email sent (check inbox or spam).");
+    } catch (e) {
+      alert(e?.response?.data?.error || "Failed to send test email.");
+    } finally {
+      setTestSending(false);
     }
   }
 
@@ -336,6 +351,11 @@ export default function ProfilePage() {
                   {verifySending ? 'Sending…' : 'Send verification email'}
                 </button>
               )}
+              <div style={{ marginTop: 8 }}>
+                <button className="profile-btn-secondary" onClick={handleSendTestEmail} disabled={testSending}>
+                  {testSending ? 'Sending…' : 'Send test email'}
+                </button>
+              </div>
             </div>
 
             {/* Stats Grid */}

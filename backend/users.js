@@ -217,3 +217,19 @@ router.post("/verify", async (req, res) => {
     res.status(500).json({ error: "Failed to verify" });
   }
 });
+
+// Send a simple test email (auth)
+router.post("/test-email", auth, async (req, res) => {
+  try {
+    const me = await User.findOne({ username: req.user.username });
+    if (!me) return res.status(404).json({ error: "User not found" });
+    const to = (req.body && req.body.to) || me.username;
+    const from = process.env.SMTP_FROM || "no-reply@fridgeshare";
+    const transport = createTransport();
+    const info = await transport.sendMail({ to, from, subject: "FridgeShare test email", text: "This is a test email from FridgeShare SMTP settings." });
+    res.json({ ok: true, messageId: info?.messageId || null });
+  } catch (e) {
+    console.error("test-email error:", e);
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});

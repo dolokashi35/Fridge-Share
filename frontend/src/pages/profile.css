@@ -45,6 +45,10 @@
   transform: translateY(-2px);
 }
 
+.setup-card {
+  min-height: 640px;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -413,6 +417,19 @@
 .profile-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Setup page button overrides: black and roomy */
+.setup-card .profile-btn {
+  background: #111827;
+  border: 2px solid #111827;
+  padding: 1rem 1.25rem;
+  font-size: 1.05rem;
+}
+.setup-card .profile-btn:hover {
+  background: #0b1220;
+  border-color: #0b1220;
+  box-shadow: 0 8px 16px rgba(17, 24, 39, 0.2);
 }
 
 /* Autocomplete container */

@@ -79,7 +79,7 @@ export default function ProfileSetup({ onComplete }) {
 
   return (
     <div className="profile-bg">
-      <div className="profile-card">
+      <div className="profile-card setup-card">
         <h1 className="profile-title setup-title">Complete profile</h1>
 
         <form onSubmit={submit} className="profile-form" autoComplete="off">

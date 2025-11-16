@@ -183,9 +183,14 @@ router.post("/verify/send", auth, async (req, res) => {
       <p><a href="${verifyUrl}">Click here to verify</a>. This link expires in 24 hours.</p>
     `;
     const transport = createTransport();
-    await transport.sendMail({ to: me.username, from, subject: "Verify your FridgeShare email", html });
-
-    res.json({ ok: true });
+    try {
+      await transport.sendMail({ to: me.username, from, subject: "Verify your FridgeShare email", html });
+      res.json({ ok: true });
+    } catch (sendErr) {
+      console.error("verify/send transport error:", sendErr);
+      // Fallback: return the verification URL so the user can proceed
+      res.json({ ok: false, verifyUrl, error: "Email send failed; use verifyUrl" });
+    }
   } catch (e) {
     console.error("verify/send error:", e);
     res.status(500).json({ error: "Failed to send verification email" });

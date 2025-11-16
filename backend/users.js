@@ -35,14 +35,6 @@ router.post("/register", async (req, res) => {
     if (!username || !password)
       return res.status(400).json({ error: "Username and password required" });
 
-    // ✅ enforce .edu email format
-    const eduRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.edu$/i;
-    if (!eduRegex.test(username)) {
-      return res
-        .status(400)
-        .json({ error: "Only .edu email addresses are allowed" });
-    }
-
     const existing = await User.findOne({ username });
     if (existing)
       return res.status(400).json({ error: "Account already exists" });
@@ -62,13 +54,6 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const eduRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.edu$/i;
-
-    if (!eduRegex.test(username)) {
-      return res
-        .status(400)
-        .json({ error: "Only .edu email addresses can log in" });
-    }
 
     const user = await User.findOne({ username });
     if (!user) return res.status(400).json({ error: "Invalid credentials" });
@@ -184,10 +169,6 @@ router.post("/verify/send", auth, async (req, res) => {
   try {
     const me = await User.findOne({ username: req.user.username });
     if (!me) return res.status(404).json({ error: "User not found" });
-    const eduRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.edu$/i;
-    if (!eduRegex.test(me.username)) {
-      return res.status(400).json({ error: "Only .edu emails can be verified" });
-    }
     const raw = crypto.randomBytes(32).toString("hex");
     const hash = crypto.createHash("sha256").update(raw).digest("hex");
     me.verifyTokenHash = hash;
@@ -198,7 +179,7 @@ router.post("/verify/send", auth, async (req, res) => {
     const from = process.env.SMTP_FROM || "no-reply@fridgeshare";
 
     const html = `
-      <p>Verify your .edu email for FridgeShare.</p>
+      <p>Verify your email for FridgeShare.</p>
       <p><a href="${verifyUrl}">Click here to verify</a>. This link expires in 24 hours.</p>
     `;
     const transport = createTransport();

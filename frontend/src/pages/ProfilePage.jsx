@@ -328,7 +328,7 @@ export default function ProfilePage() {
               )}
             </div>
             <div className="profile-info-item">
-              <span className="profile-label">Email Verification (.edu)</span>
+              <span className="profile-label">Email Verification</span>
               {verified ? (
                 <span className="profile-value">Verified</span>
               ) : (

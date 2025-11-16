@@ -148,6 +148,58 @@ export default function ProfilePage() {
     }
   }
 
+  // Start Stripe Connect onboarding
+  async function handleOnboard() {
+    try {
+      const stored = localStorage.getItem("fs_user");
+      const token = stored ? JSON.parse(stored)?.token : null;
+      if (!token) {
+        alert("Please log in to set up payouts.");
+        return;
+      }
+
+      const origin = window.location.origin.replace(/\/$/, "");
+      const returnUrl = `${origin}/profile`;
+      const refreshUrl = `${origin}/profile`;
+
+      // Try POST first (preferred)
+      try {
+        const res = await axios.post(
+          `${BACKEND_URL}/payments/connect/link`,
+          { returnUrl, refreshUrl },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const url = res.data?.url;
+        if (url) {
+          window.location.assign(url);
+          return;
+        }
+      } catch (err) {
+        // Fallback to GET without body if backend expects it
+        const res = await axios.get(`${BACKEND_URL}/payments/connect/link`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { returnUrl, refreshUrl },
+        });
+        const url = res.data?.url;
+        if (url) {
+          window.location.assign(url);
+          return;
+        }
+        throw err;
+      }
+
+      alert("Could not start payouts onboarding. Please try again later.");
+    } catch (error) {
+      console.error("Stripe Connect onboarding error:", error);
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to start payouts onboarding.";
+      alert(msg);
+    }
+  }
+
   const initials = getInitials(user?.profile?.name, user?.username);
 
   return (

@@ -46,7 +46,8 @@
 }
 
 .setup-card {
-  min-height: 500px;
+  min-height: 460px;
+  padding-top: 1.25rem; /* extra space above the title */
 }
 
 @keyframes slideIn {

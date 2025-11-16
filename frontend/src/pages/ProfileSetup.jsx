@@ -80,8 +80,7 @@ export default function ProfileSetup({ onComplete }) {
   return (
     <div className="profile-bg">
       <div className="profile-card">
-        <h1 className="profile-title">Complete your profile</h1>
-        <p className="profile-desc">Tell classmates who you are</p>
+        <h1 className="profile-title setup-title">Complete profile</h1>
 
         <form onSubmit={submit} className="profile-form" autoComplete="off">
           {/* Full name */}
@@ -131,7 +130,7 @@ export default function ProfileSetup({ onComplete }) {
             disabled={!name || !college || saving}
             className="profile-btn"
           >
-            {saving ? "Saving…" : "Save & Continue"}
+            {saving ? "Saving…" : "Save"}
           </button>
         </form>
       </div>

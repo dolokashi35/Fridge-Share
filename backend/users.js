@@ -40,10 +40,37 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Account already exists" });
 
     const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, password: hash });
+    // Create user with unverified flag
+    const user = await User.create({ username, password: hash, isVerified: false });
+
+    // Generate verification token and send email via SendGrid
+    try {
+      const raw = crypto.randomBytes(32).toString("hex");
+      const vhash = crypto.createHash("sha256").update(raw).digest("hex");
+      user.verifyTokenHash = vhash;
+      user.verifyTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+      await user.save();
+
+      if (process.env.SENDGRID_API_KEY) {
+        const verifyUrl = `${(process.env.FRONTEND_URL || req.headers.origin || "").replace(/\/$/, "")}/verify?token=${raw}&email=${encodeURIComponent(
+          user.username
+        )}`;
+        const from = process.env.SENDGRID_API_KEY ? (process.env.SENDGRID_FROM || process.env.SMTP_FROM || "no-reply@fridgeshare") : undefined;
+        const html = `
+          <p>Welcome to FridgeShare!</p>
+          <p>Please verify your email by clicking the link below:</p>
+          <p><a href="${verifyUrl}">Verify your email</a></p>
+          <p>This link will expire in 24 hours.</p>
+        `;
+        await sendViaSendGrid({ to: user.username, from, subject: "Verify your email", html });
+      }
+    } catch (mailErr) {
+      console.error("❌ Error sending verification email:", mailErr);
+      // Do not block registration on email failure; frontend can trigger manual resend
+    }
 
     const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
-    res.json({ token, username: user.username });
+    res.json({ token, username: user.username, isVerified: user.isVerified });
   } catch (err) {
     console.error("❌ Register error:", err);
     res.status(500).json({ error: "Server error" });

@@ -46,7 +46,7 @@
 }
 
 .setup-card {
-  min-height: 640px;
+  min-height: 560px;
 }
 
 @keyframes slideIn {
@@ -139,6 +139,7 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+  margin-bottom: 1rem;
 }
 
 .profile-subtitle {
@@ -350,10 +351,10 @@
 /* Form Styles */
 .profile-form {
   width: 100%;
-  padding: 0 2.5rem 2.5rem 2.5rem;
+  padding: 0 2.75rem 2.75rem 2.75rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
   box-sizing: border-box;
 }
 
@@ -423,8 +424,9 @@
 .setup-card .profile-btn {
   background: #111827;
   border: 2px solid #111827;
-  padding: 1rem 1.25rem;
-  font-size: 1.05rem;
+  padding: 1.1rem 1.75rem;
+  font-size: 1.08rem;
+  width: 100%;
 }
 .setup-card .profile-btn:hover {
   background: #0b1220;

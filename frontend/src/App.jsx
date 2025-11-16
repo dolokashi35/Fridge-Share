@@ -12,6 +12,8 @@ import ChatPage from "./pages/ChatPage";
 import MapDiscovery from "./components/MapDiscovery";
 import BottomNav from "./components/BottomNav";
 import { SocketProvider } from "./contexts/SocketContext";
+import Verify from "./pages/Verify";
+import VerifyPending from "./pages/VerifyPending";
 
 function AppContent() {
   const [user, setUser] = useState(() => {
@@ -25,7 +27,7 @@ function AppContent() {
   }, [user]);
 
   const location = useLocation();
-  const hideNavOn = ["/login", "/setup"];
+  const hideNavOn = ["/login", "/setup", "/verify", "/verify-pending"];
 
   return (
     <>
@@ -66,6 +68,10 @@ function AppContent() {
               )
             }
           />
+          
+          {/* ✅ Email Verification */}
+          <Route path="/verify" element={<Verify />} />
+          <Route path="/verify-pending" element={<VerifyPending />} />
 
           {/* ✅ Marketplace */}
           <Route

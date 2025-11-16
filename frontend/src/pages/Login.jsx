@@ -26,7 +26,21 @@ export default function Login({ onAuth }) {
     try {
       const endpoint = `${BACKEND_URL}/users/${mode}`;
       const res = await axios.post(endpoint, { username, password });
-      const { token, username: userName, profile } = res.data;
+      const { token, username: userName, profile, isVerified } = res.data || {};
+
+      // Registration: always require verification before continuing
+      if (mode === 'register') {
+        const emailParam = encodeURIComponent(username);
+        navigate(`/verify-pending?email=${emailParam}`);
+        return;
+      }
+
+      // Login: block if not verified
+      if (isVerified === false) {
+        const emailParam = encodeURIComponent(username);
+        navigate(`/verify-pending?email=${emailParam}`);
+        return;
+      }
 
       onAuth(token, userName, profile);
 

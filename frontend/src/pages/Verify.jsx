@@ -25,9 +25,21 @@ export default function Verify() {
         }
         await axios.post(`${BACKEND_URL}/users/verify`, { token, email });
         setStatus("success");
-        // Clear any pending local user
-        try { localStorage.removeItem("fs_user"); } catch {}
-        setTimeout(() => navigate("/login"), 1500);
+        // Mark local user as verified and send to profile setup
+        try {
+          const saved = localStorage.getItem("fs_user");
+          const u = saved ? JSON.parse(saved) : null;
+          if (u && u.username) {
+            const next = { ...u, isVerified: true };
+            localStorage.setItem("fs_user", JSON.stringify(next));
+            setTimeout(() => window.location.replace("/setup"), 800);
+          } else {
+            // Fallback if no pending user found
+            setTimeout(() => navigate("/login"), 800);
+          }
+        } catch {
+          setTimeout(() => navigate("/login"), 800);
+        }
       } catch (e) {
         setStatus("error");
         setMessage(e?.response?.data?.error || "Verification failed. The link may have expired.");

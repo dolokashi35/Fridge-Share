@@ -54,15 +54,15 @@ export default function VerifyPending() {
         <p className="login-desc" style={{ marginBottom: "1rem" }}>
           Check your spam folder if you don't see it.
         </p>
-        <div style={{ display: "flex", gap: 12, marginTop: 8, marginBottom: 12 }}>
-          <button className="login-btn" onClick={() => window.open("https://mail.google.com", "_blank")}>
+        <div className="verify-actions">
+          <button className="login-btn" type="button" onClick={() => window.open("https://mail.google.com", "_blank")}>
             Open Gmail
           </button>
-          <button className="login-btn-secondary" onClick={() => navigate("/login")}>
+          <button className="login-btn-secondary" type="button" onClick={() => navigate("/login")}>
             Back to login
           </button>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="verify-resend">
           <span className="login-desc">Didn’t get it?</span>
           <button
             className="login-link"

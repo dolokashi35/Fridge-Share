@@ -116,6 +116,31 @@ html, body {
   transform: scale(0.97);
 }
 
+.login-btn-secondary {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #fff;
+  color: var(--color-black);
+  font-weight: 600;
+  border: 2px solid var(--color-black);
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: all 0.25s ease;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+}
+.login-btn-secondary:hover {
+  background-color: var(--color-black);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.login-btn-secondary:active {
+  transform: scale(0.97);
+}
+
 .login-error {
   color: var(--color-primary);
   background: #fef2f2;
@@ -188,5 +213,32 @@ html, body {
   color: var(--color-text-gray);
   margin-bottom: 1.25rem;
   font-size: 0.95rem;
+}
+
+/* Verify: make action buttons equal width and single-line */
+.verify-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+.verify-actions .login-btn,
+.verify-actions .login-btn-secondary {
+  flex: 1 1 0;
+  width: auto;
+  white-space: nowrap;
+}
+
+/* Verify: align resend row */
+.verify-resend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.verify-resend .login-desc {
+  margin: 0;
 }
 

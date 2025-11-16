@@ -28,15 +28,22 @@ export default function Login({ onAuth }) {
       const res = await axios.post(endpoint, { username, password });
       const { token, username: userName, profile, isVerified } = res.data || {};
 
-      // Registration: always require verification before continuing
+      // Registration: always require verification before continuing.
       if (mode === 'register') {
+        // Store a minimal pending user to enable resend
+        if (token && userName) {
+          localStorage.setItem('fs_user', JSON.stringify({ token, username: userName, isVerified: false }));
+        }
         const emailParam = encodeURIComponent(username);
         navigate(`/verify-pending?email=${emailParam}`);
         return;
       }
 
-      // Login: block if not verified
+      // Login: block if not verified; persist token for resend
       if (isVerified === false) {
+        if (token && userName) {
+          localStorage.setItem('fs_user', JSON.stringify({ token, username: userName, isVerified: false }));
+        }
         const emailParam = encodeURIComponent(username);
         navigate(`/verify-pending?email=${emailParam}`);
         return;

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import ProfileSetup from "./pages/ProfileSetup";
@@ -27,7 +27,20 @@ function AppContent() {
   }, [user]);
 
   const location = useLocation();
+  const navigate = useNavigate();
   const hideNavOn = ["/login", "/setup", "/verify", "/verify-pending"];
+
+  // Enforce verify gating globally when user.isVerified === false
+  useEffect(() => {
+    if (user && user.isVerified === false) {
+      const allow = ["/login", "/verify", "/verify-pending"];
+      if (!allow.includes(location.pathname)) {
+        const email = encodeURIComponent(user.username || "");
+        navigate(`/verify-pending?email=${email}`, { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, location.pathname]);
 
   return (
     <>

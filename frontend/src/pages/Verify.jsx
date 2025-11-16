@@ -25,6 +25,8 @@ export default function Verify() {
         }
         await axios.post(`${BACKEND_URL}/users/verify`, { token, email });
         setStatus("success");
+        // Clear any pending local user
+        try { localStorage.removeItem("fs_user"); } catch {}
         setTimeout(() => navigate("/login"), 1500);
       } catch (e) {
         setStatus("error");

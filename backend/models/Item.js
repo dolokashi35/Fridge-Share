@@ -10,7 +10,7 @@ const itemSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
-      "Produce", "Dairy", "Baked Goods", "Meat", "Seafood",
+      "Produce", "Dairy", "Baked", "Meat", "Seafood",
       "Frozen", "Fresh", "Drinks", "Snacks", "Canned", "Spices", "Sauces"
     ]
   },

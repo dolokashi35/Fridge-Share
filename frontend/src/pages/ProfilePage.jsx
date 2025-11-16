@@ -51,9 +51,6 @@ export default function ProfilePage() {
   const [college, setCollege] = useState("");
   const [saving, setSaving] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
-  const [verified, setVerified] = useState(false);
-  const [verifySending, setVerifySending] = useState(false);
-  const [testSending, setTestSending] = useState(false);
   const [stats, setStats] = useState({ averageRating: 0, salesCount: 0, purchaseCount: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -65,7 +62,6 @@ export default function ProfilePage() {
       setUser(parsed);
       setName(parsed.profile?.name || "");
       setCollege(parsed.profile?.college || "");
-      setVerified(!!parsed.isVerified);
     }
     setLoading(false);
   }, []);
@@ -84,62 +80,7 @@ export default function ProfilePage() {
     go();
   }, []);
 
-  async function handleOnboard() {
-    try {
-      const stored = localStorage.getItem("fs_user");
-      const token = stored ? JSON.parse(stored)?.token : null;
-      if (!token) {
-        alert("Please log in to set up payouts.");
-        return;
-      }
-      const payload = {
-        returnUrl: `${window.location.origin}/profile?onboard=done`,
-        refreshUrl: `${window.location.origin}/profile?onboard=refresh`,
-      };
-      const res = await axios.post(
-        `${BACKEND_URL}/payments/connect/link`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        console.error("Onboarding link response:", res.data);
-        alert("Could not start payouts onboarding. Check backend Stripe config.");
-      }
-    } catch (e) {
-      console.error("Onboarding error:", e?.response?.data || e?.message || e);
-      alert(e?.response?.data?.error || "Failed to start onboarding.");
-    }
-  }
-
-  async function handleSendVerification() {
-    try {
-      setVerifySending(true);
-      const stored = localStorage.getItem("fs_user");
-      const token = stored ? JSON.parse(stored)?.token : null;
-      await axios.post(`${BACKEND_URL}/users/verify/send`, {}, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      alert("Verification email sent to your .edu address.");
-    } catch (e) {
-      alert(e?.response?.data?.error || "Failed to send verification email.");
-    } finally {
-      setVerifySending(false);
-    }
-  }
-
-  async function handleSendTestEmail() {
-    try {
-      setTestSending(true);
-      const stored = localStorage.getItem("fs_user");
-      const token = stored ? JSON.parse(stored)?.token : null;
-      await axios.post(`${BACKEND_URL}/users/test-email`, {}, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      alert("Test email sent (check inbox or spam).");
-    } catch (e) {
-      alert(e?.response?.data?.error || "Failed to send test email.");
-    } finally {
-      setTestSending(false);
-    }
-  }
+  // Email verification is now sent automatically on signup via SendGrid.
 
   // ✅ Fetch user stats
   useEffect(() => {
@@ -342,21 +283,7 @@ export default function ProfilePage() {
                 <button className="profile-btn-primary" onClick={handleOnboard}>Set up payouts</button>
               )}
             </div>
-            <div className="profile-info-item">
-              <span className="profile-label">Email Verification</span>
-              {verified ? (
-                <span className="profile-value">Verified</span>
-              ) : (
-                <button className="profile-btn-secondary" onClick={handleSendVerification} disabled={verifySending}>
-                  {verifySending ? 'Sending…' : 'Send verification email'}
-                </button>
-              )}
-              <div style={{ marginTop: 8 }}>
-                <button className="profile-btn-secondary" onClick={handleSendTestEmail} disabled={testSending}>
-                  {testSending ? 'Sending…' : 'Send test email'}
-                </button>
-              </div>
-            </div>
+            {/* Email verification is automatic on signup via SendGrid. No manual buttons shown. */}
 
             {/* Stats Grid */}
             {!loadingStats && (

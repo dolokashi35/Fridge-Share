@@ -423,16 +423,21 @@
 
 /* Setup page button overrides: black and roomy */
 .setup-card .profile-btn {
-  background: #111827;
-  border: 2px solid #111827;
+  background: #000000;
+  border: 2px solid #000000;
   padding: 1.1rem 1.75rem;
   font-size: 1.08rem;
-  width: 100%;
+  width: auto;
+  align-self: flex-end;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 .setup-card .profile-btn:hover {
-  background: #0b1220;
-  border-color: #0b1220;
-  box-shadow: 0 8px 16px rgba(17, 24, 39, 0.2);
+  background: #000000;
+  border-color: #000000;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 /* Autocomplete container */

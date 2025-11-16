@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
@@ -151,17 +151,15 @@ export { router, User };
 // 📧 .edu Email Verification
 // ========================
 
-function createTransport() {
-  if (process.env.SMTP_HOST) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: false,
-      auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
-    });
-  }
-  // Fallback: JSON transport (logs to console)
-  return nodemailer.createTransport({ jsonTransport: true });
+// Configure SendGrid
+if (process.env.SENDGRID_API_KEY) {
+  try { sgMail.setApiKey(process.env.SENDGRID_API_KEY); } catch {}
+}
+
+async function sendViaSendGrid({ to, from, subject, html, text }) {
+  if (!process.env.SENDGRID_API_KEY) throw new Error("SENDGRID_API_KEY not set");
+  const msg = { to, from, subject, html, text };
+  return sgMail.send(msg);
 }
 
 // Send verification email (requires auth)
@@ -176,15 +174,14 @@ router.post("/verify/send", auth, async (req, res) => {
     await me.save();
 
     const verifyUrl = `${(process.env.FRONTEND_URL || req.headers.origin || "").replace(/\/$/, "")}/verify?token=${raw}&email=${encodeURIComponent(me.username)}`;
-    const from = process.env.SMTP_FROM || "no-reply@fridgeshare";
+    const from = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "no-reply@fridgeshare";
 
     const html = `
       <p>Verify your email for FridgeShare.</p>
       <p><a href="${verifyUrl}">Click here to verify</a>. This link expires in 24 hours.</p>
     `;
-    const transport = createTransport();
     try {
-      await transport.sendMail({ to: me.username, from, subject: "Verify your FridgeShare email", html });
+      await sendViaSendGrid({ to: me.username, from, subject: "Verify your FridgeShare email", html });
       res.json({ ok: true });
     } catch (sendErr) {
       console.error("verify/send transport error:", sendErr);
@@ -224,10 +221,9 @@ router.post("/test-email", auth, async (req, res) => {
     const me = await User.findOne({ username: req.user.username });
     if (!me) return res.status(404).json({ error: "User not found" });
     const to = (req.body && req.body.to) || me.username;
-    const from = process.env.SMTP_FROM || "no-reply@fridgeshare";
-    const transport = createTransport();
-    const info = await transport.sendMail({ to, from, subject: "FridgeShare test email", text: "This is a test email from FridgeShare SMTP settings." });
-    res.json({ ok: true, messageId: info?.messageId || null });
+    const from = process.env.SENDGRID_FROM || process.env.SMTP_FROM || "no-reply@fridgeshare";
+    await sendViaSendGrid({ to, from, subject: "FridgeShare test email", text: "This is a test email from FridgeShare SendGrid settings." });
+    res.json({ ok: true });
   } catch (e) {
     console.error("test-email error:", e);
     res.status(500).json({ ok: false, error: e?.message || String(e) });

@@ -17,9 +17,9 @@ export default function Login({ onAuth }) {
     e.preventDefault();
     setError('');
 
-    const eduRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.edu$/i;
-    if (!eduRegex.test(username)) {
-      setError("Please use a valid .edu email address");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(username)) {
+      setError("Please enter a valid email address");
       return;
     }
 
@@ -66,7 +66,7 @@ export default function Login({ onAuth }) {
             className="login-input"
             value={username}
             onChange={e => setUsername(e.target.value)}
-            placeholder="Email address (.edu)"
+            placeholder="Email address"
             autoFocus
             autoComplete="username"
             required

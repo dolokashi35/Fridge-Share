@@ -181,7 +181,7 @@ app.post("/payments/intent", auth, async (req, res) => {
       amount: Number(amountCents),
       currency,
       capture_method: "manual",
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ["card"],
       transfer_data: { destination: seller.stripeAccountId },
       application_fee_amount: appFee,
       metadata: {

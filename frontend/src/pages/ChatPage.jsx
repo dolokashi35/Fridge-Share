@@ -59,6 +59,11 @@ const ChatPage = ({ currentUser }) => {
   const [showPay, setShowPay] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [showQr, setShowQr] = useState(false);
+  const [showScan, setShowScan] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [manualToken, setManualToken] = useState("");
+  const videoRef = useRef(null);
+  const scanTimerRef = useRef(null);
   const inputRef = useRef(null);
 
   // Persist chat state to localStorage whenever to or selectedItem changes
@@ -492,6 +497,16 @@ const ChatPage = ({ currentUser }) => {
                     </button>
                   </div>
                 )}
+                {fullItem && isBuyer && isReserved && (
+                  <div className="chat-security-warning" style={{ borderStyle: 'dashed', background: '#f0fdf4', borderColor: '#86efac' }}>
+                    <div className="chat-security-text" style={{ flex: 1 }}>
+                      Payment authorized. Scan the seller’s QR on pickup to release payment.
+                    </div>
+                    <button className="market-card-btn request" onClick={() => { setShowScan(true); setTimeout(() => startLiveScan(), 50); }} style={{ minWidth: 160 }}>
+                      Scan QR to Complete
+                    </button>
+                  </div>
+                )}
               </>
             ) : (() => {
               // Group messages by date and render with date headers
@@ -725,6 +740,25 @@ const ChatPage = ({ currentUser }) => {
                     >
                       {confirming ? 'Confirming...' : (confirmation && userConfirmed) ? 'Confirmed' : 'Confirm Purchase'}
                     </button>
+                    {isBuyer && isReserved && (
+                      <button
+                        onClick={() => { setShowScan(true); setTimeout(() => startLiveScan(), 50); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          backgroundColor: '#16a34a',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.95rem',
+                          cursor: 'pointer',
+                          marginTop: 8
+                        }}
+                      >
+                        Scan QR to Complete
+                      </button>
+                    )}
                   </div>
                 )}
               </>
@@ -782,6 +816,35 @@ const ChatPage = ({ currentUser }) => {
           <PayModal item={{ _id: fullItem._id, name: fullItem.name, price: fullItem.price, imageUrl: fullItem.imageUrl }} isOpen={showPay} onClose={() => setShowPay(false)} />
         )}
         
+        {/* Buyer QR Scan Modal */}
+        {showScan && (
+          <div className="item-modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowScan(false)}>
+            <div className="item-modal-content" style={{ maxWidth: 480 }}>
+              <button className="item-modal-close" onClick={() => setShowScan(false)}>×</button>
+              <div style={{ padding: 16 }}>
+                <h3 style={{ marginTop: 0 }}>Scan Pickup QR</h3>
+                <p style={{ color: '#64748b', marginTop: 0 }}>Align the QR within the frame. If scanning isn’t supported, paste the code manually.</p>
+                <div style={{ background: '#0b1220', borderRadius: 12, padding: 8, display: 'flex', justifyContent: 'center' }}>
+                  <video ref={videoRef} style={{ width: '100%', maxWidth: 420, borderRadius: 8 }} muted playsInline />
+                </div>
+                {scanError && <p style={{ color: '#ef4444', marginTop: 8 }}>{scanError}</p>}
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <input
+                    className="market-input"
+                    style={{ flex: 1 }}
+                    placeholder="Or paste code here"
+                    value={manualToken}
+                    onChange={(e) => setManualToken(e.target.value)}
+                  />
+                  <button className="market-card-btn request" onClick={() => verifyPickup(manualToken)} disabled={!manualToken.trim()}>
+                    Verify
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* QR Modal (Seller) */}
         {showQr && (
           <div className="item-modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowQr(false)}>

@@ -277,7 +277,7 @@ const ChatPage = ({ currentUser }) => {
   useEffect(() => {
     const autoSendBuyMessage = async () => {
       // Check if we came from buy action (either from location.state or if content was pre-filled)
-      const cameFromBuy = cameFromBuyRef.current || (initialState.content && initialState.content.length > 0);
+      const cameFromBuy = cameFromBuyRef.current === true;
       const shouldAutoSend = cameFromBuy && 
                              content && 
                              content.trim().length > 0 &&

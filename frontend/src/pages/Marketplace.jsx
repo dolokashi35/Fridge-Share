@@ -95,7 +95,17 @@ export default function Marketplace() {
             params: { lat, lng, radius: 5000 },
             headers
           });
-          setItems(res.data.length ? res.data : SAMPLE);
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            setItems(res.data);
+          } else {
+            // If nearby returns no items (e.g., items without location), try non-geo, same-college list
+            try {
+              const res2 = await axios.get(`${BACKEND_URL}/items`, { headers });
+              setItems(res2.data.length ? res2.data : SAMPLE);
+            } catch {
+              setItems(SAMPLE);
+            }
+          }
         } catch {
           // Fallback to scoped items without distance
           try {

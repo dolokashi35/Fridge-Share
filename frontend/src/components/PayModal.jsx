@@ -4,7 +4,6 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import axios from "axios";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
 function PayForm({ item, onClose, onSuccess }) {
   const stripe = useStripe();
@@ -47,6 +46,8 @@ export default function PayModal({ item, isOpen, onClose }) {
   const [clientSecret, setClientSecret] = useState("");
   const [loadingCS, setLoadingCS] = useState(false);
   const [error, setError] = useState("");
+  const [stripePromise, setStripePromise] = useState(null);
+  const [loadingPK, setLoadingPK] = useState(false);
 
   const fetchClientSecret = useCallback(async () => {
     setError("");
@@ -54,11 +55,6 @@ export default function PayModal({ item, isOpen, onClose }) {
     try {
       if (!item || !item._id) {
         setError("Invalid item.");
-        return;
-      }
-      // Check Stripe publishable key presence (build-time env)
-      if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
-        setError("Payments not configured (missing Stripe publishable key).");
         return;
       }
       const stored = localStorage.getItem("fs_user");
@@ -83,12 +79,44 @@ export default function PayModal({ item, isOpen, onClose }) {
     }
   }, [item]);
 
-  useEffect(() => {
-    if (isOpen && item) {
-      setClientSecret("");
-      fetchClientSecret();
+  const ensureStripe = useCallback(async () => {
+    setLoadingPK(true);
+    setError("");
+    try {
+      const envPk = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+      if (envPk) {
+        setStripePromise(loadStripe(envPk));
+        return true;
+      }
+      // Fallback to backend-provided key
+      const res = await axios.get(`${BACKEND_URL}/payments/pk`);
+      const pk = res.data?.pk || "";
+      if (!pk) {
+        setError("Payments not configured (missing publishable key).");
+        return false;
+      }
+      setStripePromise(loadStripe(pk));
+      return true;
+    } catch (e) {
+      const msg = e?.response?.data?.error || e?.message || "Failed to load Stripe key";
+      setError(msg);
+      return false;
+    } finally {
+      setLoadingPK(false);
     }
-  }, [isOpen, item, fetchClientSecret]);
+  }, []);
+
+  useEffect(() => {
+    const go = async () => {
+      if (!isOpen || !item) return;
+      setClientSecret("");
+      const ok = await ensureStripe();
+      if (ok) {
+        await fetchClientSecret();
+      }
+    }
+    go();
+  }, [isOpen, item, ensureStripe, fetchClientSecret]);
 
   if (!isOpen) return null;
   return (
@@ -97,17 +125,19 @@ export default function PayModal({ item, isOpen, onClose }) {
       <div style={{ background: "#fff", borderRadius: 12, width: 420, maxWidth: "92%", padding: 16 }}>
         <h3 style={{ margin: 0, marginBottom: 6, fontWeight: 700 }}>Pay {item?.name}</h3>
         <p style={{ marginTop: 0, color: "#64748b" }}>${(item?.price || 0).toFixed(2)}</p>
-        {clientSecret ? (
+        {clientSecret && stripePromise ? (
           <Elements stripe={stripePromise} options={{ clientSecret }}>
             <PayForm item={item} onClose={onClose} onSuccess={onClose} />
           </Elements>
         ) : (
           <div>
-            <div style={{ color: "#64748b" }}>{loadingCS ? "Loading payment…" : (error || "Loading payment…")}</div>
+            <div style={{ color: "#64748b" }}>
+              {(loadingPK || loadingCS) ? "Loading payment…" : (error || "Loading payment…")}
+            </div>
             {error && (
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button className="market-card-btn message" style={{ flex: 1 }} onClick={onClose}>Close</button>
-                <button className="market-card-btn request" style={{ flex: 1 }} onClick={fetchClientSecret}>
+                <button className="market-card-btn request" style={{ flex: 1 }} onClick={async () => { await ensureStripe(); await fetchClientSecret(); }}>
                   Try Again
                 </button>
               </div>

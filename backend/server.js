@@ -198,6 +198,19 @@ app.post("/payments/intent", auth, async (req, res) => {
   }
 });
 
+// Public endpoint to expose Stripe publishable key for frontend fallback
+app.get("/payments/pk", (req, res) => {
+  const pk =
+    process.env.STRIPE_PUBLISHABLE_KEY ||
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    process.env.STRIPE_PUBLIC_KEY ||
+    "";
+  if (!pk) {
+    return res.status(503).json({ error: "Publishable key not set" });
+  }
+  res.json({ pk });
+});
+
 // Stripe webhook
 app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (req, res) => {
   if (!stripe) return res.status(503).end();

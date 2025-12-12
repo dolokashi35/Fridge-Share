@@ -89,48 +89,22 @@ export default function Marketplace() {
         // ignore
       }
 
-      const fetchNearby = async (lat, lng) => {
-        try {
-          const res = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
-            params: { lat, lng, radius: 5000 },
-            headers
-          });
-          if (Array.isArray(res.data) && res.data.length > 0) {
-            setItems(res.data);
-          } else {
-            // If nearby returns no items (e.g., items without location), try non-geo, same-college list
-            try {
-              const res2 = await axios.get(`${BACKEND_URL}/items`, { headers });
-              setItems(res2.data.length ? res2.data : SAMPLE);
-            } catch {
-              setItems(SAMPLE);
-            }
-          }
-        } catch {
-          // Fallback to scoped items without distance
-          try {
-            const res = await axios.get(`${BACKEND_URL}/items`, { headers });
-            setItems(res.data.length ? res.data : SAMPLE);
-          } catch {
-            setItems(SAMPLE);
-          }
-        }
-      };
-
+      // Capture user location (for distance display in modals), but fetch listings without geo restriction
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const { latitude, longitude } = pos.coords;
             setUserLoc([latitude, longitude]);
-            fetchNearby(latitude, longitude);
           },
-          () => {
-            // Default center if denied
-            fetchNearby(40.7128, -74.0060);
-          }
+          () => {}
         );
-      } else {
-        fetchNearby(40.7128, -74.0060);
+      }
+
+      try {
+        const res = await axios.get(`${BACKEND_URL}/items`, { headers });
+        setItems(res.data.length ? res.data : SAMPLE);
+      } catch {
+        setItems(SAMPLE);
       }
     }
     fetchItems();

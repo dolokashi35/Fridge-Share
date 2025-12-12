@@ -332,7 +332,7 @@ export default function ProfilePage() {
               {onboarded ? (
                 <span className="profile-value">Connected</span>
               ) : (
-                <button className="profile-btn-primary" onClick={handleOnboard}>Set up payouts</button>
+                <button className="profile-btn-primary" onClick={handleOnboard}>Set up payment</button>
               )}
             </div>
             {/* Email verification is automatic on signup via SendGrid. No manual buttons shown. */}

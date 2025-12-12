@@ -115,22 +115,6 @@ const ChatPage = ({ currentUser }) => {
         });
       }
     }
-    // If navigated with a peer but no messages yet, show it
-    if (to) {
-      const key = `${to}::${selectedItem?.id || 'none'}`;
-      if (!map.has(key)) {
-        map.set(key, {
-          key,
-          peer: to,
-          itemId: selectedItem?.id || null,
-          itemName: selectedItem?.name || '',
-          // Do not show thumbnail for brand-new conversations without messages
-          itemImageUrl: '',
-          preview: selectedItem ? `New chat about ${selectedItem.name}` : 'New conversation',
-          timestamp: new Date().toISOString()
-        });
-      }
-    }
     return Array.from(map.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }, [messagesAll, currentUser, to, selectedItem]);
   const filteredMessages = useMemo(() => {

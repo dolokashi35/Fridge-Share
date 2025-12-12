@@ -523,7 +523,7 @@ export default function Marketplace() {
                       className="item-modal-btn-request"
                       onClick={() => setPayItem(selectedItem)}
                     >
-                      Pay
+                      Reserve
                     </button>
                   </div>
                 </div>

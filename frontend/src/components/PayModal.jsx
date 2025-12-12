@@ -36,7 +36,7 @@ function PayForm({ item, onClose, onSuccess }) {
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button className="market-card-btn message" style={{ flex: 1 }} onClick={onClose} disabled={loading}>Cancel</button>
         <button className="market-card-btn request" style={{ flex: 1 }} onClick={handlePay} disabled={!stripe || loading}>
-          {loading ? "Processing..." : "Pay"}
+          {loading ? "Processing..." : "Reserve"}
         </button>
       </div>
     </div>
@@ -69,7 +69,7 @@ export default function PayModal({ item, isOpen, onClose }) {
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3100 }}>
       <div style={{ background: "#fff", borderRadius: 12, width: 420, maxWidth: "92%", padding: 16 }}>
-        <h3 style={{ margin: 0, marginBottom: 6, fontWeight: 700 }}>Pay {item?.name}</h3>
+        <h3 style={{ margin: 0, marginBottom: 6, fontWeight: 700 }}>Reserve {item?.name}</h3>
         <p style={{ marginTop: 0, color: "#64748b" }}>${(item?.price || 0).toFixed(2)}</p>
         {clientSecret ? (
           <Elements stripe={stripePromise} options={{ clientSecret }}>

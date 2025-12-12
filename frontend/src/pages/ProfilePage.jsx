@@ -327,7 +327,7 @@ export default function ProfilePage() {
                 <span className="profile-value">Active member</span>
               </div>
             </div>
-            <div className="profile-info-item">
+            <div className="profile-info-item payouts-row">
               <span className="profile-label">Payouts</span>
               {onboarded ? (
                 <span className="profile-value">Connected</span>

@@ -172,6 +172,10 @@
   min-height: 0;    /* allow children to shrink */
   overflow-y: auto;
 }
+/* Nudge empty-state helper text slightly right inside chat body only */
+.chat-body .offer-meta {
+  margin-left: 10px;
+}
 
 .chat-security-warning {
   margin: 16px;

@@ -41,6 +41,7 @@ export default function Marketplace() {
   const [selectedItem, setSelectedItem] = useState(null); // full item details for modal
   const [loadingItem, setLoadingItem] = useState(false);
   const [requests, setRequests] = useState(() => ({})); // itemId -> { offerId, status }
+  const [meUsername, setMeUsername] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(() => {
     try {
       const raw = localStorage.getItem('fs_hidden_items');
@@ -63,6 +64,10 @@ export default function Marketplace() {
     async function fetchItems() {
       const stored = localStorage.getItem("fs_user");
       const token = stored ? JSON.parse(stored)?.token : null;
+      try {
+        const parsed = stored ? JSON.parse(stored) : null;
+        setMeUsername(parsed?.username || null);
+      } catch {}
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       // Load existing buyer requests so "Requested"/"Cancel Request" persists on reload
@@ -142,6 +147,7 @@ export default function Marketplace() {
   const filtered = useMemo(() => {
     let list = items.filter((it) => {
       if (hiddenIds.has(it._id)) return false; // hide user-confirmed items
+      if (meUsername && it.username === meUsername) return false; // never show own listings
       const okCat = cat === "All" || it.category === cat;
       const okTerm = it.name.toLowerCase().includes(term.toLowerCase());
       const okPrice = it.price <= Number(maxP);

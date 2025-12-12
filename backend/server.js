@@ -194,7 +194,7 @@ app.post("/payments/intent", auth, async (req, res) => {
     res.json({ clientSecret: intent.client_secret });
   } catch (e) {
     console.error("Create PaymentIntent error:", e);
-    res.status(500).json({ error: "Failed to create payment intent" });
+    res.status(500).json({ error: e?.message || "Failed to create payment intent" });
   }
 });
 

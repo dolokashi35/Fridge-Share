@@ -266,72 +266,7 @@ const ChatPage = ({ currentUser }) => {
     fetchConfirmation();
   }, [to, selectedItem]);
 
-  // Auto-send message when coming from "Buy Now" button
-  const hasAutoSentRef = useRef(false);
-  const cameFromBuyRef = useRef(location.state?.source === 'buy');
-  
-  useEffect(() => {
-    const autoSendBuyMessage = async () => {
-      // Check if we came from buy action (either from location.state or if content was pre-filled)
-      const cameFromBuy = cameFromBuyRef.current === true;
-      const shouldAutoSend = cameFromBuy && 
-                             content && 
-                             content.trim().length > 0 &&
-                             to && 
-                             !hasAutoSentRef.current && 
-                             !loading;
-      
-      if (shouldAutoSend) {
-        hasAutoSentRef.current = true; // Mark as sent to prevent duplicate sends
-        try {
-          setLoading(true);
-          setError('');
-          const stored = localStorage.getItem('fs_user');
-          const token = stored ? JSON.parse(stored)?.token : null;
-          await axios.post(
-            `${BACKEND_URL}/api/messages`,
-            { to, content, itemId: selectedItem?.id || null, itemName: selectedItem?.name || '', itemImageUrl: selectedItem?.imageUrl || '' },
-            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-          );
-          setContent('');
-          // Refresh messages
-          const res = await axios.get(`${BACKEND_URL}/api/messages`, {
-            params: selectedItem?.id ? { peer: to, itemId: selectedItem.id } : { peer: to },
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          });
-          setMessages(res.data.messages || []);
-          // Refresh confirmation status
-          if (selectedItem?.id && to) {
-            try {
-              const confRes = await axios.get(`${BACKEND_URL}/api/purchase-confirmation`, {
-                params: { itemId: selectedItem.id, peer: to },
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-              });
-              setConfirmation(confRes.data.confirmation);
-            } catch {}
-          }
-          // Refresh sidebar conversations
-          try {
-            const allRes = await axios.get(`${BACKEND_URL}/api/messages`, {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
-            setMessagesAll(allRes.data.messages || []);
-          } catch {}
-        } catch (err) {
-          setError('Failed to send message');
-          console.error('Auto-send error:', err);
-          hasAutoSentRef.current = false; // Reset on error so user can retry
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-    // Small delay to ensure component is fully mounted and state is set
-    const timer = setTimeout(() => {
-      autoSendBuyMessage();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [content, to, selectedItem, loading]); // Run when these are set
+  // Auto-send disabled to avoid unintended repeat messages on refresh
 
   // Send a message
   const handleSend = async (e) => {
@@ -593,16 +528,6 @@ const ChatPage = ({ currentUser }) => {
               ref={inputRef}
               autoFocus
             />
-            {isBuyer && (fullItem || selectedItem) && (
-              <button
-                type="button"
-                className="market-card-btn request"
-                onClick={() => setShowPay(true)}
-                style={{ padding: '10px 12px' }}
-              >
-                Reserve
-              </button>
-            )}
             <button className="chat-send" type="submit" disabled={loading || !to || !content.trim()}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>

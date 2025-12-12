@@ -423,11 +423,25 @@ const ChatPage = ({ currentUser }) => {
                 </div>
                 <div className="offer-meta">Say hello and propose a time and place.</div>
                 {fullItem && isBuyer && !isReserved && (
-                  <div className="chat-security-warning" style={{ borderStyle: 'dashed' }}>
-                    <div className="chat-security-text" style={{ flex: 1 }}>
+                  <div className="chat-security-warning" style={{ borderStyle: 'dashed', flexDirection: 'column', alignItems: 'stretch' }}>
+                    <div className="chat-security-text" style={{ marginBottom: 8 }}>
                       Complete payment to reserve this item. Your card will be authorized; funds are held until pickup.
                     </div>
-                    <button className="market-card-btn request" onClick={() => setShowPay(true)} style={{ minWidth: 140 }}>
+                    <button
+                      onClick={() => setShowPay(true)}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: '#0E7490',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontWeight: 600,
+                        fontSize: '0.95rem',
+                        cursor: 'pointer',
+                        boxSizing: 'border-box'
+                      }}
+                    >
                       Reserve now
                     </button>
                   </div>
@@ -653,14 +667,24 @@ const ChatPage = ({ currentUser }) => {
                   </div>
                 )}
                 {isBuyer && !isReserved && (
-                  <div className="chat-security-warning" style={{ borderStyle: 'dashed' }}>
-                    <div className="chat-security-text" style={{ flex: 1 }}>
+                  <div className="chat-security-warning" style={{ borderStyle: 'dashed', flexDirection: 'column', alignItems: 'stretch' }}>
+                    <div className="chat-security-text" style={{ marginBottom: 8 }}>
                       Complete payment to reserve this item. Your card will be authorized; funds are held until pickup.
                     </div>
                     <button
-                      className="market-card-btn request"
                       onClick={() => setShowPay(true)}
-                      style={{ minWidth: 140 }}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: '#0E7490',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontWeight: 600,
+                        fontSize: '0.95rem',
+                        cursor: 'pointer',
+                        boxSizing: 'border-box'
+                      }}
                     >
                       Reserve now
                     </button>

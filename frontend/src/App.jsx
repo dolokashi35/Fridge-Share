@@ -20,6 +20,7 @@ function AppContent() {
     const saved = localStorage.getItem("fs_user");
     return saved ? JSON.parse(saved) : null;
   });
+  const isProfileComplete = !!(user && user.profile && user.profile.name && user.profile.college);
 
   useEffect(() => {
     if (user) localStorage.setItem("fs_user", JSON.stringify(user));
@@ -45,7 +46,7 @@ function AppContent() {
   return (
     <>
       {/* ✅ Global Top Navbar */}
-      {user && user.profile && !hideNavOn.includes(location.pathname) && (
+      {user && isProfileComplete && !hideNavOn.includes(location.pathname) && (
         <BottomNav />
       )}
 
@@ -70,7 +71,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : user.profile ? (
+              ) : isProfileComplete ? (
                 <Navigate to="/marketplace" />
               ) : (
                 <ProfileSetup
@@ -92,7 +93,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <Marketplace />
@@ -106,7 +107,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <MapDiscovery />
@@ -120,7 +121,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <ItemDetail />
@@ -134,7 +135,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <PostItem />
@@ -148,7 +149,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <MyListings />
@@ -162,7 +163,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <ProfilePage />
@@ -176,7 +177,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <EditListing />
@@ -190,7 +191,7 @@ function AppContent() {
             element={
               !user ? (
                 <Navigate to="/login" />
-              ) : !user.profile ? (
+              ) : !isProfileComplete ? (
                 <Navigate to="/setup" />
               ) : (
                 <ChatPage currentUser={user.username} />

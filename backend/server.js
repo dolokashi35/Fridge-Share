@@ -1164,25 +1164,13 @@ app.post("/api/purchase-confirmation/confirm", auth, async (req, res) => {
   }
 });
 
-// GET /items - Get all active items (same college as requester, exclude self)
+// GET /items - Get all active items (relaxed: no college requirement so marketplace always shows)
 app.get("/items", auth, async (req, res) => {
   try {
-    const me = await User.findOne({ username: req.user.username }).lean();
-    const myCollege = me?.profile?.college;
-    if (!myCollege) {
-      return res.status(400).json({ error: "User college not set" });
-    }
-    // Find all users in the same college except self
-    const sameCollegeUsers = await User.find(
-      { "profile.college": myCollege, username: { $ne: req.user.username } },
-      { username: 1 }
-    ).lean();
-    const allowedUsernames = new Set(sameCollegeUsers.map(u => u.username));
-
-    const items = await Item.find({ 
+    // Show all active items that haven't expired
+    const items = await Item.find({
       status: "active",
-      expiresAt: { $gt: new Date() },
-      username: { $in: Array.from(allowedUsernames) }
+      expiresAt: { $gt: new Date() }
     }).sort({ createdAt: -1 });
     
     res.json(items);
@@ -1341,21 +1329,9 @@ app.get("/api/items/nearby", auth, async (req, res) => {
   }
 
   try {
-    // Filter by same college as requester and exclude self
-    const me = await User.findOne({ username: req.user.username }).lean();
-    const myCollege = me?.profile?.college;
-    if (!myCollege) {
-      return res.status(400).json({ error: "User college not set" });
-    }
-    const sameCollegeUsers = await User.find(
-      { "profile.college": myCollege, username: { $ne: req.user.username } },
-      { username: 1 }
-    ).lean();
-    const allowedUsernames = new Set(sameCollegeUsers.map(u => u.username));
-
+    // Relaxed: show active items near the user regardless of college
     const items = await Item.find({
       status: "active",
-      username: { $in: Array.from(allowedUsernames) },
       location: {
         $near: {
           $geometry: {

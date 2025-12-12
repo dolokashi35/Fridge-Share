@@ -717,6 +717,34 @@ const ChatPage = ({ currentUser }) => {
                     </button>
                   </div>
                 )}
+                {isBuyer && !isReserved && (
+                  <div className="chat-security-warning" style={{ borderStyle: 'dashed' }}>
+                    <div className="chat-security-text" style={{ flex: 1 }}>
+                      Complete payment to reserve this item. Your card will be authorized; funds are held until pickup.
+                    </div>
+                    <button
+                      className="market-card-btn request"
+                      onClick={() => setShowPay(true)}
+                      style={{ minWidth: 140 }}
+                    >
+                      Reserve now
+                    </button>
+                  </div>
+                )}
+                {isBuyer && isReserved && (
+                  <div className="chat-security-warning" style={{ borderStyle: 'dashed', background: '#f0fdf4', borderColor: '#86efac' }}>
+                    <div className="chat-security-text" style={{ flex: 1 }}>
+                      Payment authorized. Scan the seller’s QR on pickup to release payment.
+                    </div>
+                    <button
+                      className="market-card-btn request"
+                      onClick={() => { setShowScan(true); setTimeout(() => startLiveScan(), 50); }}
+                      style={{ minWidth: 160 }}
+                    >
+                      Scan QR to Complete
+                    </button>
+                  </div>
+                )}
                 
                 {to && selectedItem?.id && (
                   <div style={{ marginTop: 'auto', paddingTop: '16px', width: '100%' }}>

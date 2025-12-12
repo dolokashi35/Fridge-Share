@@ -124,7 +124,8 @@ const ChatPage = ({ currentUser }) => {
           peer: to,
           itemId: selectedItem?.id || null,
           itemName: selectedItem?.name || '',
-          itemImageUrl: selectedItem?.imageUrl || '',
+          // Do not show thumbnail for brand-new conversations without messages
+          itemImageUrl: '',
           preview: selectedItem ? `New chat about ${selectedItem.name}` : 'New conversation',
           timestamp: new Date().toISOString()
         });
@@ -208,13 +209,13 @@ const ChatPage = ({ currentUser }) => {
             };
             
             try {
-              const nearbyRes = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
+            const nearbyRes = await axios.get(`${BACKEND_URL}/api/items/nearby`, {
                 params: { lat: userLocation.lat, lng: userLocation.lng, radius: 50000 },
-                headers
-              });
+              headers
+            });
               const nearbyItem = nearbyRes.data.find(it => it._id === selectedItem.id || it.id === selectedItem.id);
-              if (nearbyItem) {
-                itemData = nearbyItem;
+            if (nearbyItem) {
+              itemData = nearbyItem;
               }
             } catch {
               // Nearby endpoint failed, will try regular fetch and calculate distance
@@ -475,7 +476,7 @@ const ChatPage = ({ currentUser }) => {
                       <span className="preview-text">{c.preview}</span>
                     </div>
                   </div>
-                  {c.itemImageUrl && (
+                  {c.itemId && c.itemImageUrl && (
                     <img 
                       src={c.itemImageUrl} 
                       alt="" 
@@ -618,7 +619,7 @@ const ChatPage = ({ currentUser }) => {
                     <h2 className="item-modal-title">{fullItem?.name || selectedItem?.name || 'Item'}</h2>
                     {(fullItem?.category || selectedItem?.category) && (
                       <p className="item-modal-category">{fullItem?.category || selectedItem?.category}</p>
-                    )}
+                      )}
                     {(fullItem?.price ?? selectedItem?.price) !== undefined && (
                       <p className="item-modal-price">${((fullItem?.price ?? selectedItem?.price) || 0).toFixed(2)}</p>
                     )}
@@ -629,19 +630,19 @@ const ChatPage = ({ currentUser }) => {
                       <p><strong>Quantity:</strong> {fullItem?.quantity ?? selectedItem?.quantity ?? 'N/A'}</p>
                       {fullItem?.purchaseDate && (
                         <p><strong>Purchased:</strong> {new Date(fullItem.purchaseDate).toLocaleDateString()}</p>
-                      )}
+                    )}
                       {fullItem?.expirationDate && (
                         <p><strong>Expires:</strong> {new Date(fullItem.expirationDate).toLocaleDateString()}</p>
-                      )}
+                    )}
                       {(fullItem?.username || selectedItem?.username) && (
                         <p><strong>Posted by:</strong> {fullItem?.username || selectedItem?.username}</p>
-                      )}
-                      {fullItem?.createdAt && (
+                    )}
+                    {fullItem?.createdAt && (
                         <p><strong>Posted:</strong> {new Date(fullItem.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                       )}
                       {typeof fullItem?.distance === 'number' && (
                         <p><strong>Distance:</strong> {(fullItem.distance * 0.621371).toFixed(1)} mi away</p>
-                      )}
+                    )}
                       {fullItem?.location?.name && (
                         <p><strong>Location:</strong> 📍 {fullItem.location.name}</p>
                       )}

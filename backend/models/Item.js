@@ -58,10 +58,6 @@ const itemSchema = new mongoose.Schema({
     enum: ["active", "sold", "expired", "handed_off"],
     default: "active"
   },
-  paymentIntentId: {
-    type: String,
-    default: null
-  },
   handoffStatus: {
     type: String,
     enum: ["pending", "completed", "cancelled"],

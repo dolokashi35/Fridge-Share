@@ -180,7 +180,6 @@ app.post("/payments/intent", auth, async (req, res) => {
     const intent = await stripe.paymentIntents.create({
       amount: Number(amountCents),
       currency,
-      capture_method: "manual", // 🔒 authorize now, capture on handoff
       automatic_payment_methods: { enabled: true },
       transfer_data: { destination: seller.stripeAccountId },
       application_fee_amount: appFee,
@@ -214,42 +213,11 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (r
   }
 
   try {
-    // When funds are authorized and capturable (manual capture flow)
-    if (event.type === 'payment_intent.amount_capturable_updated') {
-      const pi = event.data.object;
-      const itemId = pi.metadata?.itemId;
-      const buyerUsername = pi.metadata?.buyerUsername;
-      if (itemId) {
-        await Item.findByIdAndUpdate(itemId, {
-          paymentIntentId: pi.id,
-          handoffStatus: 'pending',
-          handoffTo: buyerUsername || null,
-          handoffDate: new Date(),
-          status: 'handed_off'
-        });
-        console.log(`🔒 Reservation authorized for item ${itemId} — capturable amount ready.`);
-      }
-    }
-
     if (event.type === 'payment_intent.succeeded') {
       const pi = event.data.object;
       const itemId = pi.metadata?.itemId;
       if (itemId) {
-        await Item.findByIdAndUpdate(itemId, { status: 'sold', handoffStatus: 'completed' });
-      }
-    }
-    if (event.type === 'payment_intent.canceled') {
-      const pi = event.data.object;
-      const itemId = pi.metadata?.itemId;
-      if (itemId) {
-        await Item.findByIdAndUpdate(itemId, {
-          status: 'active',
-          handoffStatus: null,
-          handoffTo: null,
-          handoffDate: null,
-          paymentIntentId: null
-        });
-        console.log(`🟦 Reservation canceled for item ${itemId}`);
+        await Item.findByIdAndUpdate(itemId, { status: 'sold' });
       }
     }
   } catch (e) {
@@ -565,17 +533,7 @@ app.post("/api/complete-handoff", async (req, res) => {
       return res.status(400).json({ error: "Item is not in pending handoff status" });
     }
 
-    // If there is a reserved payment intent, try to capture now
-    if (stripe && item.paymentIntentId) {
-      try {
-        await stripe.paymentIntents.capture(item.paymentIntentId);
-      } catch (err) {
-        console.error("❌ Stripe capture failed:", err);
-        return res.status(500).json({ error: "Payment capture failed. Try again or contact support." });
-      }
-    }
-
-    // Mark as sold after successful capture (or if no payment intent present)
+    // Mark as sold (no payment capture here)
     item.handoffStatus = "completed";
     item.status = "sold";
 
@@ -619,17 +577,6 @@ app.post("/api/cancel-handoff", async (req, res) => {
     item.handoffNotes = "";
     item.handoffDate = null;
     item.status = "active";
-    // If a payment was reserved, cancel the PaymentIntent to release hold
-    if (stripe && item.paymentIntentId) {
-      try {
-        await stripe.paymentIntents.cancel(item.paymentIntentId);
-      } catch (err) {
-        console.error("❌ Stripe cancel failed:", err);
-        // continue, since we still reset the item; webhook will also clean up if cancel succeeded later
-      }
-      item.paymentIntentId = null;
-    }
-
     await item.save();
 
     console.log(`❌ Handoff cancelled: ${item.name}`);

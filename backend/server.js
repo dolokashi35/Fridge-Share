@@ -1173,9 +1173,12 @@ app.get("/items", auth, async (req, res) => {
       // If no college set, return empty to keep marketplace scoped
       return res.json([]);
     }
+    // Normalize college: trimmed and case-insensitive match
+    const escaped = String(myCollege).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const reCollege = new RegExp(`^${escaped}$`, "i");
     // Find all users in the same college except self
     const sameCollegeUsers = await User.find(
-      { "profile.college": myCollege, username: { $ne: req.user.username } },
+      { "profile.college": reCollege, username: { $ne: req.user.username } },
       { username: 1 }
     ).lean();
     const allowedUsernames = new Set(sameCollegeUsers.map(u => u.username));
@@ -1342,15 +1345,17 @@ app.get("/api/items/nearby", auth, async (req, res) => {
   }
 
   try {
-    // Filter by same college as requester and exclude self
+    // Filter by same college as requester (case-insensitive, trimmed) and exclude self
     const me = await User.findOne({ username: req.user.username }).lean();
     const myCollege = me?.profile?.college;
     if (!myCollege) {
       // If no college set, return empty to keep marketplace scoped
       return res.json([]);
     }
+    const escaped = String(myCollege).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const reCollege = new RegExp(`^${escaped}$`, "i");
     const sameCollegeUsers = await User.find(
-      { "profile.college": myCollege, username: { $ne: req.user.username } },
+      { "profile.college": reCollege, username: { $ne: req.user.username } },
       { username: 1 }
     ).lean();
     const allowedUsernames = new Set(sameCollegeUsers.map(u => u.username));

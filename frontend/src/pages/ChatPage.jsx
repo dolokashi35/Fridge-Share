@@ -37,20 +37,7 @@ const ChatPage = ({ currentUser }) => {
         content: location.state.source === 'buy' ? (location.state.prefill || '') : ''
       };
     }
-    // Otherwise, try to restore from localStorage
-    try {
-      const saved = localStorage.getItem('fs_chat_state');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          to: parsed.to || '',
-          selectedItem: parsed.selectedItem || null,
-          content: ''
-        };
-      }
-    } catch (e) {
-      console.error('Failed to load chat state:', e);
-    }
+    // Do not restore previous peer automatically; require explicit selection
     return { to: '', selectedItem: null, content: '' };
   };
 

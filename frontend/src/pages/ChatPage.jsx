@@ -593,6 +593,16 @@ const ChatPage = ({ currentUser }) => {
               ref={inputRef}
               autoFocus
             />
+            {isBuyer && (fullItem || selectedItem) && (
+              <button
+                type="button"
+                className="market-card-btn request"
+                onClick={() => setShowPay(true)}
+                style={{ padding: '10px 12px' }}
+              >
+                Reserve
+              </button>
+            )}
             <button className="chat-send" type="submit" disabled={loading || !to || !content.trim()}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>

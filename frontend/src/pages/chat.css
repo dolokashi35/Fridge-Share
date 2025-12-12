@@ -337,16 +337,16 @@
   height: 100vh;
 }
 .chat-right-header {
-  padding: 14px 16px;
+  padding: 10px 12px;
   font-weight: 800;
   border-bottom: 1px solid var(--color-border);
   background: #ffffff;
 }
 .listing-panel {
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
   overflow-y: auto;
   height: 100%;
@@ -372,16 +372,20 @@
 }
 .listing-panel .market-img {
   flex-shrink: 0;
+  height: 120px !important; /* tighter image to avoid scrolling */
 }
 
-/* Override description truncation in listing panel - show full description */
+/* In listing panel, keep description compact (2 lines clamp) */
 .listing-panel .market-card-description {
-  white-space: pre-wrap !important;
-  word-break: break-word !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
-  max-height: none !important;
-  line-height: 1.5 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: normal !important;
+  line-height: 1.3 !important;
+  font-size: 0.9rem !important;
+  margin: 0.25rem 0 !important;
 }
 
 /* Remove cursor pointer and click functionality - only show shadow on hover */
@@ -411,6 +415,33 @@
 .listing-panel .item-modal-meta { gap: 0.25rem; padding-top: 0.5rem; margin-bottom: 0.5rem; }
 .listing-panel .item-modal-meta p { margin: 0.1rem 0; font-size: 0.9rem; }
 .listing-panel .seller-profile-card { margin-top: 0.75rem; }
+/* Make seller card more compact in listing panel */
+.listing-panel .seller-profile-card {
+  padding: 0.5rem !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+}
+.listing-panel .seller-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 0.8rem !important;
+}
+.listing-panel .seller-username {
+  font-size: 0.9rem !important;
+  margin-bottom: 0.25rem !important;
+}
+.listing-panel .seller-stats-row {
+  gap: 0.5rem !important;
+}
+.listing-panel .seller-rating-text,
+.listing-panel .seller-purchases {
+  font-size: 0.75rem !important;
+}
+
+/* Compact security/cta boxes in listing panel */
+.listing-panel .chat-security-warning {
+  padding: 8px 10px !important;
+  gap: 8px !important;
+}
 
 /* Ensure seller rating box and listing have the same width */
 .chat-listing,

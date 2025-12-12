@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './chat.css';
+import PayModal from '../components/PayModal';
 import './marketplace-modern.css';
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -55,6 +56,9 @@ const ChatPage = ({ currentUser }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [sellerStats, setSellerStats] = useState(null); // stats for seller in chat listing
+  const [showPay, setShowPay] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [showQr, setShowQr] = useState(false);
   const inputRef = useRef(null);
 
   // Persist chat state to localStorage whenever to or selectedItem changes
@@ -412,6 +416,8 @@ const ChatPage = ({ currentUser }) => {
   const stored = localStorage.getItem('fs_user');
   const currentUsername = stored ? JSON.parse(stored)?.username : null;
   const isSeller = fullItem?.username === currentUsername;
+  const isBuyer = !!fullItem && currentUsername && fullItem.username !== currentUsername;
+  const isReserved = fullItem?.handoffStatus === 'pending';
   const userConfirmed = confirmation ? (isSeller ? confirmation.sellerConfirmed : confirmation.buyerConfirmed) : false;
   const otherConfirmed = confirmation ? (isSeller ? confirmation.buyerConfirmed : confirmation.sellerConfirmed) : false;
 
@@ -476,6 +482,16 @@ const ChatPage = ({ currentUser }) => {
                   </div>
                 </div>
                 <div className="offer-meta">Say hello and propose a time and place.</div>
+                {fullItem && isBuyer && !isReserved && (
+                  <div className="chat-security-warning" style={{ borderStyle: 'dashed' }}>
+                    <div className="chat-security-text" style={{ flex: 1 }}>
+                      Complete payment to reserve this item. Your card will be authorized; funds are held until pickup.
+                    </div>
+                    <button className="market-card-btn request" onClick={() => setShowPay(true)} style={{ minWidth: 140 }}>
+                      Reserve now
+                    </button>
+                  </div>
+                )}
               </>
             ) : (() => {
               // Group messages by date and render with date headers
@@ -659,6 +675,34 @@ const ChatPage = ({ currentUser }) => {
                   </div>
                 )}
                 
+                {/* Status/Actions */}
+                {isSeller && isReserved && (
+                  <div className="chat-security-warning" style={{ background: '#ecfeff', borderColor: '#a5f3fc' }}>
+                    <div className="chat-security-icon">✅</div>
+                    <div className="chat-security-text" style={{ flex: 1 }}>
+                      Payment authorized — arrange pickup and show QR at handoff.
+                    </div>
+                    <button
+                      className="market-card-btn request"
+                      onClick={async () => {
+                        try {
+                          const stored = localStorage.getItem('fs_user');
+                          const token = stored ? JSON.parse(stored)?.token : null;
+                          const res = await axios.post(`${BACKEND_URL}/pickup/qr/start`, { itemId: fullItem._id }, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : {}
+                          });
+                          setQrDataUrl(res.data?.qr || "");
+                          setShowQr(true);
+                        } catch {
+                          alert("Failed to generate QR code");
+                        }
+                      }}
+                    >
+                      Show QR Code
+                    </button>
+                  </div>
+                )}
+                
                 {to && selectedItem?.id && (
                   <div style={{ marginTop: 'auto', paddingTop: '16px', width: '100%' }}>
                     {/* Status text intentionally removed for a cleaner UX */}
@@ -729,6 +773,29 @@ const ChatPage = ({ currentUser }) => {
                   </p>
           )}
         </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Reserve/Pay Modal */}
+        {showPay && fullItem && (
+          <PayModal item={{ _id: fullItem._id, name: fullItem.name, price: fullItem.price, imageUrl: fullItem.imageUrl }} isOpen={showPay} onClose={() => setShowPay(false)} />
+        )}
+        
+        {/* QR Modal (Seller) */}
+        {showQr && (
+          <div className="item-modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowQr(false)}>
+            <div className="item-modal-content" style={{ maxWidth: 380 }}>
+              <button className="item-modal-close" onClick={() => setShowQr(false)}>×</button>
+              <div style={{ padding: 16, textAlign: 'center' }}>
+                <h3 style={{ marginTop: 0 }}>Pickup QR</h3>
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt="Pickup QR" style={{ width: '100%', maxWidth: 300 }} />
+                ) : (
+                  <div>Generating…</div>
+                )}
+                <p style={{ color: '#64748b' }}>Ask the buyer to scan this QR on pickup.</p>
+              </div>
             </div>
           </div>
         )}

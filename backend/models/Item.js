@@ -58,6 +58,10 @@ const itemSchema = new mongoose.Schema({
     enum: ["active", "sold", "expired", "handed_off"],
     default: "active"
   },
+  paymentIntentId: {
+    type: String,
+    default: null
+  },
   handoffStatus: {
     type: String,
     enum: ["pending", "completed", "cancelled"],
@@ -74,6 +78,14 @@ const itemSchema = new mongoose.Schema({
   handoffNotes: {
     type: String,
     default: ""
+  },
+  pickupCodeHash: {
+    type: String,
+    default: null
+  },
+  pickupCodeExpires: {
+    type: Date,
+    default: null
   },
   location: {
     type: {

@@ -180,6 +180,8 @@ app.post("/payments/intent", auth, async (req, res) => {
     const intent = await stripe.paymentIntents.create({
       amount: Number(amountCents),
       currency,
+      capture_method: "manual",
+      confirmation_method: "automatic",
       automatic_payment_methods: { enabled: true },
       transfer_data: { destination: seller.stripeAccountId },
       application_fee_amount: appFee,
@@ -213,17 +215,105 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (r
   }
 
   try {
+    // Funds authorized and capturable → reserve listing
+    if (event.type === 'payment_intent.amount_capturable_updated') {
+      const pi = event.data.object;
+      const itemId = pi.metadata?.itemId;
+      const buyerUsername = pi.metadata?.buyerUsername;
+      if (itemId) {
+        await Item.findByIdAndUpdate(itemId, {
+          paymentIntentId: pi.id,
+          handoffStatus: 'pending',
+          handoffTo: buyerUsername || null,
+          handoffDate: new Date(),
+          status: 'handed_off'
+        });
+      }
+    }
     if (event.type === 'payment_intent.succeeded') {
       const pi = event.data.object;
       const itemId = pi.metadata?.itemId;
       if (itemId) {
-        await Item.findByIdAndUpdate(itemId, { status: 'sold' });
+        await Item.findByIdAndUpdate(itemId, { status: 'sold', handoffStatus: 'completed' });
+      }
+    }
+    if (event.type === 'payment_intent.canceled') {
+      const pi = event.data.object;
+      const itemId = pi.metadata?.itemId;
+      if (itemId) {
+        await Item.findByIdAndUpdate(itemId, {
+          status: 'active',
+          handoffStatus: null,
+          handoffTo: null,
+          handoffDate: null,
+          paymentIntentId: null
+        });
       }
     }
   } catch (e) {
     console.error('Stripe webhook handling error:', e);
   }
   res.json({ received: true });
+});
+
+// ========================
+// 🧾 QR Pickup Flow (Seller generates, Buyer verifies)
+// ========================
+app.post("/pickup/qr/start", auth, async (req, res) => {
+  try {
+    const { itemId } = req.body || {};
+    if (!itemId) return res.status(400).json({ error: "itemId required" });
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    if (item.username !== req.user.username) return res.status(403).json({ error: "Not item owner" });
+    if (item.handoffStatus !== "pending" || !item.paymentIntentId) {
+      return res.status(400).json({ error: "Payment not authorized yet" });
+    }
+    const raw = crypto.randomBytes(16).toString("hex");
+    const hash = crypto.createHash("sha256").update(raw).digest("hex");
+    item.pickupCodeHash = hash;
+    item.pickupCodeExpires = new Date(Date.now() + 1000 * 60 * 60 * 2); // 2h
+    await item.save();
+    const payload = JSON.stringify({ itemId: String(item._id), token: raw });
+    const dataUrl = await qrcode.toDataURL(payload);
+    res.json({ qr: dataUrl, expiresAt: item.pickupCodeExpires });
+  } catch (e) {
+    console.error("QR start error:", e);
+    res.status(500).json({ error: "Failed to create pickup QR" });
+  }
+});
+
+app.post("/pickup/qr/verify", auth, async (req, res) => {
+  try {
+    const { itemId, token } = req.body || {};
+    if (!itemId || !token) return res.status(400).json({ error: "itemId and token required" });
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    if (item.handoffStatus !== "pending" || !item.paymentIntentId) {
+      return res.status(400).json({ error: "No authorized payment to capture" });
+    }
+    if (!item.pickupCodeHash || !item.pickupCodeExpires || item.pickupCodeExpires.getTime() < Date.now()) {
+      return res.status(400).json({ error: "Pickup code invalid or expired" });
+    }
+    const hash = crypto.createHash("sha256").update(token).digest("hex");
+    if (hash !== item.pickupCodeHash) {
+      return res.status(400).json({ error: "Invalid pickup code" });
+    }
+    // Capture funds
+    if (stripe) {
+      await stripe.paymentIntents.capture(item.paymentIntentId);
+    }
+    // Clear code; status will also flip to sold via webhook, but set here for UX
+    item.pickupCodeHash = null;
+    item.pickupCodeExpires = null;
+    item.handoffStatus = "completed";
+    item.status = "sold";
+    await item.save();
+    res.json({ success: true });
+  } catch (e) {
+    console.error("QR verify error:", e);
+    res.status(500).json({ error: "Failed to verify pickup" });
+  }
 });
 
 // ========================

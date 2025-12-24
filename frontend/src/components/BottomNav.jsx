@@ -79,7 +79,7 @@ export default function BottomNav() {
         {initials ? (
           <span className="profile-initials-badge" aria-label="My Profile">{initials}</span>
         ) : (
-          <FaUser />
+        <FaUser />
         )}
       </button>
     </div>

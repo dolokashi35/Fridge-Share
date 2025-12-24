@@ -1288,21 +1288,31 @@ app.post("/items", auth, async (req, res) => {
       location
     } = req.body;
 
-    // Calculate expiration date
+    // Require only name; other fields optional with sensible defaults
+    if (!name || String(name).trim().length === 0) {
+      return res.status(400).json({ error: "Missing name" });
+    }
+
+    const listingDurationNum = (() => {
+      const n = parseInt(listingDuration);
+      if (Number.isFinite(n) && n >= 1 && n <= 7) return n;
+      return 7;
+    })();
+
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + parseInt(listingDuration));
+    expiresAt.setDate(expiresAt.getDate() + listingDurationNum);
 
     const item = new Item({
       name,
-      category,
-      price: parseFloat(price),
-      description,
-      quantity: parseInt(quantity),
-      purchaseDate: new Date(purchaseDate),
+      category: category || "Fresh",
+      price: Number.isFinite(parseFloat(price)) ? parseFloat(price) : 0,
+      description: description || "",
+      quantity: Number.isFinite(parseInt(quantity)) && parseInt(quantity) > 0 ? parseInt(quantity) : 1,
+      purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
       expirationDate: expirationDate ? new Date(expirationDate) : null,
-      listingDuration: parseInt(listingDuration),
-      transferMethods,
-      imageUrl,
+      listingDuration: listingDurationNum,
+      transferMethods: Array.isArray(transferMethods) ? transferMethods : [],
+      imageUrl: imageUrl || "",
       username: req.user.username,
       location: location || null, // Include location data
       expiresAt

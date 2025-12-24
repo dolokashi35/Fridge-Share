@@ -8,7 +8,7 @@ const itemSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: true,
+    default: "Fresh",
     enum: [
       "Produce", "Dairy", "Baked", "Meat", "Seafood",
       "Frozen", "Fresh", "Drinks", "Snacks", "Canned", "Spices", "Sauces"
@@ -16,8 +16,8 @@ const itemSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: true,
-    min: 0
+    min: 0,
+    default: 0
   },
   description: {
     type: String,
@@ -25,21 +25,21 @@ const itemSchema = new mongoose.Schema({
   },
   quantity: {
     type: Number,
-    required: true,
-    min: 1
+    min: 1,
+    default: 1
   },
   purchaseDate: {
     type: Date,
-    required: true
+    default: Date.now
   },
   expirationDate: {
     type: Date
   },
   listingDuration: {
     type: Number,
-    required: true,
     min: 1,
-    max: 7
+    max: 7,
+    default: 7
   },
   transferMethods: [{
     type: String,
@@ -108,7 +108,7 @@ const itemSchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    required: true
+    default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
   }
 });
 

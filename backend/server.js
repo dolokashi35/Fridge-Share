@@ -360,6 +360,8 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 console.log("✅ Gemini 2.0 Flash initialized via API key");
 
+// (Gemini image-only fallback helper removed)
+
 // ========================
 // 🖼️ Image Upload Endpoint (S3)
 // ========================
@@ -407,165 +409,48 @@ app.get("/", (_, res) =>
 // 📸 POST /api/analyze — Enhanced Vision API (Reliable)
 // ========================
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
-  if (!visionClient) return res.status(503).json({ error: "Vision service unavailable" });
   if (!req.file) return res.status(400).json({ error: "No image uploaded" });
 
   const imagePath = path.resolve(req.file.path);
-  const quantity = req.body.quantity || "1";
 
   try {
-    console.log("🧠 Enhanced Vision analysis:", imagePath);
+    // Require Google Vision; no Gemini fallback
+    if (!visionClient) {
+      return res.status(503).json({ error: "Vision is disabled; please enter details manually." });
+    }
 
-    // Enhanced Vision API analysis with multiple detection methods
     const [labelResult] = await visionClient.labelDetection(imagePath);
-    const [objectResult] = await visionClient.objectLocalization(imagePath);
-    const [textResult] = await visionClient.textDetection(imagePath);
-    const [logoResult] = await visionClient.logoDetection(imagePath);
-    const [faceResult] = await visionClient.faceDetection(imagePath);
-    
-    let labels = labelResult.labelAnnotations || [];
-    let objects = objectResult.localizedObjectAnnotations || [];
-    let text = textResult.fullTextAnnotation?.text || "";
-    let logos = logoResult.logoAnnotations || [];
-    let faces = faceResult.faceAnnotations || [];
+    const labels = (labelResult?.labelAnnotations || [])
+      .filter(l => l?.score > 0.5)
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
 
-    // Combine all detection results for better accuracy
-    let allDetections = [];
-    
-    // Add high-confidence labels
-    labels.forEach(label => {
-      if (label.score > 0.6) {
-        allDetections.push({
-          name: label.description,
-          confidence: label.score,
-          type: 'label'
-        });
-      }
-    });
+    const best = labels[0];
+    let itemName = best?.description || 'Unknown item';
+    let category = 'Fresh';
+    const allText = (labels.map(l => l.description).join(' ') || '').toLowerCase();
 
-    // Add objects
-    objects.forEach(obj => {
-      if (obj.score > 0.5) {
-        allDetections.push({
-          name: obj.name,
-          confidence: obj.score,
-          type: 'object'
-        });
-      }
-    });
+    if (/(apple|banana|fruit|vegetable|produce|organic|fresh)/i.test(allText)) category = 'Produce';
+    else if (/(milk|cheese|yogurt|dairy|cream)/i.test(allText)) category = 'Dairy';
+    else if (/(meat|chicken|beef|protein|poultry)/i.test(allText)) category = 'Meat';
+    else if (/(frozen|ice cream)/i.test(allText)) category = 'Frozen';
+    else if (/(drink|beverage|juice)/i.test(allText)) category = 'Drinks';
+    else if (/(snack|chips|candy)/i.test(allText)) category = 'Snacks';
 
-    // Add logos/brands (very important for food items)
-    logos.forEach(logo => {
-      if (logo.score > 0.3) {
-        allDetections.push({
-          name: logo.description,
-          confidence: logo.score,
-          type: 'logo'
-        });
-      }
-    });
-
-    // Filter out face-related detections (not relevant for food)
-    allDetections = allDetections.filter(detection => 
-      !detection.name.toLowerCase().includes('face') &&
-      !detection.name.toLowerCase().includes('person') &&
-      !detection.name.toLowerCase().includes('human') &&
-      !detection.name.toLowerCase().includes('skin')
-    );
-
-    // Sort by confidence
-    allDetections.sort((a, b) => b.confidence - a.confidence);
-
-    // Use best detection
-    const bestDetection = allDetections[0] || { name: "Unknown item", confidence: 0.0 };
-    
-    // Use Gemini to analyze detected text and improve item name/description
-    let enhancedResult = {
-      itemName: bestDetection.name,
-      category: "Fresh",
-      description: "",
+    return res.json({
+      itemName,
+      category,
+      description: '',
       marketPrice: "1.00",
-      discountedPrice: "0.50"
-    };
-
-    if (text && text.trim().length > 0) {
-      try {
-        const geminiPrompt = `
-Analyze this food item image with multiple detection methods:
-
-DETECTED TEXT: "${text}"
-DETECTED LABELS: ${allDetections.slice(0, 5).map(d => d.name).join(', ')}
-DETECTED OBJECTS: ${objects.slice(0, 3).map(o => o.name).join(', ')}
-DETECTED LOGOS: ${logos.slice(0, 2).map(l => l.description).join(', ')}
-
-Focus on FOOD ITEMS ONLY. Provide:
-1. Most specific item name possible (include brand if detected)
-2. Correct category (Produce, Dairy, Meat, Seafood, Frozen, Fresh, Drinks, Snacks, Canned, Spices, Sauces)
-3. Brief description mentioning key details from text/labels
-
-Return JSON:
-{
-  "itemName": "specific item name with brand",
-  "category": "correct category",
-  "description": "brief description with key details"
-}
-`;
-
-        const response = await geminiModel.generateContent(geminiPrompt);
-        const geminiText = response.response.text();
-        
-        const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const aiResult = JSON.parse(jsonMatch[0]);
-          enhancedResult.itemName = aiResult.itemName || bestDetection.name;
-          enhancedResult.category = aiResult.category || "Fresh";
-          enhancedResult.description = aiResult.description || "";
-        }
-      } catch (e) {
-        console.warn("⚠️ Text analysis failed, using Vision API only");
-      }
-    }
-
-    // Enhanced fallback category detection using all detection methods
-    if (enhancedResult.category === "Fresh") {
-      const itemName = enhancedResult.itemName.toLowerCase();
-      const allText = (text + " " + allDetections.map(d => d.name).join(" ")).toLowerCase();
-      
-      if (itemName.includes('apple') || itemName.includes('banana') || itemName.includes('fruit') || itemName.includes('vegetable') || 
-          allText.includes('produce') || allText.includes('organic') || allText.includes('fresh')) {
-        enhancedResult.category = "Produce";
-      } else if (itemName.includes('milk') || itemName.includes('cheese') || itemName.includes('yogurt') || 
-                 allText.includes('dairy') || allText.includes('cream')) {
-        enhancedResult.category = "Dairy";
-      } else if (itemName.includes('meat') || itemName.includes('chicken') || itemName.includes('beef') || 
-                 allText.includes('protein') || allText.includes('poultry')) {
-        enhancedResult.category = "Meat";
-      } else if (allText.includes('frozen') || allText.includes('ice cream')) {
-        enhancedResult.category = "Frozen";
-      } else if (allText.includes('drink') || allText.includes('beverage') || allText.includes('juice')) {
-        enhancedResult.category = "Drinks";
-      } else if (allText.includes('snack') || allText.includes('chips') || allText.includes('candy')) {
-        enhancedResult.category = "Snacks";
-      }
-    }
-
-    console.log(`📷 Enhanced Detection: ${enhancedResult.itemName} (${allDetections.length} detections)`);
-
-    res.json({
-      itemName: enhancedResult.itemName,
-      category: enhancedResult.category,
-      description: enhancedResult.description,
-      marketPrice: enhancedResult.marketPrice,
-      discountedPrice: enhancedResult.discountedPrice,
-      confidence: (bestDetection.confidence * 100).toFixed(1),
-      detectedLabels: allDetections.map(d => d.name),
-      detectedText: text,
-      aiEnhanced: true,
-      detectionCount: allDetections.length
+      discountedPrice: "0.50",
+      confidence: ((best?.score || 0) * 100).toFixed(1),
+      detectedLabels: labels.map(l => l.description),
+      detectedText: '',
+      aiEnhanced: false,
+      detectionCount: labels.length
     });
   } catch (err) {
-    console.error("❌ Enhanced analysis error:", err);
-    res.status(500).json({ error: "AI analysis failed" });
+    console.error("❌ Vision analyze error:", err);
+    return res.status(502).json({ error: "Vision analysis failed" });
   } finally {
     await fs.unlink(imagePath).catch(() => {});
   }

@@ -171,7 +171,6 @@ app.post("/purchase/buy-now", auth, async (req, res) => {
       currency,
       capture_method: "manual",
       payment_method_types: ["card"],
-      automatic_payment_methods: { enabled: true },
       transfer_data: { destination: seller.stripeAccountId },
       metadata: {
         itemId: String(item._id),

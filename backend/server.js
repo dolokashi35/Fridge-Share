@@ -151,7 +151,11 @@ app.post("/purchase/buy-now", auth, async (req, res) => {
   try {
     if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
     const { itemId, amountCents, currency = "usd" } = req.body || {};
-    if (!itemId || !amountCents) return res.status(400).json({ error: "itemId and amountCents required" });
+    if (!itemId || amountCents == null) return res.status(400).json({ error: "itemId and amountCents required" });
+    const amt = Number(amountCents);
+    if (!Number.isFinite(amt) || amt < 50) {
+      return res.status(400).json({ error: "Amount too low. Minimum is $0.50" });
+    }
 
     const item = await Item.findById(itemId);
     if (!item) return res.status(404).json({ error: "Item not found" });
@@ -163,10 +167,11 @@ app.post("/purchase/buy-now", auth, async (req, res) => {
 
     // Create manual capture PI (escrow)
     const intent = await stripe.paymentIntents.create({
-      amount: Number(amountCents),
+      amount: amt,
       currency,
       capture_method: "manual",
       payment_method_types: ["card"],
+      automatic_payment_methods: { enabled: true },
       transfer_data: { destination: seller.stripeAccountId },
       metadata: {
         itemId: String(item._id),
@@ -207,8 +212,10 @@ app.post("/purchase/buy-now", auth, async (req, res) => {
 
     res.json({ clientSecret: intent.client_secret, transactionId: transaction._id, dropoffDeadline });
   } catch (e) {
-    console.error("Buy Now error:", e);
-    res.status(500).json({ error: "Failed to start purchase" });
+    const msg = e?.raw?.message || e?.message || "Failed to start purchase";
+    console.error("Buy Now error:", msg);
+    const code = /amount|account|destination|capab|invalid/i.test(msg) ? 400 : 500;
+    res.status(code).json({ error: msg });
   }
 });
 

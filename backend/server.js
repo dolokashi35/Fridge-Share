@@ -233,6 +233,73 @@ app.post("/purchase/buy-now", auth, async (req, res) => {
   }
 });
 
+// Backwards-compatible alias: POST /buy-now
+app.post("/buy-now", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const { itemId, amountCents, currency = "usd" } = req.body || {};
+    if (!itemId || amountCents == null) return res.status(400).json({ error: "itemId and amountCents required" });
+    const amt = Number(amountCents);
+    if (!Number.isFinite(amt) || amt < 50) {
+      return res.status(400).json({ error: "Amount too low. Minimum is $0.50" });
+    }
+
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    if (item.status !== "active") return res.status(400).json({ error: "Item not available" });
+    if (item.username === req.user.username) return res.status(400).json({ error: "Cannot buy your own item" });
+
+    const seller = await User.findOne({ username: item.username });
+    if (!seller || !seller.stripeAccountId) return res.status(400).json({ error: "Seller not onboarded" });
+
+    const intent = await stripe.paymentIntents.create({
+      amount: amt,
+      currency,
+      capture_method: "manual",
+      payment_method_types: ["card"],
+      transfer_data: { destination: seller.stripeAccountId },
+      metadata: {
+        itemId: String(item._id),
+        sellerUsername: item.username,
+        buyerUsername: req.user.username,
+      },
+    });
+
+    item.status = "reserved";
+    item.paymentIntentId = intent.id;
+    await item.save();
+
+    const dropoffDeadline = new Date(Date.now() + 1000 * 60 * 60);
+    const transaction = new Transaction({
+      itemId: item._id,
+      sellerId: item.username,
+      buyerId: req.user.username,
+      verificationCode: crypto.randomBytes(4).toString('hex').toUpperCase(),
+      qrCode: "",
+      chatRoomId: crypto.randomUUID(),
+      status: "reserved",
+      paymentIntentId: intent.id,
+      dropoffDeadline,
+    });
+    await transaction.save();
+
+    await Message.create({
+      from: "system",
+      to: item.username,
+      content: `Order reserved for ${item.name}. Please drop off and provide instructions by ${dropoffDeadline.toLocaleTimeString()}.`,
+      itemId: item._id,
+      itemName: item.name,
+      itemImageUrl: item.imageUrl || ""
+    });
+
+    res.json({ clientSecret: intent.client_secret, transactionId: transaction._id, dropoffDeadline });
+  } catch (e) {
+    const msg = e?.raw?.message || e?.message || "Failed to start purchase";
+    console.error("Buy Now (alias) error:", msg);
+    const code = /amount|account|destination|capab|invalid/i.test(msg) ? 400 : 500;
+    res.status(code).json({ error: msg });
+  }
+});
 // Check onboarding status for current user
 app.get("/payments/connect/status", auth, async (req, res) => {
   try {

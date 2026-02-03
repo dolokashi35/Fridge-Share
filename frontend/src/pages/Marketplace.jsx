@@ -332,15 +332,15 @@ export default function Marketplace() {
                   {getHandoffStatusBadge(it)}
                   
                   <div className="market-card-actions" onClick={(e) => e.stopPropagation()}>
-                <button
+                    <button
                       className="market-card-btn request"
                       onClick={(e) => {
                         e.stopPropagation();
-                    // Open confirm dialog
-                    setConfirmItem(it);
+                        // Open payment directly
+                        setPayItem(it);
                       }}
                     >
-                  Buy Now
+                      Buy Now
                     </button>
                     <button
                       className="market-card-btn message"
@@ -495,7 +495,7 @@ export default function Marketplace() {
                     <button
                       className="item-modal-btn-buy"
                       onClick={() => {
-                        setConfirmItem(selectedItem);
+                        setPayItem(selectedItem);
                       }}
                     >
                       Buy Now
@@ -508,12 +508,6 @@ export default function Marketplace() {
                       }}
                     >
                       Request Item
-                    </button>
-                    <button
-                      className="item-modal-btn-request"
-                      onClick={() => setPayItem(selectedItem)}
-                    >
-                      Pay
                     </button>
                   </div>
                 </div>

@@ -60,7 +60,7 @@ export default function PayModal({ item, isOpen, onClose }) {
       const stored = localStorage.getItem("fs_user");
       const token = stored ? JSON.parse(stored)?.token : null;
       const res = await axios.post(
-        `${BACKEND_URL}/payments/intent`,
+        `${BACKEND_URL}/purchase/buy-now`,
         { itemId: item._id, amountCents: Math.round((item.price || 0) * 100), currency: "usd" },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );

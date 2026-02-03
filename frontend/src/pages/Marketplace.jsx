@@ -336,7 +336,18 @@ export default function Marketplace() {
                       className="market-card-btn request"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Open payment directly
+                        // Require live listing and login
+                        const stored = localStorage.getItem("fs_user");
+                        const token = stored ? JSON.parse(stored)?.token : null;
+                        if (!token) {
+                          alert("Please log in to buy.");
+                          nav("/login");
+                          return;
+                        }
+                        if (!it?._id && !it?.id) {
+                          alert("Please select a live listing to buy.");
+                          return;
+                        }
                         setPayItem(it);
                       }}
                     >
@@ -495,6 +506,17 @@ export default function Marketplace() {
                     <button
                       className="item-modal-btn-buy"
                       onClick={() => {
+                        const stored = localStorage.getItem("fs_user");
+                        const token = stored ? JSON.parse(stored)?.token : null;
+                        if (!token) {
+                          alert("Please log in to buy.");
+                          nav("/login");
+                          return;
+                        }
+                        if (!selectedItem?._id && !selectedItem?.id) {
+                          alert("Please select a live listing to buy.");
+                          return;
+                        }
                         setPayItem(selectedItem);
                       }}
                     >

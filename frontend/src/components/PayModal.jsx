@@ -53,15 +53,16 @@ export default function PayModal({ item, isOpen, onClose }) {
     setError("");
     setLoadingCS(true);
     try {
-      if (!item || !item._id) {
-        setError("Invalid item.");
+      const id = item?._id || item?.id;
+      if (!id) {
+        setError("Please log in and select a live listing to purchase.");
         return;
       }
       const stored = localStorage.getItem("fs_user");
       const token = stored ? JSON.parse(stored)?.token : null;
       const res = await axios.post(
         `${BACKEND_URL}/purchase/buy-now`,
-        { itemId: item._id, amountCents: Math.round((item.price || 0) * 100), currency: "usd" },
+        { itemId: id, amountCents: Math.round((item.price || 0) * 100), currency: "usd" },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       const cs = res.data?.clientSecret || "";

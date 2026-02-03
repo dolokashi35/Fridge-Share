@@ -159,6 +159,25 @@ app.post("/payments/connect/link", auth, async (req, res) => {
   }
 });
 
+// Login link to Stripe Express dashboard for connected seller
+app.post("/payments/connect/login", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const me = await User.findOne({ username: req.user.username });
+    if (!me || !me.stripeAccountId) {
+      return res.status(400).json({ error: "Seller not onboarded" });
+    }
+    const { returnUrl } = req.body || {};
+    const link = await stripe.accounts.createLoginLink(me.stripeAccountId, {
+      redirect_url: returnUrl || `${(req.headers.origin || '').replace(/\/$/, '')}/profile?connect=back`
+    });
+    res.json({ url: link.url });
+  } catch (e) {
+    console.error("Create login link error:", e);
+    res.status(500).json({ error: e?.message || "Failed to create login link" });
+  }
+});
+
 // ========================
 // 🛒 Buy Now: Create escrow, reserve listing, create transaction, notify
 // ========================

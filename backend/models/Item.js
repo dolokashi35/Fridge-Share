@@ -55,7 +55,7 @@ const itemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["active", "sold", "expired", "handed_off"],
+    enum: ["active", "reserved", "sold", "expired", "handed_off"],
     default: "active"
   },
   paymentIntentId: {

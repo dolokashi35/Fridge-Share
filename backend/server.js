@@ -144,6 +144,74 @@ app.post("/payments/connect/link", auth, async (req, res) => {
   }
 });
 
+// ========================
+// 🛒 Buy Now: Create escrow, reserve listing, create transaction, notify
+// ========================
+app.post("/purchase/buy-now", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const { itemId, amountCents, currency = "usd" } = req.body || {};
+    if (!itemId || !amountCents) return res.status(400).json({ error: "itemId and amountCents required" });
+
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+    if (item.status !== "active") return res.status(400).json({ error: "Item not available" });
+    if (item.username === req.user.username) return res.status(400).json({ error: "Cannot buy your own item" });
+
+    const seller = await User.findOne({ username: item.username });
+    if (!seller || !seller.stripeAccountId) return res.status(400).json({ error: "Seller not onboarded" });
+
+    // Create manual capture PI (escrow)
+    const intent = await stripe.paymentIntents.create({
+      amount: Number(amountCents),
+      currency,
+      capture_method: "manual",
+      payment_method_types: ["card"],
+      transfer_data: { destination: seller.stripeAccountId },
+      metadata: {
+        itemId: String(item._id),
+        sellerUsername: item.username,
+        buyerUsername: req.user.username,
+      },
+    });
+
+    // Reserve item
+    item.status = "reserved";
+    item.paymentIntentId = intent.id;
+    await item.save();
+
+    // Create transaction record with 1h dropoff deadline
+    const dropoffDeadline = new Date(Date.now() + 1000 * 60 * 60);
+    const transaction = new Transaction({
+      itemId: item._id,
+      sellerId: item.username,
+      buyerId: req.user.username,
+      verificationCode: crypto.randomBytes(4).toString('hex').toUpperCase(),
+      qrCode: "",
+      chatRoomId: crypto.randomUUID(),
+      status: "reserved",
+      paymentIntentId: intent.id,
+      dropoffDeadline,
+    });
+    await transaction.save();
+
+    // Notify seller via simple message
+    await Message.create({
+      from: "system",
+      to: item.username,
+      content: `Order reserved for ${item.name}. Please drop off and provide instructions by ${dropoffDeadline.toLocaleTimeString()}.`,
+      itemId: item._id,
+      itemName: item.name,
+      itemImageUrl: item.imageUrl || ""
+    });
+
+    res.json({ clientSecret: intent.client_secret, transactionId: transaction._id, dropoffDeadline });
+  } catch (e) {
+    console.error("Buy Now error:", e);
+    res.status(500).json({ error: "Failed to start purchase" });
+  }
+});
+
 // Check onboarding status for current user
 app.get("/payments/connect/status", auth, async (req, res) => {
   try {
@@ -360,7 +428,79 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 console.log("✅ Gemini 2.0 Flash initialized via API key");
 
-// (Gemini image-only fallback helper removed)
+// ========================
+// 🧰 Helpers: Gemini analysis (image-only and fusion with Vision detections)
+// ========================
+async function analyzeWithGeminiImageOnly(imagePath, mimeType = 'image/jpeg') {
+  try {
+    const imgBuffer = await fs.readFile(imagePath);
+    const base64 = imgBuffer.toString('base64');
+    const prompt = `Identify the FOOD ITEM in this photo. Return concise JSON:
+{
+  "itemName": "specific name (include brand if visible)",
+  "category": "Produce|Dairy|Baked|Meat|Seafood|Frozen|Fresh|Drinks|Snacks|Canned|Spices|Sauces",
+  "description": "one short sentence with key details"
+}`;
+    const resp = await geminiModel.generateContent([
+      { text: prompt },
+      { inlineData: { mimeType, data: base64 } }
+    ]);
+    const txt = resp.response.text() || '';
+    const m = txt.match(/\{[\s\S]*\}/);
+    let itemName = 'Unknown item', category = 'Fresh', description = '';
+    if (m) {
+      try {
+        const j = JSON.parse(m[0]);
+        itemName = j.itemName || itemName;
+        category = j.category || category;
+        description = j.description || description;
+      } catch {}
+    }
+    return { itemName, category, description };
+  } catch {
+    return { itemName: 'Unknown item', category: 'Fresh', description: '' };
+  }
+}
+
+async function analyzeWithGeminiFusion(imagePath, detections, mimeType = 'image/jpeg') {
+  try {
+    const imgBuffer = await fs.readFile(imagePath);
+    const base64 = imgBuffer.toString('base64');
+    const { labels = [], objects = [], logos = [], text = "" } = detections || {};
+    const prompt = `You are classifying FOOD items for a marketplace.
+Use the provided detections (labels/objects/logos/text) AND the image.
+Return concise JSON only:
+{
+  "itemName": "specific item (include brand if visible)",
+  "category": "Produce|Dairy|Baked|Meat|Seafood|Frozen|Fresh|Drinks|Snacks|Canned|Spices|Sauces",
+  "description": "one short factual sentence"
+}
+
+DETECTIONS:
+- LABELS: ${labels.slice(0, 8).join(', ')}
+- OBJECTS: ${objects.slice(0, 5).join(', ')}
+- LOGOS: ${logos.slice(0, 5).join(', ')}
+- TEXT: ${text?.slice(0, 500) || ""}`;
+    const resp = await geminiModel.generateContent([
+      { text: prompt },
+      { inlineData: { mimeType, data: base64 } }
+    ]);
+    const txt = resp.response.text() || '';
+    const m = txt.match(/\{[\s\S]*\}/);
+    let itemName = 'Unknown item', category = 'Fresh', description = '';
+    if (m) {
+      try {
+        const j = JSON.parse(m[0]);
+        itemName = j.itemName || itemName;
+        category = j.category || category;
+        description = j.description || description;
+      } catch {}
+    }
+    return { itemName, category, description };
+  } catch {
+    return { itemName: 'Unknown item', category: 'Fresh', description: '' };
+  }
+}
 
 // ========================
 // 🖼️ Image Upload Endpoint (S3)
@@ -1547,6 +1687,43 @@ app.post("/api/transactions/:id/location", async (req, res) => {
 });
 
 // ========================
+// 📦 POST /api/transactions/:id/dropped-off - Seller provides proof + instructions
+// ========================
+app.post("/api/transactions/:id/dropped-off", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { pickupInstructions, proofPhotoUrl } = req.body || {};
+    const txn = await Transaction.findById(id);
+    if (!txn) return res.status(404).json({ error: "Transaction not found" });
+    if (txn.sellerId !== req.user.username) return res.status(403).json({ error: "Only seller can mark dropped off" });
+    if (txn.status !== "reserved") return res.status(400).json({ error: "Transaction not in reserved state" });
+
+    // Update transaction
+    txn.status = "dropped_off";
+    txn.droppedOffAt = new Date();
+    txn.pickupDeadline = new Date(Date.now() + 1000 * 60 * 120); // 2 hours
+    txn.pickupInstructions = pickupInstructions || "";
+    txn.proofPhotoUrl = proofPhotoUrl || "";
+    await txn.save();
+
+    // Notify buyer
+    await Message.create({
+      from: "system",
+      to: txn.buyerId,
+      content: `Pickup ready. Instructions: ${txn.pickupInstructions || 'Check app details'}. Pick up before ${txn.pickupDeadline.toLocaleTimeString()}.`,
+      itemId: txn.itemId,
+      itemName: "",
+      itemImageUrl: ""
+    });
+
+    res.json({ success: true, status: txn.status, pickupDeadline: txn.pickupDeadline });
+  } catch (e) {
+    console.error("Dropped-off error:", e);
+    res.status(500).json({ error: "Failed to mark dropped off" });
+  }
+});
+
+// ========================
 // ⏰ POST /api/transactions/:id/time - Set Pickup Time
 // ========================
 app.post("/api/transactions/:id/time", async (req, res) => {
@@ -1575,6 +1752,37 @@ app.post("/api/transactions/:id/time", async (req, res) => {
   } catch (err) {
     console.error("❌ Set time error:", err);
     res.status(500).json({ error: "Failed to set pickup time" });
+  }
+});
+
+// ========================
+// ✅ POST /api/transactions/:id/confirm-pickup - Buyer confirms, capture funds
+// ========================
+app.post("/api/transactions/:id/confirm-pickup", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const { id } = req.params;
+    const txn = await Transaction.findById(id);
+    if (!txn) return res.status(404).json({ error: "Transaction not found" });
+    if (txn.buyerId !== req.user.username) return res.status(403).json({ error: "Only buyer can confirm pickup" });
+    if (txn.status !== "dropped_off") return res.status(400).json({ error: "Pickup not ready to confirm" });
+
+    // Capture funds
+    if (txn.paymentIntentId) {
+      await stripe.paymentIntents.capture(txn.paymentIntentId);
+    }
+
+    txn.status = "completed";
+    txn.completedAt = new Date();
+    await txn.save();
+
+    // Mark item sold
+    await Item.findByIdAndUpdate(txn.itemId, { status: "sold", handoffStatus: "completed" });
+
+    res.json({ success: true, status: txn.status });
+  } catch (e) {
+    console.error("Confirm pickup error:", e);
+    res.status(500).json({ error: "Failed to confirm pickup" });
   }
 });
 
@@ -1627,12 +1835,61 @@ app.post("/api/transactions/:id/verify", async (req, res) => {
 });
 
 // ========================
+// ❌ POST /api/transactions/:id/report-missing - Buyer reports item missing → refund + cancel
+// ========================
+app.post("/api/transactions/:id/report-missing", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const { id } = req.params;
+    const txn = await Transaction.findById(id);
+    if (!txn) return res.status(404).json({ error: "Transaction not found" });
+    if (txn.buyerId !== req.user.username) return res.status(403).json({ error: "Only buyer can report missing" });
+    if (!["dropped_off"].includes(txn.status)) return res.status(400).json({ error: "Invalid state to report missing" });
+
+    // Refund the PaymentIntent (cancel since manual capture)
+    if (txn.paymentIntentId) {
+      await stripe.paymentIntents.cancel(txn.paymentIntentId);
+    }
+
+    txn.status = "cancelled";
+    await txn.save();
+
+    // Re-activate item
+    await Item.findByIdAndUpdate(txn.itemId, { status: "active", handoffStatus: null, paymentIntentId: null });
+
+    res.json({ success: true, status: txn.status });
+  } catch (e) {
+    console.error("Report missing error:", e);
+    res.status(500).json({ error: "Failed to report missing" });
+  }
+});
+
+// ========================
 // 📋 GET /api/transactions/:userId - Get User Transactions
 // ========================
 app.get("/api/transactions/:userId", async (req, res) => {
   const { userId } = req.params;
   
   try {
+    // Lazy auto-cancel: if reserved and past dropoffDeadline → cancel + refund if possible
+    const now = Date.now();
+    const reservedOverdue = await Transaction.find({
+      status: "reserved",
+      dropoffDeadline: { $lt: new Date(now) }
+    });
+    for (const txn of reservedOverdue) {
+      try {
+        if (stripe && txn.paymentIntentId) {
+          await stripe.paymentIntents.cancel(txn.paymentIntentId);
+        }
+        txn.status = "cancelled";
+        await txn.save();
+        await Item.findByIdAndUpdate(txn.itemId, { status: "active", handoffStatus: null, paymentIntentId: null });
+      } catch (e) {
+        console.error("Lazy auto-cancel error:", e);
+      }
+    }
+
     const transactions = await Transaction.find({
       $or: [{ sellerId: userId }, { buyerId: userId }]
     }).populate('itemId').sort({ createdAt: -1 });

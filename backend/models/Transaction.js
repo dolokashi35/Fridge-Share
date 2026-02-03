@@ -26,12 +26,20 @@ const transactionSchema = new mongoose.Schema(
     verificationCode: { type: String, required: true },
     qrCode: { type: String, default: "" },
     chatRoomId: { type: String, required: true },
-    status: { type: String, enum: ["pending", "confirmed", "completed"], default: "pending" },
+    // Escrow flow statuses
+    status: { type: String, enum: ["pending", "reserved", "dropped_off", "completed", "cancelled", "confirmed"], default: "pending" },
     completedAt: { type: Date },
     pickupWindow: { type: windowSchema, default: undefined },
     location: { type: pointSchema, default: undefined },
     sellerLocation: { type: pointSchema, default: undefined },
     buyerLocation: { type: pointSchema, default: undefined },
+    // Escrow/payment metadata
+    paymentIntentId: { type: String, default: null },
+    dropoffDeadline: { type: Date, default: null },
+    droppedOffAt: { type: Date, default: null },
+    pickupDeadline: { type: Date, default: null },
+    pickupInstructions: { type: String, default: "" },
+    proofPhotoUrl: { type: String, default: "" },
   },
   { timestamps: true }
 );

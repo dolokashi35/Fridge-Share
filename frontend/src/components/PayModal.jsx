@@ -10,9 +10,11 @@ function PayForm({ item, onClose, onSuccess }) {
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
 
   const handlePay = async () => {
     if (!stripe || !elements) return;
+    if (!ready) return;
     setLoading(true);
     setError("");
     const { error } = await stripe.confirmPayment({
@@ -30,12 +32,12 @@ function PayForm({ item, onClose, onSuccess }) {
 
   return (
     <div>
-      <PaymentElement />
+      <PaymentElement onReady={() => setReady(true)} />
       {error && <p style={{ color: "#ef4444", marginTop: 8 }}>{error}</p>}
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button className="market-card-btn message" style={{ flex: 1 }} onClick={onClose} disabled={loading}>Cancel</button>
-        <button className="market-card-btn request" style={{ flex: 1 }} onClick={handlePay} disabled={!stripe || loading}>
-          {loading ? "Processing..." : "Pay"}
+        <button className="market-card-btn request" style={{ flex: 1 }} onClick={handlePay} disabled={!stripe || !elements || !ready || loading}>
+          {loading ? "Processing..." : (ready ? "Pay" : "Loading…")}
         </button>
       </div>
     </div>
@@ -127,7 +129,7 @@ export default function PayModal({ item, isOpen, onClose }) {
         <h3 style={{ margin: 0, marginBottom: 6, fontWeight: 700 }}>Pay {item?.name}</h3>
         <p style={{ marginTop: 0, color: "#64748b" }}>${(item?.price || 0).toFixed(2)}</p>
         {clientSecret && stripePromise ? (
-          <Elements stripe={stripePromise} options={{ clientSecret }}>
+          <Elements stripe={stripePromise} options={{ clientSecret }} key={clientSecret}>
             <PayForm item={item} onClose={onClose} onSuccess={onClose} />
           </Elements>
         ) : (

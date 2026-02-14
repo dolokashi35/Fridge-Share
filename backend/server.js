@@ -166,6 +166,31 @@ app.post("/payments/connect/login", auth, async (req, res) => {
   }
 });
 
+// Disconnect seller's Stripe Connect account (delete at Stripe and clear locally)
+app.post("/payments/connect/disconnect", auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: "Stripe not configured" });
+    const me = await User.findOne({ username: req.user.username });
+    if (!me || !me.stripeAccountId) {
+      return res.status(400).json({ error: "No connected account to disconnect" });
+    }
+    const acctId = me.stripeAccountId;
+    try {
+      await stripe.accounts.del(acctId);
+    } catch (e) {
+      // In some cases (live mode or restrictions), deletion may fail. Still proceed to clear locally if needed.
+      console.warn("Stripe account deletion warning:", e?.message || e);
+    }
+    me.stripeAccountId = null;
+    me.isStripeOnboarded = false;
+    await me.save();
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Disconnect connect account error:", e);
+    res.status(500).json({ error: e?.message || "Failed to disconnect account" });
+  }
+});
+
 // ========================
 // 🛒 Buy Now: Create escrow, reserve listing, create transaction, notify
 // ========================

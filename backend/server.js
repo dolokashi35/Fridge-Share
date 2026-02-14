@@ -95,19 +95,7 @@ app.use(
   })
 );
 // Explicitly handle preflight for all routes
-app.options(
-  '*',
-  cors({
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) return callback(null, true);
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    optionsSuccessStatus: 204,
-  })
-);
+// Express 5: '*' path pattern is invalid; rely on app.use(cors(...)) to handle preflight
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
